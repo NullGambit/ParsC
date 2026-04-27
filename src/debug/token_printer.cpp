@@ -2,17 +2,10 @@
 
 #include <vector>
 
-#include "containers/hash_map.hpp"
 #include "frontend/lexer.hpp"
 #include "frontend/token.hpp"
 #include "magic_enum/magic_enum.hpp"
 #include "util/fmt.hpp"
-
-struct ColumnInfo
-{
-	std::string_view value;
-	u32 max_length;
-};
 
 void print_padding(u32 length, char c = ' ')
 {
@@ -63,18 +56,6 @@ void pars::print_tokens(std::string_view source)
 		}
 		return 0;
 	};
-
-	// auto longest = 0;
-	//
-	// for (auto token : stream)
-	// {
-	// 	auto s = magic_enum::enum_name(token.type);
-	//
-	// 	if (s.length() > longest)
-	// 	{
-	// 		longest = s.length();
-	// 	}
-	// }
 
 	auto longest_type = longest_token_component(stream, [](Token token) { return magic_enum::enum_name(token.type); });
 	auto longest_lexeme = longest_token_component(stream, [](Token token) { return token.lexeme; });
