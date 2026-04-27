@@ -22,6 +22,24 @@ void print_padding(u32 length, char c = ' ')
 	}
 }
 
+template<class Fn>
+int longest_token_component(std::vector<pars::Token> &stream, Fn fn)
+{
+	auto longest = 0;
+
+	for (auto token : stream)
+	{
+		auto s = fn(token);
+
+		if (s.length() > longest)
+		{
+			longest = s.length();
+		}
+	}
+
+	return longest;
+}
+
 void pars::print_tokens(std::string_view source)
 {
 	auto lexer = Lexer(source);
@@ -46,25 +64,30 @@ void pars::print_tokens(std::string_view source)
 		return 0;
 	};
 
-	auto longest = 0;
+	// auto longest = 0;
+	//
+	// for (auto token : stream)
+	// {
+	// 	auto s = magic_enum::enum_name(token.type);
+	//
+	// 	if (s.length() > longest)
+	// 	{
+	// 		longest = s.length();
+	// 	}
+	// }
 
-	for (auto token : stream)
-	{
-		auto s = magic_enum::enum_name(token.type);
-
-		if (s.length() > longest)
-		{
-			longest = s.length();
-		}
-	}
+	auto longest_type = longest_token_component(stream, [](Token token) { return magic_enum::enum_name(token.type); });
+	auto longest_lexeme = longest_token_component(stream, [](Token token) { return token.lexeme; });
 
 	const std::string_view TYPE_COLUMN = "Type";
 	const std::string_view LOCATION_COLUMN = "Location";
 	const std::string_view LEXEME_COLUMN = "Lexeme";
 
+	fmt::print("| ");
+
 	fmt::print(TYPE_COLUMN);
 
-	print_padding(diff(longest,TYPE_COLUMN.length()));
+	print_padding(diff(longest_type,TYPE_COLUMN.length()));
 
 	fmt::print(" | ");
 
@@ -72,19 +95,25 @@ void pars::print_tokens(std::string_view source)
 
 	fmt::print(" | ");
 
-	fmt::println(LEXEME_COLUMN);
+	fmt::print(LEXEME_COLUMN);
 
-	print_padding(longest + LOCATION_COLUMN.length() + TYPE_COLUMN.length() + LEXEME_COLUMN.length() + 3, '-');
+	fmt::println(" |");
+
+	auto border_size = longest_type + LOCATION_COLUMN.length() + TYPE_COLUMN.length() + LEXEME_COLUMN.length() + 6;
+
+	print_padding(border_size, '-');
 
 	fmt::println("");
 
 	for (auto token : stream)
 	{
+		fmt::print("| ");
+
 		auto s = magic_enum::enum_name(token.type);
 
 		fmt::print("{}", s);
 
-		print_padding(diff(longest, s.length()));
+		print_padding(diff(longest_type, s.length()));
 
 		fmt::print(" | ");
 
@@ -96,6 +125,12 @@ void pars::print_tokens(std::string_view source)
 
 		fmt::print(" | ");
 
-		fmt::println(token.lexeme);
+		fmt::print(token.lexeme);
+
+		print_padding(diff(longest_lexeme, token.lexeme.length()));
+
+		fmt::println(" |");
 	}
+
+	print_padding(border_size, '-');
 }
