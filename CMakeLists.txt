@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 4.2)
+project(ParsC)
+
+set(CMAKE_CXX_STANDARD 20)
+
+include_directories(
+        src/
+        deps/unordered_dense/include
+        deps/magic_enum/include)
+
+add_subdirectory(deps/unordered_dense/)
+add_subdirectory(deps/magic_enum/)
+
+add_executable(ParsC src/main.cpp
+        src/containers/hash_map.hpp
+        src/frontend/text_reader.hpp
+        src/frontend/text_reader.cpp
+        src/type_defs.hpp
+        src/util/fmt.cpp
+        src/util/fmt.hpp
+        src/util/io.cpp
+        src/util/io.hpp
+        src/frontend/token.cpp
+        src/frontend/token.hpp
+        src/frontend/lexer.cpp
+        src/frontend/lexer.hpp
+        src/debug/token_printer.cpp
+        src/debug/token_printer.hpp)
+
+target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.hpp)

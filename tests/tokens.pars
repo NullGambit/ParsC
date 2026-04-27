@@ -1,0 +1,17 @@
+import std.io
+
+struct MyData
+{
+    alias MyType = List<i32>
+
+    i: i32
+    s: str
+    f: f32
+}
+
+fn main()
+{
+    var data = MyData(i: 10, s: "hello", f: 10.32)
+
+    println(data)
+}
