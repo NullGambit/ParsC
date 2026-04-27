@@ -1,0 +1,43 @@
+import std.mem
+import std.io
+
+struct CustomAllocator : Allocator
+{
+    fn alloc<T>(): T*
+    {
+        println($"Allocated 1 {T.nameof}")
+        return mem::alloc<T>()
+    }
+
+    fn alloc_bytes(size: int): byte[]
+    {
+        println($"Allocated {size} bytes")
+        return mem::alloc_bytes(size)
+    }
+
+    // every pointer can be coerced down to a void pointer so only one needed
+    fn free(ptr: *void)
+    {
+        println($"freed")
+        mem::free(ptr)
+    }
+}
+
+fn alloc_some_stuff()
+{
+    // use allocator set for this scope by the higher scope
+    var number = #alloc<int>()
+
+    defer #free(number)
+}
+
+fn main()
+{
+    // all allocations made in this scope and bellow will use the custom allocator
+    #allocator = CustomAllocator{}
+
+    alloc_some_stuff()
+
+    // will only use the default allocator here and afterwards will use the allocator set earlier
+    alloc_some_stuff() #use(DefaultAllocator)
+}

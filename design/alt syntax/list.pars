@@ -1,0 +1,71 @@
+import std.io 
+
+main :: fn()
+{
+    numbers := [1, 2, 3, 4]
+
+    for n in numbers 
+    {
+        println(n)
+    }
+
+    for n in numbers where n % 2 == 0
+    {
+        println(n)
+    }
+}
+
+List :: struct<T, A = #allocator<T>> (Drop, Copy)
+{
+    @ReadOnly
+    length: i32
+    @ReadOnly
+    capacity: i32
+    allocator: A 
+    ptr: *T 
+
+    self<A...>(args: A)
+    {
+        reserve(args.length)
+
+        $for arg in args 
+        {
+            add(arg)
+        }
+    }
+
+    ensure_size :: fn(size := 1)
+    {
+        if size + length > capacity 
+        {
+            new_capacity :: if capacity == 0 do size else capacity
+            reserve(new_capacity * 2)
+        }
+    }
+
+    add :: fn(value: &&T): &T 
+    {
+        ensure_size()
+
+        index :: length++
+
+        ptr[index] = value 
+
+        return ptr[index]
+    }
+
+    reserve :: fn(new_capacity: i32)
+    {
+        capacity = new_capacity
+
+        temp :: allocator.alloc(capacity)
+
+        memcpy(ptr, temp, length)
+
+        allocator.free(ptr)
+
+        ptr = temp
+    }
+
+    pop :: fn() => ptr[length--]
+}

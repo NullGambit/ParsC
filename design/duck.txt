@@ -1,0 +1,37 @@
+import std.io, std.collections 
+
+// when using ? with a template parameter it becomes optional 
+// works with any other template declaration 
+// duck just describes the shape of a desired object including fields
+duck Writer<T?>
+{   
+    // if T is provided find a method that exactly matches
+    if try T 
+    {
+        fn write(T)
+    }
+    else 
+    {
+        // ? is used as a wildcard so any signature is valid
+        fn write(?): ?
+    }
+}
+
+fn write_anything<W: Writer, T>(writer: &W, value: T)
+{
+    writer.write(value)
+}
+
+fn write_int<W: Writer<int>>(writer: &W, value: int)
+{
+    writer.write(value)
+}
+
+fn main()
+{
+    var s: String
+
+    write_anything(s, "hello")
+
+    write_int(s, 10)
+}

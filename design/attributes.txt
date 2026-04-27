@@ -1,0 +1,61 @@
+// a struct can be a tag so it does not need a body
+struct Export
+
+// a struct can also only have fields defined in an inline way this can be useful if i change the method syntax to be inline inside the struct def
+struct Range<T>(T min, T max)
+
+struct MyComponent
+{
+    @Export
+    moveSpeed: float
+    // will infer what T is from its target. if there is more than one template param than it has to be explicitly typed
+    @(Export, Range(0, 1))
+    lookSpeed: float
+}
+
+fn attribute_test()
+{
+    var comp = MyComponent{100, 0.35f}
+
+    for field in $fields(comp)
+    {
+        if $has_attribute(Export, field)
+        {
+            println(field)
+        }
+    }
+}
+
+struct MyData
+{
+    x: i32
+    name: str
+}
+
+fn reflection_test()
+{
+    var comp = MyData{100, "john"}
+
+    for &field in $fields(comp)
+    {
+        field = default
+    }
+
+    // now all fields will be their default values
+
+    var clonedComp = MyData{}
+
+    for &field, i in $fields(comp)
+    {
+        var other_field = $get_field(clonedComp, i)
+
+        if field is Copy
+        {
+            other_field = field.copy()
+        }
+        else
+        {
+            other_field = field
+        }
+    }
+}

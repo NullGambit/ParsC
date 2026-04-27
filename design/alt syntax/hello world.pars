@@ -1,0 +1,6 @@
+import std.io 
+
+main :: fn()
+{
+    println("hello world")
+}

@@ -1,0 +1,15 @@
+
+fn make_strings(): List<String> 
+{
+    // rtype will become List<String>
+    // can also write
+    // var strings = rtype{}
+    var strings: rtype 
+
+    for i in 0..10
+    {
+        strings.Add($"{i}")
+    }
+
+    return strings
+}

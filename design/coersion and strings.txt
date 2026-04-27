@@ -1,0 +1,46 @@
+import std.io
+
+// a str is essentially just an alias like this
+alias str = const(char)[]
+
+// its unmanaged and so there is the String struct for this
+// in most places its useful for types to be coerced into other types so theres a builtin system for that
+
+// leaving out a lot of other details
+struct String
+{
+    ptr: *char
+    length: int
+    capacity: int
+
+    // when using a String where an str is needed the compiler will see if it has an op_coerce method
+    // and if the type is specialized as the desrired type
+    // in this case all its really doing is making a slice with a known length
+    fn op_coerce<T: str>() => ptr[:length]
+}
+
+// always best to default to an str when only need to do readonly operations
+// as its always garantueed to be a slice
+fn print_str(s: str) => println(s)
+
+fn coerce_ints(n: u64) => println(n)
+
+fn main()
+{
+    // string literals will become str
+    print_str("hello")
+
+    var bytes = ['a', 'b', 'c']
+
+    // bytes is not const but will be coerced into const because there is no negative side effect
+    print_str(bytes)
+
+    // newly created string object will be coerced into an str
+    print_str(String::new("hello"))
+
+    // will be an 32 bit int
+    var n = 10
+    // because the desired type is much larger there is no negative side effect from upcasting
+    // but downcasting can lose data and is very unsafe so that is not allowed
+    coerce_ints(n)
+}

@@ -1,0 +1,111 @@
+module std.box 
+
+struct Box<T, A = #allocator<T>> : Drop, Copy
+{
+    // the ptr itself is mutable but the ptr field cannot be reassigned
+    readonly ptr: *T
+    allocator: A 
+
+    // now the struct is treated as if it is the ptr field 
+    alias ptr
+
+    self() 
+    {
+        alloc_ptr()
+        ptr* = T()
+    } 
+
+    // the compiler will pick this constructor if the first argument passed is not equal T
+    self<A...>(args: &&A)
+    {
+        alloc_ptr()
+
+        ptr* = T(a)
+    }
+
+    // auto ref will also do a forward so if a move was done it will be moved all the way through
+    self(value: &&T)
+    {
+        alloc_ptr()
+
+        ptr* = value
+    }
+
+    fn alloc_ptr()
+    {
+        if ptr != nil 
+        {
+            drop()
+        }
+
+        ptr = allocator.alloc()
+    }
+
+    fn drop()
+    {
+        $if T is Drop 
+        {
+            ptr.drop()
+        }
+
+        allocator.free(ptr)
+        
+        ptr = nil
+    }
+
+    fn copy(): Self
+    {
+        import std.mem 
+
+        var new_self = Self {allocator: allocator}
+
+        new_self.ptr = new_self.allocator.alloc<T>()
+
+        memcpy(ptr, new_self.ptr, sizeof(T))
+
+        return new_self
+    }
+}
+
+@Test 
+{
+    struct Data : Drop
+    {
+        x: i32
+
+        fn drop()
+        {
+            x = -1
+        }
+    }
+
+    // the () syntax will either pick the default constructor or will zero init all fields 
+    // it is the best way to universally init any type
+    var ptr = Box<Data>()
+
+    // alias self working its magic
+    ptr.x = 10
+
+    // calls Data::drop
+    // if Data did not have drop then it would call Box::drop 
+    ptr.drop()
+
+    // calls Box drop
+    ptr.self.drop()
+
+    // directly create the object
+    var ptr2 = Box(Data(x: 10))
+
+    // only explicit copy allowed
+    var ptr_copy = ^ptr2
+
+    var data = Data()
+
+    // no copies will be made it will be forwarded all the way down to the assignment
+    var ptr3 = Box(@data)
+
+    // will be forwarded but will be copied once when assigned to the ptr
+    var ptr4 = Box(data)
+
+    var ptr5 = Box<Data>(10)
+}

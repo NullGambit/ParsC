@@ -1,0 +1,143 @@
+import std.io
+
+fn test_arrays()
+{
+    // type will be infered from first element
+    var x = [1, 2, 3]
+    // size infered
+    var y: int[] = [4, 5, 6]
+    // explicit size
+    var z: int[3] = [7, 8, 9]
+
+    // array programming
+    var result = x + y + z
+
+    println(result)
+
+    // ranged based loop
+    for n in result
+    {
+        println(n)
+    }
+
+    import std.containers
+
+    // can also do List<str> but will infer from new
+    var names = List("John")
+
+    names.add("henry")
+
+    // all containers are similair types forbid copying and must either clone or move explicitly or take a reference
+    var names_copy = names.copy()
+
+    // @ moves the object and will reset it to its initial state. length = 0 capacity = 0 and data = nil
+    // moved values are safe to use as long as their initial state is also safe to use
+    var names_moved = @names
+
+    // now refers to an empty names list
+    // when add is called again it will reallocate the memory
+    var names_ptr = &names
+
+    // will use an allocator that can support 256 hash table entries on the stack
+    var numbers = Map<string, int, StackA<256>>()
+}
+
+// any object can be iterable if it has a length field and implements op_index 
+// the compiler will then turn it into for var i in 0..list.length { var item = list[i] }
+// allocator will default to whatever is the scopes allocator at the time of creation unless specified otherwise
+struct CustomList<T, A = #allocator> : Drop, Copy
+{
+    // only methods can change this
+    @readonly
+    length: int
+    @readonly
+    capacity: int
+    allocator: A
+    private ptr: *T
+
+    // accepts any number of T parameters
+    Self(T... args)
+    {
+        ensure_size(args.length)
+
+        $for item in args 
+        {
+            add(item)
+        }
+    }
+
+    // called automatically when no longer in scope
+    fn drop()
+    {
+        if ptr != nil 
+        {
+            allocator.free(ptr)
+        }
+
+        length = 0
+        capacity = 0
+        ptr = nil
+    }
+
+    fn op_index(index: int) => ptr[index]
+
+    // will be called when slicing 
+    fn op_slice(start, end: int) => ptr[start:end]
+
+    fn copy(): Self
+    {
+        // $bit_copy is allowed even when copying is disabled
+        var newSelf = $bit_copy(self)
+
+        newSelf.ptr = newSelf.allocator.alloc(newSelf.capacity)
+
+        import std.mem
+
+        memcpy(ptr, newSelf.ptr)
+
+        return newSelf
+    }
+
+    fn ensure_size(length: int = 1)
+    {
+        // length will shadow self.length and self.length has to be used explicitly
+        if self.length + length >= capacity
+        {
+            capacity *= 2
+            allocator.realloc(ptr, capacity)
+        }
+    }
+
+    fn add(T item): *T
+    {
+        ensure_size()
+
+        var index = length++
+
+        ptr[index] = item
+
+        return &ptr[index]
+    }
+}
+
+fn custom_list_test()
+{
+    // will infer from first argument
+    // the rest can then be coerced into that type if possible
+    var list = CustomList(1, 2, 3)
+
+    // will do a deep copy of list
+    var list2 = list
+
+    // list2 will now be length 0 capacity 0 and ptr nil
+    // on next call to add it will reallocate and be back to a valid state
+    var list3 = @list2
+
+    list3.add(10)
+
+    // explicitly drop resource
+    list3.drop()
+
+    // default initializer works fine
+    var list4 = CustomList<int>{}
+}

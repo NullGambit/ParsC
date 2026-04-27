@@ -1,0 +1,17 @@
+import std.io 
+
+fn make_tuple(): (i32, str)
+{
+    return (10, "hello")
+}
+
+fn main()
+{
+    var x, s = make_tuple()
+
+    println($"{x} {s}")
+
+    var tuple = make_tuple()
+
+    println($"{tuple[0]} {tuple[1]}")
+}

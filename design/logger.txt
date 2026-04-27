@@ -1,0 +1,30 @@
+import std.io
+
+struct CustomLogger : Logger
+{
+    fn log(level: Level, message: str) => println($"{level} - {message}")
+}
+
+fn test_log()
+{
+    #log(.Info, "hello")
+}
+
+fn log_and_alloc()
+{
+    var ptr = #alloc_bytes(1)
+    defer #free(ptr)
+    #log(.Info, "allocated memory")
+}
+
+fn main()
+{
+    #logger = CustomLogger{}
+
+    test_log()
+
+    test_log() #use(DefaultLogger)
+
+    // can use multiple context objects. order does not matter
+    log_and_alloc() #use(DefaultLogger, DefaultAllocator)
+}

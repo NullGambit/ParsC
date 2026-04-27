@@ -1,0 +1,43 @@
+import std.io, std.mem
+
+CustomAllocator :: struct (Allocator)
+{
+    alloc :: fn<T>() -> *T
+    {
+        println($"Allocated 1 {T.nameof}")
+        return mem::alloc<T>()
+    }
+
+    alloc_bytes :: fn(size: int) -> byte[]
+    {
+        println($"Allocated {size} bytes")
+        return mem::alloc_bytes(size)
+    }
+
+    // every pointer can be coerced down to a void pointer so only one needed
+    free :: fn(ptr: *void)
+    {
+        println($"freed")
+        mem::free(ptr)
+    }
+}
+
+alloc_stuff :: fn()
+{
+    stuff := #alloc(10)
+
+    defer #free(stuff)
+
+    println("allocated stuff")
+}
+
+main :: fn()
+{
+    #allocator = CustomAllocator{}
+
+    // will use custom allocator here
+    alloc_stuff()
+
+    // will use the default allocator for only this function recursively 
+    alloc_stuff() #use(DefaultAllocator)
+}

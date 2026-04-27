@@ -1,0 +1,87 @@
+import std.io
+
+enum Payload
+{
+    A
+    B
+    Data(int x)
+
+    fn print_self()
+    {
+        if self == .A
+        {
+            println(self)
+        }
+    }
+}
+
+fn enum_test()
+{
+    var payload = Payload::A
+
+    payload = .B
+
+    payload = .Data(10)
+
+    var message = match payload
+    {
+        .A => "is a",
+        .B => "is b",
+        .Data(x) => $"data is {x}"
+    }
+
+    payload.print_self()
+}
+
+enum Animals
+{
+    Cat
+    Dog
+    Sheep
+}
+
+fn index_test()
+{
+    // only works if the enum does not contain any payload
+    var animal_names: str[Animals]
+
+    animal_names[.Cat] = "Jeff"
+    animal_names[.Dog] = "Woofert"
+    animal_names[.Sheep] = "baasel"
+}
+
+// must have no payload members
+// all enums have bitwise operations enabled if all values are numeric
+enum Flags
+{
+    // iota will essentially repeat the same pattern for the rest of the members
+    A = 1 << 0 iota
+    B
+    C
+    D
+}
+
+// the flag attribute essentially is a shorthand for the iota 
+@flag
+enum Flags2
+{
+    A
+    B
+    C
+    D
+}
+
+// changes the backing type of this enum to a byte
+enum BackingType (u8)
+{
+    A
+}
+
+fn flag_test()
+{
+    var f: Flags 
+
+    f |= .B | .C
+
+    println(f) // should format into Flags(B | C)
+}

@@ -1,0 +1,70 @@
+// often times its useful to Register types that have certain attributes or implement traits
+// such as components for a game object system or http handlers for a web server 
+// using the Register attribute any types that have this attribute used on them will Register its target 
+// inside a registry to be queried at runtime
+// this is a good solution as it keeps runtime bloat very low but gives very useful ergonomics 
+
+@Register
+struct Get 
+{
+    endpoint: s
+}
+
+// because the Get attribute has the Register attribute this function will be Registered in the global registry
+@get{"url"}
+fn my_handler(r: Request)
+{
+
+}
+
+struct MyHandler 
+{
+    @Get{"url"}
+    fn get(r: Request)
+    {
+
+    }
+}
+
+// now all structs that implement this trait are also Registered 
+// can specify to only Register in debug builds
+@Register(.DebugOnly)
+trait Component 
+{
+    fn update()
+}
+
+import std.registry
+
+fn main()
+{
+    var get_handlers = find_in_registry<Get>(.Method | .Function)
+
+    // in real world you would index these
+    for handler in get_handlers 
+    {
+        if handler.type == .Method 
+        {
+            // creates on the stack 
+            var handler_struct = create_from_Register(handler)
+
+            // can do compile time inspection and pass basically anything desired to the method
+            handler.call_method(handler_struct, {})
+        }
+        else 
+        {
+            handler.call({})
+        }
+    }
+
+    var components = find_in_registry<Get>(.Struct)
+
+    for component in components 
+    {
+        // generic parameter needed to call update method 
+        var component_struct = create_from_Register<Component>(component)
+
+        component_struct.update()
+    }
+
+}

@@ -1,0 +1,11 @@
+
+fn println(s: str)
+{
+    // will compile down to llvm inline assembly 
+    // the parameters will automatically be put in the correct registers 
+    $if PLATFORM == .Linux 
+    {
+        // this is compile time because each invocation is expanded to its corresponding inline assembly 
+        $syscall(1, s.ptr, s.length)
+    }
+}

@@ -1,0 +1,17 @@
+import std.io 
+
+// any function marked as async will be scheduled to run on a thread pool 
+// the async execution should be able to be overriden but the language should provide a good one out of the box
+async fn async_test(): Task<int>
+{
+    await Task.Wait(100)
+
+    return 10
+}
+
+async fn main()
+{
+    var n = await async_test()
+
+    println(n)
+}

@@ -1,0 +1,33 @@
+import std.io
+
+Data :: struct 
+{
+    x: f32 
+    y: f32 
+
+    get_x :: fn() -> inout &i32 
+    {
+        return x
+    }
+}
+
+main :: fn()
+{
+    PI :: 3.14
+
+    const_data :: Data(x: PI, y: 1.9f32)
+
+    // will return a const reference 
+    x1 :: const_data.get_x()
+
+    // compiler error
+    x1 = PI
+
+    data := Data(x: 32.10f32)
+    
+    // will return a normal reference 
+    x2 := data.get_x()
+
+    // ok
+    x2 = PI
+}

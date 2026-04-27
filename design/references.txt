@@ -1,0 +1,31 @@
+import std.io, std.collections 
+
+fn take_expensive(s: &String) => println(s)
+fn take_copy(s: String) => println(s)
+
+// this is an auto ref will either take a reference or a copy depending on if its an r or l value
+fn take_ar(n: &&int) => println(s)
+
+// this is essentially how the declaration of println works
+fn take_many<A...>(a: const &&A) => println(a)
+
+fn main()
+{
+    var s = String("hello")
+
+    // taken as a reference 
+    take_expensive(s)
+
+    // copies s 
+    take_copy(s)
+
+    var n = 10
+
+    // here n is taken as a reference 
+    take_ar(n)
+    // takes a copy of the literal
+    take_ar(10)
+
+    // 10 is taken as a const copy and s is taken as a const ref
+    take_many(10, s)
+}

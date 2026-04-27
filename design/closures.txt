@@ -1,0 +1,37 @@
+import std.io 
+
+// can pass any object that has a call operator overloaded
+// or a function 
+// a closure compiles down to a functor so its just the first case
+fn take_fn<Fn: Callable>(f: Fn) => f()
+
+fn main()
+{
+    var adder = x => x + 1
+
+    var value = adder(10)
+
+    println(value)
+
+    var local_value = 10 
+
+    // in this case does a copy of local_value 
+    var add_local = x => x + local_value 
+
+    // capture by reference 
+    // can be unsafe but thats the programmers job
+    var mutate_local = [&local_value] x =>
+    {
+        local_value += x
+    }
+
+    take_fn(add_local)
+    take_fn(mutate_local)
+
+    fn my_fn()
+    {
+        println("hello")
+    }
+
+    take_fn(my_fn)
+}

@@ -1,0 +1,48 @@
+struct Data 
+{
+    x: int 
+    y: int 
+}
+
+// if copy is implemented than it will be called automatically when a copy is desired
+// @DisableCopy can also be used instead to disable copying
+struct Data2 : Copy 
+{
+    s: str 
+
+    fn copy() => Self{"new data"} 
+}
+
+// the compiler will now call numbers copy function when copying Data3
+struct Data3 
+{
+    // will call lists expensive copy function automatically when copying
+    numbers: List<int>
+    // will do a cheap copy
+    x: int
+}
+
+fn main()
+{
+    var a = Data {10, 20}
+    // all fields of b will be set to all fields of a and all fields of a will be set to their init value
+    var b = @a
+
+    // will copy all the bits into c
+    var c = b
+
+    var data2 = Data2{"original data"}
+    // calls its copy function because it implements copy
+    var data2_copy = data2
+
+    var data3 = Data3{List(1, 2, 3), 10}
+
+    // cannot be copied explicitly because List implements drop and must use the copy operator 
+    // this will do a recursive copy that will either use the copy method or just a simple bit by bit copy
+    var data3_copy = ^data3
+
+    // both of these are always allowed
+    // ref keyword is just a shorthand for writing var data_ref: &Data3 = data3
+    ref var data_ref = data3 
+    var data_ptr = &data3
+}

@@ -1,0 +1,164 @@
+struct Entity
+{
+    id: int
+}
+
+struct MyStruct
+{
+    // now all fields and methods of Entity will also be a part of my struct.
+    mixin Entity
+
+    // all fields must come first
+    // fields and methods cannot be mixed
+    x: int
+    y: float
+    s: str
+
+    // structs can be nested
+    struct Nested { state: bool }
+}
+
+impl MyStruct 
+{
+    // compiler will now call this when doing ~my_struct
+    fn op_stringify(s) => $"{s.x} {s.y} {s.s}"
+}
+
+fn print_struct<T>(auto_ref value: T)
+{
+    for field in $fields(value)
+    {
+        // a field type is basically a struct that aliases its field so it is that field and also a field type
+        // so if you do field = 10 the original value will be modified
+        println($"{field.name}: {field.type} = {field}")
+    }
+}
+
+// constraint forces only real types
+struct Vector<T, N: int> if T: Real
+{
+    // anonymous structs and unions will become a part of its higher scope
+    union
+    {
+        struct
+        {
+            $if N >= 1 x: T
+            $if N >= 2 y: T
+            $if N >= 3 z: T
+            $if N >= 4 w: T
+        }
+        T[N] raw
+    }
+
+    // the compiler will figure this out through duck typing
+    fn op_binary<Op: str>(rhs: Self) if Op == "+" or Op == "-" => mixin ($"raw {op} rhs")
+}
+
+alias Vec3 = Vector<float, 3>
+
+fn dot<T>(T lhs, T rhs): float if $compiles(rhs.raw)
+{
+    var result: float
+
+    $for i in 0..rhs.raw.length
+    {
+        result += rhs.raw[i] * lhs.raw[i]
+    }
+
+    return result
+}
+
+trait Shape
+{
+    fn get_area(): float
+}
+
+struct Square : Shape
+{
+    width: float
+    height: float
+
+    // return type is inferred
+    fn get_area() => width * height
+}
+
+// the compiler will use duck typing instead where possible.
+// when calling print shape because this has a matching function signature it will also consider this to be ok
+// traits have the advantage of working at runtime as well as compile time
+struct FakeShape
+{
+    fn get_area() => 0.0f
+}
+
+// type can always be infered in single line functions
+fn make_shape() => Shape {width: 1024, height: 1920}
+
+fn print_area(shape: Shape) => println(shape.get_area())
+
+fn test_shape()
+{
+    var shape = make_shape()
+
+    print_shape(shape)
+}
+
+fn test_dyn()
+{
+    var shape: *Shape
+
+    shape = #alloc(Square{width: 1024, height: 1920})
+
+    defer #free(shape)
+
+    var fake_shape: *Shape
+
+    // this is a compiler error. it does not have the trait so it only works for compile time duck typing
+    fake_shape = #alloc<FakeShape>()
+}
+
+struct ConstructorTest : Drop
+{
+    x: int
+    y: float
+
+    // y will just default initialize
+    static fn new(x: int) => Self {x}
+
+    fn drop() => x = -1
+}
+
+fn test_constructor()
+{
+    var t = ConstructorTest::new(10)
+}
+
+// a record struct for pod data
+struct Data{x: int, float: y}
+
+// an empty struct that is a type tag
+struct Tag
+
+// traits can have default implementations
+trait DefaultTraitTest
+{
+    alias MyType = int
+    const PI = 3.14
+
+    fn say_hello() => println("not implemented")
+}
+
+struct TypeWrapper<T>
+{
+    T value
+
+    alias value
+}
+
+fn test_wrapper()
+{
+    var wrapper = TypeWrapper<int>{100}
+
+    wrapper++
+
+    println(wrapper) // should print 101
+}

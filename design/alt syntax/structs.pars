@@ -1,0 +1,86 @@
+
+// a struct can be just a tag 
+// very useful for attributes
+Export :: struct
+
+Vec3 :: i32[3]
+
+Data :: struct 
+{
+    @Export
+    x: i32 
+    s: str 
+    n: Vec3
+
+    // will infer return type as i32
+    do_math :: fn() => x * x
+
+    greet => fn() println($"hello {n}")
+}
+
+Shape :: trait 
+{
+    get_area :: fn() -> f32
+}
+
+Square :: struct (Shape)
+{
+    width: f32 
+    height: f32 
+
+    get_area :: fn() => width * height
+}
+
+// will also work because it will use duck typing here
+FakeShape :: struct 
+{
+    fn get_area() => 0.0f32
+}
+
+print_shape_area :: fn<T: Shape>(shape: T) -> f32
+{
+    area := shape.get_area()
+
+    println(area)
+
+    return area
+}
+
+GenericStruct :: struct<T> 
+{
+    value: T
+}
+
+Constructor :: struct 
+{
+    x: i32 
+    y: i32
+    // z will be 0 when constructor is called
+    z: i32
+
+    self(value: i32) 
+    {
+        x = value 
+        y = -value
+    }
+
+    self(x: i32, y: i32) 
+    {
+        self.x = x
+        self.y = y
+    }
+
+    self()
+    {
+        z = 100
+    }
+}
+
+@Test 
+{
+    // value is x = 10 y = -10
+    cons1 := Constructor(10)
+    // value is x = 0 y = 0 z = 100
+    cons2 := Constructor()
+    cons3 := Constructor(10, 20)
+}

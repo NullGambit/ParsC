@@ -1,0 +1,115 @@
+import std.io 
+
+CustomError :: struct (Error)
+{
+    message: string
+    conditionUsed: bool
+
+    what :: fn() => self.message
+}
+
+// enums that implement error can also implement what but what is always optional
+// can also implement a bunch of empty structs that implement Error but this is essentially a nice abstraction over doing that
+MyErrors : enum (Error)
+{
+    A
+    B
+    C
+    Payload(i32)
+}
+
+enum_error_test :: fn(condition: bool) -> i32?
+{
+    if !condition
+    {
+        return MyErrors::A
+    }
+
+    return 10
+}
+
+catch_enum_error_test :: fn()
+{
+    result := enum_error_test(false)
+
+    // only will trigger if result has an error and is of type MyErrors
+    match result: MyErrors
+    {
+        .A => println("error is A oh no")
+    }
+
+    // can match any group of errors
+    match result
+    {
+        MyErrors::A => println("error is A oh no"),
+        SomeOtherErrors::B => println("its a different error")
+    }
+}
+
+// can either return an int or any error
+error_test :: fn(condition: bool) -> i32?
+{
+    // if has error will propogate error
+    result := do_stuff()?
+
+    if !condition
+    {
+        return CustomError("condition is false", condition)
+    }
+
+    return 10
+}
+
+error_test2 :: fn()
+{
+    result := error_test()
+
+    if try result
+    {
+        // result is only an int here
+        println(result)
+    }
+
+    if catch result
+    {
+        // result is only en error here
+        println(result.what())
+    }
+
+    // will only be caught if the error is a custom error and will be that type in that scope
+    if catch result: CustomError
+    {
+        println(result.condition)
+    }
+
+    // result will from here on be only an int
+    println(result)
+
+    // if has error than use default value
+    whatever_value := result ?? 20
+}
+
+// adding ? to a type essentially just turns it into T | error so an error type can be specified directly
+// the default Error struct can be used if you just want to return some error message
+generic_error_test :: fn() -> error
+{
+    return Error("something went wrong")
+}
+
+optional_error :: fn(condition: bool) -> int? 
+{
+    if condition 
+    {
+        return 10
+    }
+
+    // None is an error that represents no value returned something went wrong
+    return None()
+}
+
+test_optional :: fn () -> error 
+{
+    opt := optional_error()?
+
+    println(opt) // opt is now an int here
+}

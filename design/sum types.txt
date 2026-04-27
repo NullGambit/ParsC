@@ -1,0 +1,33 @@
+alias JsonValue = int | float | string | bool
+
+fn test_unions(value: JsonValue)
+{
+    match value
+    {
+        int => println("value is an int"),
+        _ => println("has some other value")
+    }
+
+    if value as string
+    {
+        // value will only be a string here
+        println(value)
+    }
+
+    if value is bool
+    {
+        // value will still be a union but now we know for sure its a bool
+        println(value)
+    }
+}
+
+// a union unlike a sum type is identical to a C union except it can have methods like a regular 
+// struct and each member can be named 
+// useful sometimes
+union JsonUnion 
+{
+    i: int
+    f: float 
+    s: str 
+    b: bool 
+}

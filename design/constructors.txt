@@ -1,0 +1,98 @@
+// constructors are still in great debate but this is one way i could do it if at all
+
+struct Test
+{
+    x: int
+
+    self(x: int)
+    {
+        self.x = x
+    }
+}
+
+struct Data : Drop
+{
+    y: int 
+
+    self(y: int)
+    {
+        self.y = y
+    }
+
+    // a struct can have at most two constructors 
+    // one with an empty param is the default constructor
+    self()
+    {
+        y = 100
+    }
+
+    // destructor use a trait instead of ~self because its much more intuitive and easier to
+    // just call data.drop() than data.~self() 
+    // and needing to destroy stuff manually is somewhat important sometimes
+    fn drop()
+    {
+        y = -1
+    }
+}
+
+struct ErrorCons 
+{
+    x: int
+
+    // a self method can return an error at any point but never needs to return itself explicitly 
+    self(x: int): self?
+    {
+        if x < 0 
+        {
+            return Error("Invalid value")
+        }
+    }
+}
+
+fn test_error_cons(): error
+{
+    // type of error_cons is always ErrorCons? when calling this constructor 
+    var error_cons = ErrorCons(-5)?
+}
+
+struct OtherData 
+{
+    data: Data 
+}
+
+struct AutomaticConstruction 
+{
+    x: int 
+}
+
+// because 10 can directly be assigned to the struct 
+// it can just be directly used without needing to construct the struct 
+// also works if there is a valid constructor that can be used as well 
+// very useful to reduce noise and makes code more readable 
+fn test_automatic_construction(): AutomaticConstruction
+{
+    return 10
+}
+
+fn main()
+{
+    // calls constructor directly
+    var t1 = Test(10)
+    // set struct members directly
+    var t2 = Test{x: 10}
+    // constructor not called all values are their initial state
+    var t3 = Test{}
+
+    // this is now has the type of Type and contains runtime and compile time type info
+    // so either brace or brackets must be used 
+    var ttype = Test
+
+    // goes back to default state
+    t1 = default
+
+    var data = Data()
+
+    // because OtherData has Data as a field and it has a default constructor 
+    // even using the brace initialization will call its default constructor 
+    var other_data = OtherData {}
+}

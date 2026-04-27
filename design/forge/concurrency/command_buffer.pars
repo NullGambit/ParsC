@@ -1,0 +1,104 @@
+import std.function 
+import std.mutex
+
+struct CommandBuffer<A...>
+{
+    alias Command = Function<void, A>
+    alias Buffer = List<Command>
+
+    private 
+    {
+        m_buffer_a: Buffer
+        m_buffer_b: Buffer
+        m_mutex: Mutex 
+        m_buffer_is_a: bool
+
+        fn add_to_buffer(cmd: &&Command) 
+        {
+            var buffer = get_active_buffer()
+
+            buffer.push(cmd)
+        }
+
+        fn get_active_buffer() => if m_buffer_is_a do m_buffer_a else m_buffer_b
+    }
+
+    fn add(cmd: &&Command) => exec_locked(() => add_to_buffer(cmd))
+
+    fn execute(args: &&A)
+    {
+        var buffer = exec_locked(() => 
+        {
+            var buffer = get_active_buffer()
+
+            m_buffer_is_a = !m_buffer_is_a
+
+            return buffer
+        })
+
+        for cmd in buffer 
+        {
+            cmd(args)
+        }
+
+        buffer.clear()
+    }
+}
+
+@Test 
+{
+    import std.io 
+
+    var commands = CommandBuffer()
+
+    commands.add(() => println("hello"))
+
+    commands.execute()
+}
+
+// alternative syntax 
+
+// opaque makes all elements private
+opaque CommandBuffer 
+{
+    alias Command = Function<void, A>
+    alias Buffer = List<Command>
+   
+    buffer_a: Buffer
+    buffer_b: Buffer
+    mutex: Mutex 
+    buffer_is_a: bool
+}
+
+impl CommandBuffer 
+{
+    fn add_to_buffer(s, cmd: &&Command) 
+    {
+        var buffer = s.get_active_buffer()
+
+        buffer.push(cmd)
+    }
+
+    fn get_active_buffer(s) => if s.buffer_is_a do s.buffer_a else s.buffer_b
+
+    fn add(s, cmd: &&Command) => exec_locked(() => s.add_to_buffer(cmd))
+
+    fn execute(s, args: &&A)
+    {
+        var buffer = exec_locked(() => 
+        {
+            var buffer = s.get_active_buffer()
+
+            s.buffer_is_a = !s.buffer_is_a
+
+            return buffer
+        })
+
+        for cmd in buffer 
+        {
+            cmd(args)
+        }
+
+        buffer.clear()
+    }
+}

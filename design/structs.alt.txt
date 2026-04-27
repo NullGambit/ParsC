@@ -1,0 +1,70 @@
+import std.io 
+import std.conv
+
+// this design of structs is a lot closer to rust 
+
+struct Data
+{
+    x: int
+    y: float
+    s: str
+}
+
+impl Data 
+{
+    fn new(value: int) => Self {x: value, y: -value}
+    // unlike rust self is always a reference. it may be const
+    fn do_math(self) => self.x + self.y 
+}
+
+// possibly an alternative syntax 
+impl Data 
+{
+    static fn new(value: int) => Self {x: value, y: -value}
+    fn do_math() => x + y 
+}
+
+// the current syntax and semantics of structs
+struct Data 
+{
+    x: int
+    y: float
+    s: str
+
+    Self(value: int) 
+    {
+        x = value
+        y = -value
+    }
+    
+    fn do_math() => x + y 
+}
+
+
+trait Shape 
+{
+    fn get_area(self): float 
+}
+
+struct Square: Shape
+{
+    width: float,
+    height: float,
+}
+
+// unlike rust all implementations are in the same place
+impl Square
+{
+    fn get_area(self) => self.width * self.area
+
+    fn inverse_width(self) => -self.width
+}
+
+fn main()
+{
+    var data = Data::new(10)
+
+    var result = data.do_math()
+
+    println(result)
+}

@@ -1,0 +1,42 @@
+
+// anything can be turned into a string using the stringify operator
+
+
+struct Data
+{
+    a: i32
+    b: f32
+    s: str 
+}
+
+enum MyEnum 
+{
+    A
+    B
+    C(i32)
+}
+
+fn my_func() => 5
+
+fn main()
+{
+    var data = Data(10, 3.14, "hello")
+
+    // will either call to_string for the struct 
+    // or will lazily generate a to_string method the first time a stringify operation is demanded
+    var s1 = ~data
+
+    // will equal 10
+    var s2 = ~data.a
+
+    var e = MyEnum::C(10)
+
+    // will equal MyEnum::C(10)
+    var s3 = ~e
+
+    // will equal Data
+    var s4 = ~Data
+
+    // will equal fn my_func(): i32
+    var s5 = ~my_func
+}

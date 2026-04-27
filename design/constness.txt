@@ -1,0 +1,21 @@
+
+struct ConstData
+{
+    x: int 
+
+    // if self is const than will return a const reference
+    fn get_x(): inout &int => x 
+}
+
+fn test_const()
+{
+    // const is a short hand for writing var data: const ConstData
+    const data = ConstData{10}
+
+    // x here is now type of x: const &int
+    var x = data.get_x()
+
+    // this is essentially what a string is
+    // constness is applied to the element not the array itself
+    var chars: const(char)[] = ['a', 'b', 'c']
+}

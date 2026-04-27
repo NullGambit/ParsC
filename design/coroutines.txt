@@ -1,0 +1,39 @@
+
+fn get_ints(start: int): int 
+{
+    var value = start 
+
+    yield value 
+
+    value++
+
+    yield value
+}
+
+// any custom struct that implements yield can be used when yielding 
+// useful for use cases such as unitys coroutines
+// where you can have an engine function call 
+// run_coroutine and every frame the engine will decide which coroutines to call again 
+struct WaitFor : Yield 
+{
+    duration: Duration 
+
+    fn yield()
+    {
+
+    }
+}
+
+fn custom_yield(): int 
+{
+    yield WaitFor{5s}
+    return 10
+}
+
+fn main()
+{
+    var coroutine = get_ints(10)
+
+    var a = coroutine.call()
+    var b = coroutine.call()
+}

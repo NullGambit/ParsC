@@ -1,0 +1,33 @@
+
+
+struct Vector<T, N: i32> if T is Real
+{
+    union
+    {
+        struct
+        {
+            $if N >= 1 x: T
+            $if N >= 2 y: T
+            $if N >= 3 z: T
+            $if N >= 4 w: T
+        }
+        T[N] raw
+    }
+
+    fn op_binary<Op: str>(rhs: Self) if Op == "+" or Op == "-" => mixin ($"raw {op} rhs")
+}
+
+alias Vec3 = Vector<f32, 3>
+alias IVec2 = Vector<i32< 3>
+
+fn dot<T>(T lhs, T rhs): typeof(rhs.x) if $compiles(rhs.raw)
+{
+    var result: rtype
+
+    $for i in 0..rhs.raw.length
+    {
+        result += rhs.raw[i] * lhs.raw[i]
+    }
+
+    return result
+}
