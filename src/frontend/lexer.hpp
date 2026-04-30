@@ -35,8 +35,6 @@ namespace pars
         bool has_next() const;
 
     private:
-        u32 m_offset;
-        u32 m_current;
         SourceFile m_src;
         TextReader m_reader;
         std::optional<Token> m_current_token;

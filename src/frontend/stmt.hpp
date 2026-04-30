@@ -1,16 +1,12 @@
 #pragma once
 #include <string_view>
-#include <variant>
 #include <vector>
+
+#include "node.hpp"
 
 namespace pars
 {
-	struct ImportStmt
-	{
-		std::vector<std::string_view> path;
-		std::string_view alias;
-		std::vector<std::string_view> selective_imports;
-	};
+	struct Expr;
 
 	struct TypedSymbol
 	{
@@ -24,27 +20,29 @@ namespace pars
 		std::string_view return_type;
 	};
 
-	struct FnStmt
+	struct Stmt : Node
+	{
+
+	};
+
+	struct ImportStmt : Stmt
+	{
+		std::vector<std::string_view> path;
+		std::string_view alias;
+		std::vector<std::string_view> selective_imports;
+	};
+
+	struct FnStmt : Stmt
 	{
 		FnPrototype prototype;
 		std::string_view symbol;
-		std::vector<size_t> statements;
+		std::vector<Node*> body;
 	};
 
-	struct VarDeclStmt
+	struct VarStmt : Stmt
 	{
 		std::string_view symbol;
 		std::string_view type;
-		size_t initializer;
+		Expr* initializer;
 	};
-
-	using Statement = std::variant
-	<
-		VarDeclStmt,
-		FnStmt,
-		ImportStmt
-	>;
-
-	size_t new_stmt(Statement &&statement);
-	Statement& get_stmt(size_t id);
 }

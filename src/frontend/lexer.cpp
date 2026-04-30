@@ -54,8 +54,6 @@ pars::Lexer::Lexer(SourceFile source)
 
 void pars::Lexer::set_source(SourceFile source)
 {
-    m_offset = 0;
-    m_current = 0;
     m_reader.set_source(source.contents);
 }
 
@@ -212,7 +210,7 @@ pars::Token pars::Lexer::build_token(TokenType type, std::string_view lexeme_ove
     {
         .location =
         {
-            .offset = m_offset,
+            .offset = m_reader.get_offset(),
             .line = m_reader.get_current_line(),
             .file_id = m_src.id,
             .column = m_reader.get_current_column(),

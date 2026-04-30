@@ -18,18 +18,17 @@ namespace pars
 	{
 	public:
 
-		const std::vector<size_t>& parse(SourceFile source);
+		const std::vector<Node*>& parse(SourceFile source);
 
 	private:
 		Lexer m_lexer;
-		std::vector<size_t> m_stmts;
-		std::vector<Expression> m_exprs;
+		std::vector<Node*> m_nodes;
 
-		size_t decleration();
-		size_t parse_import();
-		size_t parse_fn();
-		size_t parse_var();
+		Node* decleration();
+		Stmt* parse_import();
+		Stmt* parse_fn();
+		Stmt* parse_var();
 		FnPrototype parse_fn_prototype();
-		size_t expression();
+		Expr* expression();
 	};
 }

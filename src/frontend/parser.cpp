@@ -4,19 +4,19 @@
 
 using enum pars::TokenType;
 
-const std::vector<size_t> & pars::Parser::parse(SourceFile source)
+const std::vector<pars::Node*> & pars::Parser::parse(SourceFile source)
 {
 	m_lexer.set_source(source);
 
 	while (m_lexer.has_next())
 	{
-		m_stmts.emplace_back(decleration());
+		m_nodes.emplace_back(decleration());
 	}
 
-	return m_stmts;
+	return m_nodes;
 }
 
-size_t pars::Parser::decleration()
+pars::Node* pars::Parser::decleration()
 {
 	if (m_lexer.match(Import))
 	{
@@ -34,18 +34,18 @@ size_t pars::Parser::decleration()
 	return expression();
 }
 
-size_t pars::Parser::parse_import()
+pars::Stmt* pars::Parser::parse_import()
 {
-	ImportStmt stmt;
+	auto stmt = new_node<ImportStmt>();
 
 	if (m_lexer.match_next(Equal))
 	{
-		stmt.alias = m_lexer.peak_last().lexeme;
+		stmt->alias = m_lexer.peak_last().lexeme;
 	}
 
 	while (m_lexer.peak(Identifier))
 	{
-		stmt.path.push_back(m_lexer.advance().lexeme);
+		stmt->path.push_back(m_lexer.advance().lexeme);
 
 		if (!m_lexer.match(Dot))
 		{
@@ -53,16 +53,16 @@ size_t pars::Parser::parse_import()
 		}
 	}
 
-	return new_stmt(std::move(stmt));
+	return stmt;
 }
 
-size_t pars::Parser::parse_fn()
+pars::Stmt* pars::Parser::parse_fn()
 {
-	FnStmt stmt;
+	auto stmt = new_node<FnStmt>();
 
-	stmt.symbol = m_lexer.expect(Identifier).lexeme;
+	stmt->symbol = m_lexer.expect(Identifier).lexeme;
 
-	stmt.prototype = parse_fn_prototype();
+	stmt->prototype = parse_fn_prototype();
 
 	// if (m_lexer.match(Arrow))
 	// {
@@ -73,30 +73,32 @@ size_t pars::Parser::parse_fn()
 
 	while (!m_lexer.peak(RightBrace))
 	{
-		stmt.statements.emplace_back(decleration());
+		stmt->body.emplace_back(decleration());
 	}
 
 	m_lexer.expect(RightBrace);
+
+	return stmt;
 }
 
-size_t pars::Parser::parse_var()
+pars::Stmt* pars::Parser::parse_var()
 {
-	VarDeclStmt stmt;
+	auto stmt = new_node<VarStmt>();
 
-	stmt.symbol = m_lexer.expect(Identifier).lexeme;
+	stmt->symbol = m_lexer.expect(Identifier).lexeme;
 
 	auto was_typed = false;
 	auto initialized = false;
 
 	if (m_lexer.match(Colon))
 	{
-		stmt.type = m_lexer.expect(Identifier).lexeme;
+		stmt->type = m_lexer.expect(Identifier).lexeme;
 		was_typed = true;
 	}
 
 	if (m_lexer.match(Equal))
 	{
-		stmt.initializer = expression();
+		stmt->initializer = expression();
 		initialized = true;
 	}
 
@@ -105,7 +107,7 @@ size_t pars::Parser::parse_var()
 		throw Token{.type = Error, .lexeme = "Cannot infer type"};
 	}
 
-	return new_stmt(stmt);
+	return stmt;
 }
 
 pars::FnPrototype pars::Parser::parse_fn_prototype()
@@ -137,7 +139,7 @@ pars::FnPrototype pars::Parser::parse_fn_prototype()
 	return prototype;
 }
 
-size_t pars::Parser::expression()
+pars::Expr* pars::Parser::expression()
 {
 	return {};
 }

@@ -8,20 +8,10 @@
 #include "frontend/parser.hpp"
 #include "frontend/token.hpp"
 #include "util/fmt.hpp"
-#include "util/io.hpp"
 
 int main()
 {
-    // auto source = pars::read_file("./tests/tokens.pars");
-    //
-    // if (!source.has_value())
-    // {
-    //     fmt::panic("could not read source file");
-    // }
-    //
-    // pars::print_tokens(source.value());
-
-    auto source = pars::load_file("./tests/tokens.pars");
+    auto source = pars::load_file("./tests/parsing.pars");
 
     if (!source.has_value())
     {
@@ -30,35 +20,15 @@ int main()
 
 	pars::print_tokens(source.value());
 
-	// auto parser = pars::Parser();
-	//
-	// auto statements = parser.parse(source.value());
-	//
-	// for (auto &stmt_id : statements)
-	// {
-	// 	auto &stmt = pars::get_stmt(stmt_id);
-	//
-	// 	std::visit(ccc::overload
-	// 	{
-	// 		[](pars::ImportStmt &stmt)
-	// 		{
-	// 			for (auto path : stmt.path)
-	// 			{
-	// 				fmt::println(path);
-	// 			}
-	// 		},
-	// 		[](pars::TypedSymbol &stmt)
-	// 		{
-	//
-	// 		},
-	// 		[](pars::FnStmt &stmt)
-	// 		{
-	//
-	// 		},
-	// 		[](pars::VarDeclStmt &stmt)
-	// 		{
-	//
-	// 		}
-	// 	}, stmt);
-	// }
+	auto stmt = pars::new_node<pars::VarStmt>();
+
+	stmt->symbol = "hello";
+
+	fmt::println("{}", stmt->symbol.size());
+
+	auto parser = pars::Parser();
+
+	auto statements = parser.parse(source.value());
+
+	pars::free_memory_blocks();
 }

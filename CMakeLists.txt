@@ -34,6 +34,14 @@ add_executable(ParsC src/main.cpp
         src/frontend/stmt.cpp
         src/frontend/location.hpp
         src/frontend/file_manager.cpp
-        src/frontend/file_manager.hpp)
+        src/frontend/file_manager.hpp
+        src/frontend/node.cpp
+        src/frontend/node.hpp
+        src/frontend/type.hpp
+        src/memory/virtual_alloc.hpp
+        src/memory/linux/linux_virtual_alloc.cpp
+        src/memory/linux/linux_virtual_alloc.hpp
+        src/frontend/visitor.hpp
+        src/frontend/type.cpp)
 
 target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.hpp)
