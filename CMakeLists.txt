@@ -25,6 +25,15 @@ add_executable(ParsC src/main.cpp
         src/frontend/lexer.cpp
         src/frontend/lexer.hpp
         src/debug/token_printer.cpp
-        src/debug/token_printer.hpp)
+        src/debug/token_printer.hpp
+        src/overload.hpp
+        src/frontend/parser.cpp
+        src/frontend/parser.hpp
+        src/frontend/stmt.hpp
+        src/frontend/expr.hpp
+        src/frontend/stmt.cpp
+        src/frontend/location.hpp
+        src/frontend/file_manager.cpp
+        src/frontend/file_manager.hpp)
 
 target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.hpp)

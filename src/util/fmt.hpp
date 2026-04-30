@@ -130,7 +130,7 @@ namespace fmt
     }
 
     template<typename... A>
-    inline void fatal(std::string_view fmt, A&&... a)
+    inline void panic(std::string_view fmt, A&&... a)
     {
         std::printf(format(fmt, std::forward<A>(a)...).data());
         std::exit(-1);

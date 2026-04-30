@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "frontend/file_manager.hpp"
 #include "frontend/lexer.hpp"
 #include "frontend/token.hpp"
 #include "magic_enum/magic_enum.hpp"
@@ -33,7 +34,7 @@ int longest_token_component(std::vector<pars::Token> &stream, Fn fn)
 	return longest;
 }
 
-void pars::print_tokens(std::string_view source)
+void pars::print_tokens(SourceFile source)
 {
 	auto lexer = Lexer(source);
 
@@ -63,6 +64,8 @@ void pars::print_tokens(std::string_view source)
 	const std::string_view TYPE_COLUMN = "Type";
 	const std::string_view LOCATION_COLUMN = "Location";
 	const std::string_view LEXEME_COLUMN = "Lexeme";
+
+	fmt::println("{}", source.path);
 
 	fmt::print("| ");
 
@@ -98,7 +101,7 @@ void pars::print_tokens(std::string_view source)
 
 		fmt::print(" | ");
 
-		auto location = fmt::format("{}:{}", token.line, token.column);
+		auto location = fmt::format("{}:{}", token.location.line, token.location.column);
 
 		fmt::print(location);
 
@@ -114,4 +117,6 @@ void pars::print_tokens(std::string_view source)
 	}
 
 	print_padding(border_size, '-');
+
+	fmt::println("");
 }

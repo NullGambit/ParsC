@@ -2,6 +2,8 @@
 
 #include <string_view>
 
+#include "location.hpp"
+
 namespace pars
 {
     enum class TokenType : u8
@@ -95,18 +97,12 @@ namespace pars
         Eof
     };
 
-    // Type   | Location | Lexeme
-    // Struct | 10:1     | struct
     struct Token
     {
-        u32 line {};
-        // u16 should be enough since when would a source file have a line so big it cant fit in a u16
-        u16 column {};
-        TokenType type {};
+        Location location;
+        TokenType type;
         std::string_view lexeme;
     };
-
-    std::string to_string(Token token);
 
     bool is_binary_op(TokenType type);
 }

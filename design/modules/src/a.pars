@@ -1,0 +1,42 @@
+// because the name of this project is my_lib all packages use the my_lib module name
+import my_lib.b.c 
+// will all modules from b
+import my_lib.b 
+
+fn a_func()
+{
+    c_func()
+    b_func()
+}
+
+fn other_func()
+{
+    // local imports are supported
+    import my_lib.d 
+
+    d_func()
+}
+
+fn aliasing_imports()
+{
+    // now all members of my_lib.d have to be accessed with dlib
+    import dlib = my_lib.d 
+
+    dlib.d_func()
+}
+
+fn aliasing_imports2()
+{
+    // will only get symbol d_func
+    import my_lib.d : d_func
+
+    d_func()
+}
+
+fn aliasing_imports3()
+{
+    // will only get symbol d_func as aliased as symbol d
+    import my_lib.d : d = d_func
+
+    d()
+}

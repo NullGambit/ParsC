@@ -1,21 +1,19 @@
 #include "io.hpp"
 
-std::optional<std::string> pars::read_file(const std::filesystem::path &path)
+bool pars::read_file(const std::filesystem::path &path, std::string &buffer)
 {
     auto *file = fopen(path.c_str(), "r");
 
     if (file == nullptr)
     {
-        return std::nullopt;
+        return false;
     }
 
     auto size = std::filesystem::file_size(path);
 
-    std::string buffer;
-
-    buffer.resize(size);
+    buffer.resize(buffer.size() + size);
 
     fread(buffer.data(), 1, size, file);
 
-    return buffer;
+    return true;
 }

@@ -1,0 +1,14 @@
+// alternative bespoke data format 
+name: "my_lib"
+version: 0.0.1
+dependencies: 
+[
+    {
+        path: "../path/to/lib"
+    }
+    {
+        git: "some/git/url.git"
+    }
+]
+import_paths: ["path/to/import"]
+compiler: "parsc"

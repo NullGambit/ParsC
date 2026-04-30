@@ -2,5 +2,6 @@ import std.io
 
 fn main()
 {
-    println("hello world")
+    var x = 10 + 5
+    println($"hello world {x}")
 }

@@ -11,5 +11,5 @@ namespace std::filesystem::__cxx11
 
 namespace pars
 {
-    std::optional<std::string> read_file(const std::filesystem::path &path);
+    bool read_file(const std::filesystem::path &path, std::string &buffer);
 }

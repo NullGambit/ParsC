@@ -3,5 +3,7 @@
 
 namespace pars
 {
-	void print_tokens(std::string_view source);
+	struct SourceFile;
+
+	void print_tokens(SourceFile source);
 }

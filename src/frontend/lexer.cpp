@@ -47,21 +47,23 @@ namespace pars
     };
 }
 
-pars::Lexer::Lexer(std::string_view source)
+pars::Lexer::Lexer(SourceFile source)
 {
     set_source(source);
 }
 
-void pars::Lexer::set_source(std::string_view source)
+void pars::Lexer::set_source(SourceFile source)
 {
     m_offset = 0;
     m_current = 0;
-    m_reader.set_source(source);
+    m_reader.set_source(source.contents);
 }
 
 pars::Token pars::Lexer::advance()
 {
     m_reader.skip_insignificant();
+
+    m_last_token = m_current_token;
 
     const auto c = m_reader.advance();
 
@@ -115,6 +117,7 @@ pars::Token pars::Lexer::advance()
         case '?': return build_token(Question);
         case '"': return build_string();
         case '\'': return build_char();
+        case '\0': return build_token(Eof);
         default:
         {
             if (std::isdigit(c))
@@ -131,6 +134,73 @@ pars::Token pars::Lexer::advance()
     }
 }
 
+bool pars::Lexer::match(TokenType type)
+{
+    if (peak().type == type)
+    {
+        m_current_token = advance();
+        return true;
+    }
+
+    return false;
+}
+
+bool pars::Lexer::match_next(TokenType type)
+{
+    if (peak_next(type))
+    {
+        advance();
+        return true;
+    }
+
+    return false;
+}
+
+pars::Token pars::Lexer::expect(TokenType type)
+{
+    auto token = advance();
+
+    if (token.type != type)
+    {
+        throw build_error("token did not match");
+    }
+}
+
+pars::Token pars::Lexer::peak()
+{
+    if (!m_current_token.has_value())
+    {
+        m_current_token = advance();
+    }
+
+    return m_current_token.value();
+}
+
+bool pars::Lexer::peak(TokenType type)
+{
+    return peak().type == type;
+}
+
+pars::Token pars::Lexer::peak_next()
+{
+    return m_last_token.value();
+}
+
+bool pars::Lexer::peak_next(TokenType type)
+{
+    return peak_next().type == type;
+}
+
+pars::Token pars::Lexer::peak_last()
+{
+    return m_last_token.value();
+}
+
+bool pars::Lexer::peak_last(TokenType type)
+{
+    return peak_last().type == type;
+}
+
 bool pars::Lexer::has_next() const
 {
     return !m_reader.at_end();
@@ -140,8 +210,13 @@ pars::Token pars::Lexer::build_token(TokenType type, std::string_view lexeme_ove
 {
     return
     {
-        .line = m_reader.get_current_line(),
-        .column = m_reader.get_current_column(),
+        .location =
+        {
+            .offset = m_offset,
+            .line = m_reader.get_current_line(),
+            .file_id = m_src.id,
+            .column = m_reader.get_current_column(),
+        },
         .type = type,
         .lexeme = lexeme_override.empty() ? m_reader.slice() : lexeme_override
     };
