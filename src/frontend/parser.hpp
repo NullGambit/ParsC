@@ -32,6 +32,7 @@ namespace pars
 		Stmt* parse_fn();
 		Node* parse_var();
 		Node* parse_return();
+		Node* parse_println();
 		FnPrototype parse_fn_prototype();
 
 		// expr parsing stuff

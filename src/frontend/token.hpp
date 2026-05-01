@@ -94,6 +94,9 @@ namespace pars
         Struct,
         Trait,
         Union,
+        // NOTE: temporary so i can debug the compiler
+        // will replace later
+        Println,
         Eof
     };
 

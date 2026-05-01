@@ -12,5 +12,7 @@ namespace pars
 		void visit(BinaryExpr *expr) override;
 		void visit(ReturnStmt *stmt) override;
 		void visit(SymbolExpr *expr) override;
+		void visit(CallExpr *expr) override;
+		void visit(PrintlnStmt *stmt) override;
 	};
 }

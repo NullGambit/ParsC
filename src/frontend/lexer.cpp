@@ -46,6 +46,7 @@ namespace pars
         {"and", TokenType::And},
         {"or", TokenType::Or},
         {"fn", TokenType::Fn},
+        {"println", TokenType::Println}
     };
 }
 
@@ -57,9 +58,6 @@ pars::Lexer::Lexer(SourceFile source)
 void pars::Lexer::set_source(SourceFile source)
 {
     m_reader.set_source(source.contents);
-
-    // m_tokens[1] = advance_one();
-    // m_tokens[2] = advance_one();
 }
 
 pars::Token pars::Lexer::advance_one()

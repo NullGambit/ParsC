@@ -58,4 +58,11 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct PrintlnStmt : Stmt
+	{
+		Expr* expr {};
+
+		ACCEPT
+	};
 }

@@ -74,3 +74,37 @@ void pars::AstPrinter::visit(SymbolExpr *expr)
 {
 	fmt::print("{}", expr->symbol);
 }
+
+void pars::AstPrinter::visit(CallExpr *expr)
+{
+	fmt::print("call {}", expr->symbol);
+
+	if (!expr->arguments.empty())
+	{
+		fmt::print("(");
+	}
+
+	for (auto i = 0; auto *arg : expr->arguments)
+	{
+		arg->accept(this);
+
+		if (i++ < expr->arguments.size() - 1)
+		{
+			fmt::print(", ");
+		}
+	}
+
+	if (!expr->arguments.empty())
+	{
+		fmt::print(")");
+	}
+}
+
+void pars::AstPrinter::visit(PrintlnStmt *stmt)
+{
+	fmt::print("println ");
+
+	stmt->expr->accept(this);
+
+	fmt::println("");
+}

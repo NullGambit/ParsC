@@ -39,6 +39,10 @@ pars::Node* pars::Parser::decleration()
 	{
 		return parse_return();
 	}
+	if (m_lexer.match(Println))
+	{
+		return parse_println();
+	}
 
 	return expression();
 }
@@ -132,6 +136,15 @@ pars::Node * pars::Parser::parse_return()
 	return stmt;
 }
 
+pars::Node * pars::Parser::parse_println()
+{
+	auto *stmt = new_node<PrintlnStmt>();
+
+	stmt->expr = expression();
+
+	return stmt;
+}
+
 pars::FnPrototype pars::Parser::parse_fn_prototype()
 {
 	m_lexer.expect(LeftParen);
@@ -182,9 +195,32 @@ pars::Expr* pars::Parser::parse_primary()
 	}
 	if (m_lexer.match(Identifier))
 	{
+		auto identifier = m_lexer.peak_last().lexeme;
+
+		if (m_lexer.match(LeftParen))
+		{
+			auto *expr = new_node<CallExpr>();
+
+			expr->symbol = identifier;
+
+			while (true)
+			{
+				expr->arguments.emplace_back(expression());
+
+				if (!m_lexer.match(Comma))
+				{
+					break;
+				}
+			}
+
+			m_lexer.expect(RightParen);
+
+			return expr;
+		}
+
 		auto *expr = new_node<SymbolExpr>();
 
-		expr->symbol = m_lexer.peak_last().lexeme;
+		expr->symbol = identifier;
 
 		return expr;
 	}

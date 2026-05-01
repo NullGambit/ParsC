@@ -52,7 +52,7 @@ namespace pars
 		ACCEPT
 	};
 
-	struct FnCallExpr : Expr
+	struct CallExpr : Expr
 	{
 		std::string_view symbol;
 		std::vector<Expr*> arguments;
