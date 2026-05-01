@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "overload.hpp"
+#include "debug/ast_printer.hpp"
 #include "debug/token_printer.hpp"
 #include "frontend/file_manager.hpp"
 #include "frontend/lexer.hpp"
@@ -20,15 +21,27 @@ int main()
 
 	pars::print_tokens(source.value());
 
-	auto stmt = pars::new_node<pars::VarStmt>();
-
-	stmt->symbol = "hello";
-
-	fmt::println("{}", stmt->symbol.size());
-
 	auto parser = pars::Parser();
 
-	auto statements = parser.parse(source.value());
+	try
+	{
+		auto statements = parser.parse(source.value());
+		auto ast_printer = pars::AstPrinter{};
 
-	pars::free_memory_blocks();
+		for (auto *stmt : statements)
+		{
+			stmt->accept(&ast_printer);
+		}
+
+		pars::free_memory_blocks();
+	}
+	catch (pars::Token token)
+	{
+		auto source_file = pars::get_source(token.location.file_id);
+		fmt::println("{} ({}:{})\n\t{}",
+			source_file.path,
+			token.location.line,
+			token.location.column,
+			token.lexeme);
+	}
 }

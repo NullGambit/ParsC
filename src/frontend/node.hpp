@@ -11,10 +11,11 @@ namespace pars
 	{
 		virtual ~Node() = default;
 
-		virtual void visit(Visitor*) {}
+		virtual void accept(Visitor *visitor) {}
 	};
+#define ACCEPT void accept(Visitor *visitor) override { visitor->visit(this); }
 
-	Node *alloc_node(u32 size);
+	u8 *alloc_node(u32 size);
 
 	void free_memory_blocks();
 

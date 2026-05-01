@@ -4,6 +4,8 @@
 
 #include "token.hpp"
 #include "containers/hash_map.hpp"
+#include "magic_enum/magic_enum.hpp"
+#include "util/fmt.hpp"
 
 namespace pars
 {
@@ -55,13 +57,14 @@ pars::Lexer::Lexer(SourceFile source)
 void pars::Lexer::set_source(SourceFile source)
 {
     m_reader.set_source(source.contents);
+
+    // m_tokens[1] = advance_one();
+    // m_tokens[2] = advance_one();
 }
 
-pars::Token pars::Lexer::advance()
+pars::Token pars::Lexer::advance_one()
 {
     m_reader.skip_insignificant();
-
-    m_last_token = m_current_token;
 
     const auto c = m_reader.advance();
 
@@ -132,11 +135,28 @@ pars::Token pars::Lexer::advance()
     }
 }
 
+pars::Token pars::Lexer::advance()
+{
+    m_last_token = m_current_token;
+
+    if (m_next_token.has_value())
+    {
+        m_current_token = m_next_token;
+        m_next_token = std::nullopt;
+    }
+    else
+    {
+        m_current_token = advance_one();
+    }
+
+    return m_current_token.value();
+}
+
 bool pars::Lexer::match(TokenType type)
 {
-    if (peak().type == type)
+    if (peak(type))
     {
-        m_current_token = advance();
+        advance();
         return true;
     }
 
@@ -156,19 +176,26 @@ bool pars::Lexer::match_next(TokenType type)
 
 pars::Token pars::Lexer::expect(TokenType type)
 {
-    auto token = advance();
-
-    if (token.type != type)
+    if (!peak(type))
     {
-        throw build_error("token did not match");
+        // memory leak is fine here cause the program will always terminate
+        auto *s = new std::string;
+
+        *s = fmt::format("expected {} but got {}", magic_enum::enum_name(type), magic_enum::enum_name(peak().type));
+
+        throw build_error(*s);
     }
+
+    advance();
+
+    return peak_last();
 }
 
 pars::Token pars::Lexer::peak()
 {
     if (!m_current_token.has_value())
     {
-        m_current_token = advance();
+        return advance();
     }
 
     return m_current_token.value();
@@ -181,7 +208,14 @@ bool pars::Lexer::peak(TokenType type)
 
 pars::Token pars::Lexer::peak_next()
 {
-    return m_last_token.value();
+    if (m_next_token.has_value())
+    {
+        return m_next_token.value();
+    }
+
+    m_next_token = advance_one();
+
+    return m_next_token.value();
 }
 
 bool pars::Lexer::peak_next(TokenType type)
@@ -191,7 +225,7 @@ bool pars::Lexer::peak_next(TokenType type)
 
 pars::Token pars::Lexer::peak_last()
 {
-    return m_last_token.value();
+    return m_last_token.value_or(Token{});
 }
 
 bool pars::Lexer::peak_last(TokenType type)

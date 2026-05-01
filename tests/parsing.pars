@@ -1,1 +1,11 @@
-import std.io.yes
+import std.io
+
+fn add(x: i32, y: i32): i32
+{
+
+}
+
+fn main()
+{
+    var x: i32
+}

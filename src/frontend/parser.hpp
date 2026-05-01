@@ -21,13 +21,13 @@ namespace pars
 		const std::vector<Node*>& parse(SourceFile source);
 
 	private:
-		Lexer m_lexer;
+		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
 
 		Node* decleration();
-		Stmt* parse_import();
+		Node* parse_import();
 		Stmt* parse_fn();
-		Stmt* parse_var();
+		Node* parse_var();
 		FnPrototype parse_fn_prototype();
 		Expr* expression();
 	};

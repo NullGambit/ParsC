@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <optional>
 #include <string_view>
 
@@ -19,6 +20,9 @@ namespace pars
 
         void set_source(SourceFile source);
 
+        Token advance_one();
+
+        // advances by 3 tokens. will store last, current, next tokens
         Token advance();
 
         bool match(TokenType type);
@@ -37,8 +41,8 @@ namespace pars
     private:
         SourceFile m_src;
         TextReader m_reader;
-        std::optional<Token> m_current_token;
         std::optional<Token> m_last_token;
+        std::optional<Token> m_current_token;
         std::optional<Token> m_next_token;
 
         Token build_token(TokenType type, std::string_view lexeme_override = {});

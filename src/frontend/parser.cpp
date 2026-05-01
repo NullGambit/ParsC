@@ -1,16 +1,19 @@
 #include "parser.hpp"
 
 #include "frontend/token.hpp"
+#include "util/fmt.hpp"
 
 using enum pars::TokenType;
 
-const std::vector<pars::Node*> & pars::Parser::parse(SourceFile source)
+const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
 {
 	m_lexer.set_source(source);
 
 	while (m_lexer.has_next())
 	{
-		m_nodes.emplace_back(decleration());
+		auto *node = decleration();
+		m_nodes.emplace_back(node);
+
 	}
 
 	return m_nodes;
@@ -34,18 +37,18 @@ pars::Node* pars::Parser::decleration()
 	return expression();
 }
 
-pars::Stmt* pars::Parser::parse_import()
+pars::Node* pars::Parser::parse_import()
 {
-	auto stmt = new_node<ImportStmt>();
+	auto *stmt = new_node<ImportStmt>();
 
 	if (m_lexer.match_next(Equal))
 	{
 		stmt->alias = m_lexer.peak_last().lexeme;
 	}
 
-	while (m_lexer.peak(Identifier))
+	while (m_lexer.match(Identifier))
 	{
-		stmt->path.push_back(m_lexer.advance().lexeme);
+		stmt->path.push_back(m_lexer.peak_last().lexeme);
 
 		if (!m_lexer.match(Dot))
 		{
@@ -58,32 +61,36 @@ pars::Stmt* pars::Parser::parse_import()
 
 pars::Stmt* pars::Parser::parse_fn()
 {
-	auto stmt = new_node<FnStmt>();
+	auto *stmt = new_node<FnStmt>();
+
+	stmt->body = {};
 
 	stmt->symbol = m_lexer.expect(Identifier).lexeme;
 
 	stmt->prototype = parse_fn_prototype();
 
-	// if (m_lexer.match(Arrow))
-	// {
-	// 	return expression();
-	// }
-
-	m_lexer.expect(LeftBrace);
-
-	while (!m_lexer.peak(RightBrace))
+	if (m_lexer.match(Arrow))
 	{
-		stmt->body.emplace_back(decleration());
+		stmt->body.emplace_back(expression());
 	}
+	else
+	{
+		m_lexer.expect(LeftBrace);
 
-	m_lexer.expect(RightBrace);
+		while (!m_lexer.peak(RightBrace))
+		{
+			stmt->body.emplace_back(decleration());
+		}
+
+		m_lexer.expect(RightBrace);
+	}
 
 	return stmt;
 }
 
-pars::Stmt* pars::Parser::parse_var()
+pars::Node* pars::Parser::parse_var()
 {
-	auto stmt = new_node<VarStmt>();
+	auto *stmt = new_node<VarStmt>();
 
 	stmt->symbol = m_lexer.expect(Identifier).lexeme;
 
@@ -115,8 +122,10 @@ pars::FnPrototype pars::Parser::parse_fn_prototype()
 	m_lexer.expect(LeftParen);
 
 	FnPrototype prototype;
-
-	while (!m_lexer.peak_next(RightParen) || m_lexer.match(Comma))
+// fn main(a: i32) {
+// fn main() {
+	fmt::println("{}", m_lexer.peak().lexeme);
+	while (!m_lexer.peak(RightParen))
 	{
 		TypedSymbol symbol;
 
@@ -127,6 +136,11 @@ pars::FnPrototype pars::Parser::parse_fn_prototype()
 		symbol.type = m_lexer.expect(Identifier).lexeme;
 
 		prototype.parameters.push_back(symbol);
+
+		if (!m_lexer.peak(RightParen))
+		{
+			m_lexer.expect(Comma);
+		}
 	}
 
 	m_lexer.expect(RightParen);

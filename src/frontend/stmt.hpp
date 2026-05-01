@@ -30,6 +30,8 @@ namespace pars
 		std::vector<std::string_view> path;
 		std::string_view alias;
 		std::vector<std::string_view> selective_imports;
+
+		ACCEPT
 	};
 
 	struct FnStmt : Stmt
@@ -37,6 +39,8 @@ namespace pars
 		FnPrototype prototype;
 		std::string_view symbol;
 		std::vector<Node*> body;
+
+		ACCEPT
 	};
 
 	struct VarStmt : Stmt
@@ -44,5 +48,7 @@ namespace pars
 		std::string_view symbol;
 		std::string_view type;
 		Expr* initializer;
+
+		ACCEPT
 	};
 }

@@ -15,13 +15,12 @@ constexpr auto BLOCK_SIZE = MB(32);
 struct MemoryBlock
 {
 	u8 *ptr;
-	size_t free_space;
+	size_t offset {};
 	MemoryBlock *next;
 
 	void init()
 	{
 		ptr = pars::linux_virtual_alloc(BLOCK_SIZE);
-		free_space = BLOCK_SIZE;
 	}
 };
 
@@ -36,7 +35,7 @@ u8* get_memory(size_t size)
 		g_current_block = &g_root_block;
 	}
 
-	if (g_current_block->free_space < size)
+	if (g_current_block->offset + size >= BLOCK_SIZE)
 	{
 		auto block = new MemoryBlock;
 
@@ -47,19 +46,16 @@ u8* get_memory(size_t size)
 		g_current_block = block;
 	}
 
-	g_current_block->free_space -= size;
+	auto offset = g_current_block->offset;
 
-	return g_current_block->ptr;
+	g_current_block->offset += size;
+
+	return g_current_block->ptr + offset;
 }
 
-pars::Node * pars::alloc_node(u32 size)
+u8 * pars::alloc_node(u32 size)
 {
-	auto *mem = get_memory(size + sizeof(u32));
-
-	// write size of this node in case of iteration
-	memcpy(mem, &size, sizeof(u32));
-
-	return (Node*)(mem + sizeof(u32));
+	return get_memory(size);
 }
 
 void pars::free_memory_blocks()
