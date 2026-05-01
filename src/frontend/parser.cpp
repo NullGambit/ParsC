@@ -180,6 +180,14 @@ pars::Expr* pars::Parser::parse_primary()
 
 		return group;
 	}
+	if (m_lexer.match(Identifier))
+	{
+		auto *expr = new_node<SymbolExpr>();
+
+		expr->symbol = m_lexer.peak_last().lexeme;
+
+		return expr;
+	}
 
 	auto *literal = new_node<LiteralExpr>();
 

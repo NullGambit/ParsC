@@ -62,3 +62,15 @@ void pars::AstPrinter::visit(BinaryExpr *expr)
 	fmt::print(" {} ", expr->op);
 	expr->right->accept(this);
 }
+
+void pars::AstPrinter::visit(ReturnStmt *stmt)
+{
+	fmt::print("Return <");
+	stmt->expr->accept(this);
+	fmt::println(">");
+}
+
+void pars::AstPrinter::visit(SymbolExpr *expr)
+{
+	fmt::print("{}", expr->symbol);
+}

@@ -87,18 +87,26 @@ pars::Token pars::Lexer::advance_one()
             {
                 return build_token(MinusMinus);
             }
+
+            return build_token('=', MinusEqual, Minus);
+        }
+        case '=':
+        {
+            if (m_reader.match('='))
+            {
+                return build_token(EqualEqual);
+            }
             if (m_reader.match('>'))
             {
                 return build_token(Arrow);
             }
 
-            return build_token('=', MinusEqual, Minus);
+            return build_token(Equal);
         }
         case '*': return build_token('=', StarEqual, Star);
         case '/': return build_token('=', SlashEqual, ForwardSlash);
         case '<': return build_token('=', LessEqual, Less);
         case '>': return build_token('=', GreaterEqual, Greater);
-        case '=': return build_token('=', EqualEqual, Equal);
         case '!': return build_token('=', BangEqual, Bang);
         case '%': return build_token(Percent);
         case '$': return build_token(Dollar);
