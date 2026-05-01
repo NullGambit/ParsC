@@ -1,5 +1,7 @@
 #include "parser.hpp"
 
+#include <charconv>
+
 #include "frontend/token.hpp"
 #include "util/fmt.hpp"
 
@@ -32,6 +34,10 @@ pars::Node* pars::Parser::decleration()
 	if (m_lexer.match(Var))
 	{
 		return parse_var();
+	}
+	if (m_lexer.match(Return))
+	{
+		return parse_return();
 	}
 
 	return expression();
@@ -117,14 +123,21 @@ pars::Node* pars::Parser::parse_var()
 	return stmt;
 }
 
+pars::Node * pars::Parser::parse_return()
+{
+	auto stmt = new_node<ReturnStmt>();
+
+	stmt->expr = expression();
+
+	return stmt;
+}
+
 pars::FnPrototype pars::Parser::parse_fn_prototype()
 {
 	m_lexer.expect(LeftParen);
 
 	FnPrototype prototype;
-// fn main(a: i32) {
-// fn main() {
-	fmt::println("{}", m_lexer.peak().lexeme);
+
 	while (!m_lexer.peak(RightParen))
 	{
 		TypedSymbol symbol;
@@ -153,8 +166,94 @@ pars::FnPrototype pars::Parser::parse_fn_prototype()
 	return prototype;
 }
 
+pars::Expr* pars::Parser::parse_primary()
+{
+	if (m_lexer.match(LeftParen))
+	{
+		auto *expr = expression();
+
+		m_lexer.expect(RightParen);
+
+		auto *group = new_node<GroupExpr>();
+
+		group->expr = expr;
+
+		return group;
+	}
+
+	auto *literal = new_node<LiteralExpr>();
+
+	if (m_lexer.match(True))
+	{
+		literal->value = true;
+	}
+	if (m_lexer.match(False))
+	{
+		literal->value = false;
+	}
+	if (m_lexer.match(IntegerLiteral))
+	{
+		auto lexeme = m_lexer.peak_last().lexeme;
+		i64 n = 0;
+		std::from_chars(lexeme.begin(), lexeme.end(), n);
+		literal->value = n;
+	}
+	if (m_lexer.match(DecimalLiteral))
+	{
+		auto lexeme = m_lexer.peak_last().lexeme;
+		f32 n = 0;
+		std::from_chars(lexeme.begin(), lexeme.end(), n);
+		literal->value = n;
+	}
+	if (m_lexer.match(StringLiteral))
+	{
+		literal->value = m_lexer.peak_last().lexeme;
+	}
+
+	return literal;
+}
+
+pars::Expr* pars::Parser::parse_unary()
+{
+	if (m_lexer.match(Bang) || m_lexer.match(Minus))
+	{
+		auto op = m_lexer.peak_last();
+
+		auto expr = parse_unary();
+
+		auto *unary = new_node<UnaryExpr>();
+
+		unary->op = op.lexeme[0];
+		unary->right = expr;
+
+		return unary;
+	}
+
+	return parse_primary();
+}
+
+pars::Expr* pars::Parser::parse_factor()
+{
+	return parse_binary_rule<Star, ForwardSlash>(&Parser::parse_unary);
+}
+
+pars::Expr* pars::Parser::parse_term()
+{
+	return parse_binary_rule<Plus, Minus>(&Parser::parse_factor);
+}
+
+pars::Expr* pars::Parser::parse_comparison()
+{
+	return parse_binary_rule<Less, LessEqual, Greater, GreaterEqual>(&Parser::parse_term);
+}
+
+pars::Expr* pars::Parser::parse_equality()
+{
+	return parse_binary_rule<EqualEqual, BangEqual>(&Parser::parse_comparison);
+}
+
 pars::Expr* pars::Parser::expression()
 {
-	return {};
+	return parse_equality();
 }
 

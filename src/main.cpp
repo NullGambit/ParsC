@@ -18,7 +18,7 @@ int main()
     {
 	    fmt::panic("could not read source file");
     }
-
+ 
 	pars::print_tokens(source.value());
 
 	auto parser = pars::Parser();
@@ -44,4 +44,5 @@ int main()
 			token.location.column,
 			token.lexeme);
 	}
+
 }

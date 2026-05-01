@@ -15,7 +15,7 @@ namespace pars
 
 	using LiteralExprValue = std::variant
 	<
-		i32,
+		i64,
 		f32,
 		std::string_view
 	>;
@@ -24,16 +24,16 @@ namespace pars
 	{
 		LiteralExprValue value;
 
-		//NODE_BODY
+		ACCEPT
 	};
 
 	struct BinaryExpr : Expr
 	{
-		size_t left;
+		Expr* left;
 		char op;
 		Expr* right;
 
-		//NODE_BODY
+		ACCEPT
 	};
 
 	struct UnaryExpr : Expr
@@ -41,7 +41,7 @@ namespace pars
 		char op;
 		Expr* right;
 
-		//NODE_BODY
+		ACCEPT
 	};
 
 	// for not only variables but also functions to be used when taking the address of a function
@@ -49,7 +49,7 @@ namespace pars
 	{
 		std::string_view symbol;
 
-		//NODE_BODY
+		ACCEPT
 	};
 
 	struct FnCallExpr : Expr
@@ -57,6 +57,13 @@ namespace pars
 		std::string_view symbol;
 		std::vector<Expr*> arguments;
 
-		//NODE_BODY
+		ACCEPT
+	};
+
+	struct GroupExpr : Expr
+	{
+		Expr* expr;
+
+		ACCEPT
 	};
 }

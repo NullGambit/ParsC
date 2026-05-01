@@ -11,7 +11,18 @@ void pars::AstPrinter::visit(ImportStmt *stmt)
 
 void pars::AstPrinter::visit(VarStmt *stmt)
 {
-	fmt::println("var {}: type<{}>", stmt->symbol, stmt->type);
+	fmt::print("var {}: type<{}>", stmt->symbol, stmt->type);
+
+	if (stmt->initializer != nullptr)
+	{
+		fmt::print(" init<");
+
+		stmt->initializer->accept(this);
+
+		fmt::print(">");
+	}
+
+	fmt::println("");
 }
 
 void pars::AstPrinter::visit(FnStmt *stmt)
@@ -38,4 +49,16 @@ void pars::AstPrinter::visit(FnStmt *stmt)
 	{
 		body_stmt->accept(this);
 	}
+}
+
+void pars::AstPrinter::visit(LiteralExpr *expr)
+{
+	fmt::print("{}", std::get<i64>(expr->value));
+}
+
+void pars::AstPrinter::visit(BinaryExpr *expr)
+{
+	expr->left->accept(this);
+	fmt::print(" {} ", expr->op);
+	expr->right->accept(this);
 }
