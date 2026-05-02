@@ -7,21 +7,45 @@
 
 using enum pars::TokenType;
 
+pars::Parser::Parser()
+{
+	auto print_args = [](const std::vector<Expr*> &args)
+	{
+		for (auto *arg : args)
+		{
+			auto *literal = dynamic_cast<LiteralExpr*>(arg);
+
+			if (literal != nullptr && literal->value.index() == 2)
+			{
+				auto s = std::get<std::string_view>(literal->value);
+				fmt::print("{}", s);
+			}
+		}
+
+		fmt::println("");
+	};
+
+	m_builtin_functions["pragma"] = print_args;
+	m_builtin_functions["panic"] = [print_args](const auto &args)
+	{
+		print_args(args);
+		std::exit(-1);
+	};
+}
+
 const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
 {
 	m_lexer.set_source(source);
 
 	while (m_lexer.has_next())
 	{
-		auto *node = decleration();
-		m_nodes.emplace_back(node);
-
+		declare_to(m_nodes);
 	}
 
 	return m_nodes;
 }
 
-pars::Node* pars::Parser::decleration()
+pars::Node* pars::Parser::declaration()
 {
 	if (m_lexer.match(Import))
 	{
@@ -45,6 +69,17 @@ pars::Node* pars::Parser::decleration()
 	}
 
 	return expression();
+}
+
+void pars::Parser::declare_to(std::vector<Node *> &nodes)
+{
+	auto *node = declaration();
+
+	[[likely]]
+	if (node != nullptr)
+	{
+		nodes.emplace_back(node);
+	}
 }
 
 pars::Node* pars::Parser::parse_import()
@@ -89,7 +124,7 @@ pars::Stmt* pars::Parser::parse_fn()
 
 		while (!m_lexer.peak(RightBrace))
 		{
-			stmt->body.emplace_back(decleration());
+			declare_to(stmt->body);
 		}
 
 		m_lexer.expect(RightBrace);
@@ -181,6 +216,31 @@ pars::FnPrototype pars::Parser::parse_fn_prototype()
 
 pars::Expr* pars::Parser::parse_primary()
 {
+	if (m_lexer.match(Dollar))
+	{
+		auto identifier = m_lexer.expect(Identifier).lexeme;
+
+		auto iter = m_builtin_functions.find(identifier);
+
+		if (iter != m_builtin_functions.end())
+		{
+			if (m_lexer.match(LeftParen))
+			{
+				CallExpr expr;
+
+				expr.symbol = identifier;
+
+				expr.arguments = collect_call_arguments();
+
+				m_lexer.expect(RightParen);
+
+				iter->second(expr.arguments);
+			}
+		}
+
+		return nullptr;
+	}
+
 	if (m_lexer.match(LeftParen))
 	{
 		auto *expr = expression();
@@ -203,15 +263,7 @@ pars::Expr* pars::Parser::parse_primary()
 
 			expr->symbol = identifier;
 
-			while (true)
-			{
-				expr->arguments.emplace_back(expression());
-
-				if (!m_lexer.match(Comma))
-				{
-					break;
-				}
-			}
+			expr->arguments = collect_call_arguments();
 
 			m_lexer.expect(RightParen);
 
@@ -255,6 +307,23 @@ pars::Expr* pars::Parser::parse_primary()
 	}
 
 	return literal;
+}
+
+std::vector<pars::Expr*> pars::Parser::collect_call_arguments()
+{
+	std::vector<Expr*> arguments;
+
+	while (true)
+	{
+		arguments.emplace_back(expression());
+
+		if (!m_lexer.match(Comma))
+		{
+			break;
+		}
+	}
+
+	return arguments;
 }
 
 pars::Expr* pars::Parser::parse_unary()

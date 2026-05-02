@@ -1,0 +1,6 @@
+
+$pragma("hello")
+
+fn main()
+{
+}

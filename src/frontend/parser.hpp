@@ -6,6 +6,7 @@
 #include "expr.hpp"
 #include "lexer.hpp"
 #include "stmt.hpp"
+#include "containers/hash_map.hpp"
 
 namespace pars
 {
@@ -19,6 +20,8 @@ namespace pars
 	{
 	public:
 
+		Parser();
+
 		const std::vector<Node*>& parse(SourceFile source);
 
 	private:
@@ -26,8 +29,10 @@ namespace pars
 
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
+		HashMap<std::string_view, std::function<void(const std::vector<Expr*>&)>> m_builtin_functions;
 
-		Node* decleration();
+		Node* declaration();
+		void declare_to(std::vector<Node*> &nodes);
 		Node* parse_import();
 		Stmt* parse_fn();
 		Node* parse_var();
@@ -44,6 +49,8 @@ namespace pars
 		Expr* parse_unary();
 		Expr* parse_factor();
 		Expr* parse_primary();
+
+		std::vector<Expr*> collect_call_arguments();
 
 		template<TokenType ...T>
 		Expr* parse_binary_rule(BinaryRule rule)

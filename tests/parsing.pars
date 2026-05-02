@@ -2,10 +2,15 @@ import std.io
 
 fn add(x: i32, y: i32) => x + y
 
+$pragma("hello from global ", "yes")
+
 fn main()
 {
+    $pragma("hello from main")
     var x = add(10, 20)
     var y = x * 2
+
+    $panic("time to panic")
 
     println y
 }

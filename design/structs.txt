@@ -24,18 +24,16 @@ impl MyStruct
     fn op_stringify(s) => $"{s.x} {s.y} {s.s}"
 }
 
-fn print_struct<T>(auto_ref value: T)
+fn print_struct<T>(value: &&T)
 {
     for field in $fields(value)
     {
-        // a field type is basically a struct that aliases its field so it is that field and also a field type
-        // so if you do field = 10 the original value will be modified
-        println($"{field.name}: {field.type} = {field}")
+        println($"{field.name}: {field.type} = {field.value}")
     }
 }
 
 // constraint forces only real types
-struct Vector<T, N: int> if T: Real
+struct Vector<T, N: int> if T is Real
 {
     // anonymous structs and unions will become a part of its higher scope
     union
@@ -116,25 +114,6 @@ fn test_dyn()
     fake_shape = #alloc<FakeShape>()
 }
 
-struct ConstructorTest : Drop
-{
-    x: int
-    y: float
-
-    // y will just default initialize
-    static fn new(x: int) => Self {x}
-
-    fn drop() => x = -1
-}
-
-fn test_constructor()
-{
-    var t = ConstructorTest::new(10)
-}
-
-// a record struct for pod data
-struct Data{x: int, float: y}
-
 // an empty struct that is a type tag
 struct Tag
 
@@ -156,7 +135,7 @@ struct TypeWrapper<T>
 
 fn test_wrapper()
 {
-    var wrapper = TypeWrapper<int>{100}
+    var wrapper = TypeWrapper{100}
 
     wrapper++
 

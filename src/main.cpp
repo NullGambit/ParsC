@@ -19,7 +19,7 @@ int main()
 	    fmt::panic("could not read source file");
     }
  
-	pars::print_tokens(source.value());
+	// pars::print_tokens(source.value());
 
 	auto parser = pars::Parser();
 
@@ -30,7 +30,10 @@ int main()
 
 		for (auto *stmt : statements)
 		{
-			stmt->accept(&ast_printer);
+			if (stmt != nullptr)
+			{
+				stmt->accept(&ast_printer);
+			}
 		}
 
 		pars::free_memory_blocks();
