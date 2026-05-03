@@ -2,6 +2,7 @@
 
 #include <charconv>
 
+#include "frontend_error.hpp"
 #include "frontend/token.hpp"
 #include "util/fmt.hpp"
 
@@ -28,12 +29,16 @@ pars::Parser::Parser()
 	};
 
 	m_builtin_functions["pragma"] = print_args;
-	m_builtin_functions["panic"] = [print_args](const auto &args)
+	m_builtin_functions["panic"] = [print_args](const auto &args) -> Expr*
 	{
 		print_args(args);
 		std::exit(-1);
-		return nullptr;
 	};
+
+	// m_builtin_functions["has_attr"] = [](const std::vector<Expr*> &args)
+	// {
+	//
+	// };
 }
 
 const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
@@ -174,7 +179,7 @@ pars::Node* pars::Parser::parse_var()
 
 	if (!was_typed && !initialized)
 	{
-		throw Token{.type = Error, .lexeme = "Cannot infer type"};
+		throw FrontendError(m_lexer.peak_last(), "Cannot infer type", stmt);
 	}
 
 	return stmt;

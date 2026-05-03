@@ -38,14 +38,8 @@ int main()
 
 		pars::free_memory_blocks();
 	}
-	catch (pars::Token token)
+	catch (std::exception &e)
 	{
-		auto source_file = pars::get_source(token.location.file_id);
-		fmt::println("{} ({}:{})\n\t{}",
-			source_file.path,
-			token.location.line,
-			token.location.column,
-			token.lexeme);
+		fmt::println("{}", e.what());
 	}
-
 }

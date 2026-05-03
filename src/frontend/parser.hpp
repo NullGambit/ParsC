@@ -10,11 +10,6 @@
 
 namespace pars
 {
-    constexpr auto FN_PROTOTYPE_NEEDS_SYMBOL = true;
-    constexpr auto FN_PROTOTYPE_NEEDS_BODY = true;
-    constexpr auto FN_PROTOTYPE_ANON = false;
-    constexpr auto FN_PROTOTYPE_BODYLESS = false;
-
 	// a per module parser
 	class Parser
 	{

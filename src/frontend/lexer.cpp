@@ -2,6 +2,7 @@
 
 #include <locale>
 
+#include "frontend_error.hpp"
 #include "token.hpp"
 #include "containers/hash_map.hpp"
 #include "magic_enum/magic_enum.hpp"
@@ -186,12 +187,11 @@ pars::Token pars::Lexer::expect(TokenType type)
 {
     if (!peak(type))
     {
-        // memory leak is fine here cause the program will always terminate
-        auto *s = new std::string;
+        auto message = fmt::format("expected {} but got {}",
+            magic_enum::enum_name(type),
+            magic_enum::enum_name(peak().type));
 
-        *s = fmt::format("expected {} but got {}", magic_enum::enum_name(type), magic_enum::enum_name(peak().type));
-
-        throw build_error(*s);
+        throw FrontendError(peak(), std::move(message));
     }
 
     advance();
