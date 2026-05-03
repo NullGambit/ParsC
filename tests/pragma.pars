@@ -3,4 +3,5 @@ $pragma("hello")
 
 fn main()
 {
+    $panic("goodbye")
 }

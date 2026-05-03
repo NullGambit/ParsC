@@ -37,7 +37,7 @@ namespace pars
 	struct FnStmt : Stmt
 	{
 		FnPrototype prototype;
-		std::string_view symbol;
+		Symbol symbol;
 		std::vector<Node*> body;
 
 		ACCEPT
@@ -45,7 +45,7 @@ namespace pars
 
 	struct VarStmt : Stmt
 	{
-		std::string_view symbol;
+		Symbol symbol;
 		std::string_view type;
 		Expr* initializer;
 

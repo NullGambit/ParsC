@@ -2,6 +2,7 @@
 
 namespace pars
 {
+	struct Symbol;
 	struct PrintlnStmt;
 	struct GroupExpr;
 	struct ReturnStmt;
@@ -29,5 +30,6 @@ namespace pars
 		virtual void visit(FnStmt *stmt) {}
 		virtual void visit(ReturnStmt *stmt) {}
 		virtual void visit(PrintlnStmt *stmt) {}
+		virtual void visit(Symbol *stmt) {}
 	};
 }

@@ -40,6 +40,8 @@ namespace pars
         RightParen,
         LeftBrace,
         RightBrace,
+        LeftBracket,
+        RightBracket,
         Comma,
         Dollar,
         Hash,

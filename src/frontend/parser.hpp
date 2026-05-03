@@ -29,15 +29,21 @@ namespace pars
 
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
-		HashMap<std::string_view, std::function<void(const std::vector<Expr*>&)>> m_builtin_functions;
+
+		std::vector<Expr*> m_pending_attributes;
+
+		HashMap<std::string_view, std::function<Expr*(const std::vector<Expr*>&)>> m_builtin_functions;
 
 		Node* declaration();
+		Node* statement();
 		void declare_to(std::vector<Node*> &nodes);
 		Node* parse_import();
 		Stmt* parse_fn();
 		Node* parse_var();
 		Node* parse_return();
 		Node* parse_println();
+		void parse_attributes();
+		Symbol get_symbol();
 		FnPrototype parse_fn_prototype();
 
 		// expr parsing stuff

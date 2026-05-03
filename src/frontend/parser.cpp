@@ -23,6 +23,8 @@ pars::Parser::Parser()
 		}
 
 		fmt::println("");
+
+		return nullptr;
 	};
 
 	m_builtin_functions["pragma"] = print_args;
@@ -30,6 +32,7 @@ pars::Parser::Parser()
 	{
 		print_args(args);
 		std::exit(-1);
+		return nullptr;
 	};
 }
 
@@ -47,10 +50,11 @@ const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
 
 pars::Node* pars::Parser::declaration()
 {
-	if (m_lexer.match(Import))
+	if (m_lexer.match(At))
 	{
-		return parse_import();
+		parse_attributes();
 	}
+
 	if (m_lexer.match(Fn))
 	{
 		return parse_fn();
@@ -58,6 +62,20 @@ pars::Node* pars::Parser::declaration()
 	if (m_lexer.match(Var))
 	{
 		return parse_var();
+	}
+
+	// attributes not bound to any declaration symbol
+	// so discard them
+	m_pending_attributes.clear();
+
+	return statement();
+}
+
+pars::Node * pars::Parser::statement()
+{
+	if (m_lexer.match(Import))
+	{
+		return parse_import();
 	}
 	if (m_lexer.match(Return))
 	{
@@ -110,7 +128,7 @@ pars::Stmt* pars::Parser::parse_fn()
 
 	stmt->body = {};
 
-	stmt->symbol = m_lexer.expect(Identifier).lexeme;
+	stmt->symbol = get_symbol();
 
 	stmt->prototype = parse_fn_prototype();
 
@@ -137,7 +155,7 @@ pars::Node* pars::Parser::parse_var()
 {
 	auto *stmt = new_node<VarStmt>();
 
-	stmt->symbol = m_lexer.expect(Identifier).lexeme;
+	stmt->symbol = get_symbol();
 
 	auto was_typed = false;
 	auto initialized = false;
@@ -178,6 +196,48 @@ pars::Node * pars::Parser::parse_println()
 	stmt->expr = expression();
 
 	return stmt;
+}
+
+void pars::Parser::parse_attributes()
+{
+	if (!m_lexer.match(LeftBracket))
+	{
+		m_pending_attributes.emplace_back(expression());
+	}
+	else
+	{
+		while (true)
+		{
+			m_pending_attributes.emplace_back(expression());
+
+			if (!m_lexer.match(Comma))
+			{
+				break;
+			}
+		}
+
+		m_lexer.expect(RightBracket);
+	}
+}
+
+pars::Symbol pars::Parser::get_symbol()
+{
+	auto symbol = Symbol
+	{
+		.name = m_lexer.expect(Identifier).lexeme
+	};
+
+	if (!m_pending_attributes.empty())
+	{
+		symbol.attribute_id = get_attribute_id();
+		symbol.attribute_count = m_pending_attributes.size();
+
+		set_attributes(m_pending_attributes);
+
+		m_pending_attributes.clear();
+	}
+
+	return symbol;
 }
 
 pars::FnPrototype pars::Parser::parse_fn_prototype()
@@ -234,7 +294,7 @@ pars::Expr* pars::Parser::parse_primary()
 
 				m_lexer.expect(RightParen);
 
-				iter->second(expr.arguments);
+				return iter->second(expr.arguments);
 			}
 		}
 

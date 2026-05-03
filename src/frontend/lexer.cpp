@@ -122,6 +122,8 @@ pars::Token pars::Lexer::advance_one()
         case ';': return build_token(SemiColon);
         case ':': return build_token(Colon);
         case '?': return build_token(Question);
+        case '[': return build_token(LeftBracket);
+        case ']': return build_token(RightBracket);
         case '"': return build_string();
         case '\'': return build_char();
         case '\0': return build_token(Eof);

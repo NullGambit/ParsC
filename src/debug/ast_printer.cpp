@@ -11,7 +11,7 @@ void pars::AstPrinter::visit(ImportStmt *stmt)
 
 void pars::AstPrinter::visit(VarStmt *stmt)
 {
-	fmt::print("var {}: type<{}>", stmt->symbol, stmt->type);
+	fmt::print("var {}: type<{}>", stmt->symbol.name, stmt->type);
 
 	if (stmt->initializer != nullptr)
 	{
@@ -27,8 +27,26 @@ void pars::AstPrinter::visit(VarStmt *stmt)
 
 void pars::AstPrinter::visit(FnStmt *stmt)
 {
-	fmt::println("fn: {}", stmt->symbol);
+	fmt::println("fn: {}", stmt->symbol.name);
 
+	if (stmt->symbol.attribute_id != NO_ATTRIBUTES)
+	{
+		fmt::print("Attributes: ");
+
+		auto attributes = get_attributes(stmt->symbol);
+
+		for (auto i = 0; auto *attr : attributes)
+		{
+			attr->accept(this);
+
+			if (i++ < attributes.size() - 1)
+			{
+				fmt::print(", ");
+			}
+		}
+
+		fmt::println("");
+	}
 	fmt::print("params: (");
 
 	for (auto i = 0; auto [name, type] : stmt->prototype.parameters)

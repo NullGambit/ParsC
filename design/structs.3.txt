@@ -1,0 +1,132 @@
+
+// POD struct 
+// a struct is classified as pod if it has no constructors
+struct PlayerData
+{
+    score: i32
+    name: str
+    damage: f32
+}
+
+struct PlayerData2
+{
+    // all fields of PlayerData are now also a part of this struct
+    // must be done separately for impl to get all of its fields as well
+    mixin PlayerData 
+
+    armor: f32
+}
+
+// fields are public by default
+struct Player 
+{
+    data: PlayerData
+    private secret_data: bool
+}
+
+// opaque types are private by default 
+// methods are still public by default 
+opaque SecretData 
+{
+    password: str
+}
+
+// can use impl_opaque to make all methods private by default as well
+// but impl still works
+impl_opaque SecretData 
+{
+
+}
+
+// s is equivalent to self in rust or this in C++ 
+// unlike rust or even python self does not need to be passed as the first parameter 
+// its like C++ if you always had to use this to access all members
+// s is a reference not a pointer
+// i find writing s as the first param to be redundant and the static keyword works quite well
+impl Player
+{
+    fn print_stats() => println($"{s.name}: {s.score}")
+    static fn static_function() => println("this is a static call")
+
+    // function overloading that only allows + and -
+    fn op_compare<Op: str>(rhs: &Self) if Op == ("+", "-") => mixin($"{s.score} {Op} {rhs.score}")
+}
+
+trait Damageable 
+{
+    fn apply_damage(amount: f32)
+}
+
+struct Enemy
+{
+    current_heath: f32
+    max_health: f32
+}
+
+impl Enemy
+{
+    // constructor overrides setting fields directly in initializer 
+    // but can still be default initialized 
+    self(max_health: f32) => {current_heath: max_health, max_health}
+    
+    // default initializer 
+    // when doing Enemy{} or assigning enemy = default 
+    // this will be called
+    // if not defined then will zero initialize all fields
+    self() => {current_health: 1, max_health: 1}
+
+    fn apply_damage(amount: f32) 
+    {
+        import std.math 
+
+        s.current_health = clamp(s.current_health - amount, 0, max_health);
+    }
+}
+
+fn hurt_target<T: Damageable>(target: &Damageable, amount: f32)
+{
+    target.apply_damage(amount)
+    println($"hurt target for {amount}")
+}
+
+fn make_zombie_enemy(): Enemy 
+{
+    // an example of anonymous struct initialization 
+    // we know the desired type so only braces are needed
+    return 
+    {
+        max_health: 150f32
+    }
+}
+
+fn make_skeleton_enemy(): Enemy 
+{
+    // because you can directly construct enemy from a float the compiler will attempt to construct 
+    // it from 150f32 
+    return 150f32
+}
+
+fn main()
+{
+    var player = Player 
+    {
+        data: 
+        {
+            score: 100,
+            name: "John",
+            damage: 50f32
+        }
+    }
+
+    player.print_stats()
+
+    Player::static_function()
+
+    var enemy1 = Enemy{max_health: 150f32}
+    // default initializes 
+    var enemy2 = Enemy{}
+
+
+    hurt_target(enemy1, player.damage)
+    hurt_target(enemy2, player.damage)
+}

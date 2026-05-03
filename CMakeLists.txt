@@ -44,6 +44,8 @@ add_executable(ParsC src/main.cpp
         src/frontend/type.cpp
         src/debug/ast_printer.cpp
         src/debug/ast_printer.hpp
+        src/frontend/symbol.hpp
+        src/frontend/symbol.cpp
 )
 
 target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.hpp)

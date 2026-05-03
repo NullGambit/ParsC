@@ -12,6 +12,7 @@ namespace pars
 
 		virtual void accept(Visitor *visitor) {}
 	};
+
 #define ACCEPT void accept(Visitor *visitor) override { visitor->visit(this); }
 
 	u8 *alloc_node(u32 size);
