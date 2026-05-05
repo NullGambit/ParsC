@@ -19,11 +19,32 @@ namespace pars
 
 		const std::vector<Node*>& parse(SourceFile source);
 
+		void resolve_symbols();
+
 	private:
 		typedef Expr*(Parser::*BinaryRule)();
 
+		struct UnresolvedSymbol
+		{
+			Token token;
+			Node *node;
+			std::string_view name;
+		};
+
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
+
+		std::vector<Node*> &m_target = m_nodes;
+
+		// any symbol that could not be resolved such as a function or struct that was defined bellow
+		// will be added to this table to be resolved later
+		std::vector<UnresolvedSymbol> m_unresolved_symbols;
+
+		using Scope = HashMap<std::string_view, Node*>;
+
+		u32 m_scope {};
+
+		std::vector<Scope> m_scope_table;
 
 		std::vector<Expr*> m_pending_attributes;
 
@@ -32,14 +53,20 @@ namespace pars
 		Node* declaration();
 		Node* statement();
 		void declare_to(std::vector<Node*> &nodes);
+		void parse_scope(std::vector<Node*> &nodes);
 		Node* parse_import();
 		Stmt* parse_fn();
-		Node* parse_var();
+		VarDeclStmt* parse_var();
 		Node* parse_return();
 		Node* parse_println();
 		void parse_attributes();
 		Symbol get_symbol();
-		FnPrototype parse_fn_prototype();
+		FnPrototypeStmt parse_fn_prototype();
+
+		Scope& get_current_scope();
+		void add_to_scope(Symbol symbol, Node *node, u32 level = UINT32_MAX);
+		void add_to_scope(std::string_view name, Node *node, u32 level = UINT32_MAX);
+		Node* find_symbol(std::string_view name);
 
 		// expr parsing stuff
 		// TODO replace with a pratt parser
@@ -60,7 +87,7 @@ namespace pars
 
 			while ((m_lexer.match(T) || ...))
 			{
-				auto op = m_lexer.peak_last().lexeme;
+				auto op = m_lexer.peek_last().lexeme;
 
 				auto right = std::invoke(rule, this);
 

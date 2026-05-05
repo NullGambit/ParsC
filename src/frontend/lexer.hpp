@@ -20,20 +20,17 @@ namespace pars
 
         void set_source(SourceFile source);
 
-        Token advance_one();
-
-        // advances by 3 tokens. will store last, current, next tokens
         Token advance();
 
         bool match(TokenType type);
         bool match_next(TokenType type);
         Token expect(TokenType type);
-        Token peak();
-        bool peak(TokenType type);
-        Token peak_next();
-        bool peak_next(TokenType type);
-        Token peak_last();
-        bool peak_last(TokenType type);
+        Token peek();
+        bool peek(TokenType type);
+        Token peek_next();
+        bool peek_next(TokenType type);
+        Token peek_last();
+        bool peek_last(TokenType type);
 
         [[nodiscard]]
         bool has_next() const;
@@ -54,5 +51,7 @@ namespace pars
         Token build_char();
         // build identifier or keyword
         Token build_identifier();
+
+        Token advance_one();
     };
 }

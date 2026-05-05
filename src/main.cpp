@@ -26,6 +26,9 @@ int main()
 	try
 	{
 		auto statements = parser.parse(source.value());
+
+		parser.resolve_symbols();
+
 		auto ast_printer = pars::AstPrinter{};
 
 		for (auto *stmt : statements)

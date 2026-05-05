@@ -65,6 +65,12 @@ pars::Token pars::Lexer::advance_one()
 {
     m_reader.skip_insignificant();
 
+    if (m_reader.peek() == '/' && m_reader.peek_next() == '/')
+    {
+        m_reader.skip_until('\n');
+        m_reader.skip_insignificant();
+    }
+
     const auto c = m_reader.advance();
 
     using enum TokenType;
@@ -139,7 +145,7 @@ pars::Token pars::Lexer::advance_one()
                 return build_identifier();
             }
 
-            return build_error("unexpected token found");
+            throw FrontendError(build_error(""), "unexpected token found");
         }
     }
 }
@@ -163,7 +169,7 @@ pars::Token pars::Lexer::advance()
 
 bool pars::Lexer::match(TokenType type)
 {
-    if (peak(type))
+    if (peek(type))
     {
         advance();
         return true;
@@ -174,7 +180,7 @@ bool pars::Lexer::match(TokenType type)
 
 bool pars::Lexer::match_next(TokenType type)
 {
-    if (peak_next(type))
+    if (peek_next(type))
     {
         advance();
         return true;
@@ -185,21 +191,21 @@ bool pars::Lexer::match_next(TokenType type)
 
 pars::Token pars::Lexer::expect(TokenType type)
 {
-    if (!peak(type))
+    if (!peek(type))
     {
         auto message = fmt::format("expected {} but got {}",
             magic_enum::enum_name(type),
-            magic_enum::enum_name(peak().type));
+            magic_enum::enum_name(peek().type));
 
-        throw FrontendError(peak(), std::move(message));
+        throw FrontendError(peek(), std::move(message));
     }
 
     advance();
 
-    return peak_last();
+    return peek_last();
 }
 
-pars::Token pars::Lexer::peak()
+pars::Token pars::Lexer::peek()
 {
     if (!m_current_token.has_value())
     {
@@ -209,12 +215,12 @@ pars::Token pars::Lexer::peak()
     return m_current_token.value();
 }
 
-bool pars::Lexer::peak(TokenType type)
+bool pars::Lexer::peek(TokenType type)
 {
-    return peak().type == type;
+    return peek().type == type;
 }
 
-pars::Token pars::Lexer::peak_next()
+pars::Token pars::Lexer::peek_next()
 {
     if (m_next_token.has_value())
     {
@@ -226,19 +232,19 @@ pars::Token pars::Lexer::peak_next()
     return m_next_token.value();
 }
 
-bool pars::Lexer::peak_next(TokenType type)
+bool pars::Lexer::peek_next(TokenType type)
 {
-    return peak_next().type == type;
+    return peek_next().type == type;
 }
 
-pars::Token pars::Lexer::peak_last()
+pars::Token pars::Lexer::peek_last()
 {
     return m_last_token.value_or(Token{});
 }
 
-bool pars::Lexer::peak_last(TokenType type)
+bool pars::Lexer::peek_last(TokenType type)
 {
-    return peak_last().type == type;
+    return peek_last().type == type;
 }
 
 bool pars::Lexer::has_next() const

@@ -9,7 +9,7 @@ void pars::AstPrinter::visit(ImportStmt *stmt)
 	fmt::println("import {}", stmt->path);
 }
 
-void pars::AstPrinter::visit(VarStmt *stmt)
+void pars::AstPrinter::visit(VarDeclStmt *stmt)
 {
 	fmt::print("var {}: type<{}>", stmt->symbol.name, stmt->type);
 
@@ -49,9 +49,9 @@ void pars::AstPrinter::visit(FnStmt *stmt)
 	}
 	fmt::print("params: (");
 
-	for (auto i = 0; auto [name, type] : stmt->prototype.parameters)
+	for (auto i = 0; auto var : stmt->prototype.parameters)
 	{
-		fmt::print("{}: type<{}>", name, type);
+		fmt::print("{}: type<{}>", var->symbol.name, var->type);
 
 		if (i++ < stmt->prototype.parameters.size() - 1)
 		{

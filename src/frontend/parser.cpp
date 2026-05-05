@@ -10,6 +10,8 @@ using enum pars::TokenType;
 
 pars::Parser::Parser()
 {
+	m_scope_table.resize(6);
+
 	auto print_args = [](const std::vector<Expr*> &args)
 	{
 		for (auto *arg : args)
@@ -53,6 +55,19 @@ const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
 	return m_nodes;
 }
 
+void pars::Parser::resolve_symbols()
+{
+	for (auto unresolved : m_unresolved_symbols)
+	{
+		auto *symbol = find_symbol(unresolved.name);
+
+		if (symbol == nullptr)
+		{
+			throw FrontendError(unresolved.token, "Symbol not defined", unresolved.node);
+		}
+	}
+}
+
 pars::Node* pars::Parser::declaration()
 {
 	if (m_lexer.match(At))
@@ -64,7 +79,7 @@ pars::Node* pars::Parser::declaration()
 	{
 		return parse_fn();
 	}
-	if (m_lexer.match(Var))
+	if (m_lexer.match(Var) || m_lexer.match(Const))
 	{
 		return parse_var();
 	}
@@ -105,18 +120,41 @@ void pars::Parser::declare_to(std::vector<Node *> &nodes)
 	}
 }
 
+void pars::Parser::parse_scope(std::vector<Node*> &nodes)
+{
+	m_lexer.expect(LeftBrace);
+
+	m_scope++;
+
+	if (m_scope >= m_scope_table.size())
+	{
+		m_scope_table.emplace_back();
+	}
+
+	while (!m_lexer.peek(RightBrace))
+	{
+		declare_to(nodes);
+	}
+
+	m_scope_table[m_scope].clear();
+
+	m_scope--;
+
+	m_lexer.expect(RightBrace);
+}
+
 pars::Node* pars::Parser::parse_import()
 {
 	auto *stmt = new_node<ImportStmt>();
 
 	if (m_lexer.match_next(Equal))
 	{
-		stmt->alias = m_lexer.peak_last().lexeme;
+		stmt->alias = m_lexer.peek_last().lexeme;
 	}
 
 	while (m_lexer.match(Identifier))
 	{
-		stmt->path.push_back(m_lexer.peak_last().lexeme);
+		stmt->path.push_back(m_lexer.peek_last().lexeme);
 
 		if (!m_lexer.match(Dot))
 		{
@@ -131,34 +169,45 @@ pars::Stmt* pars::Parser::parse_fn()
 {
 	auto *stmt = new_node<FnStmt>();
 
-	stmt->body = {};
-
 	stmt->symbol = get_symbol();
+
+	add_to_scope(stmt->symbol, stmt);
 
 	stmt->prototype = parse_fn_prototype();
 
+	for (auto *param : stmt->prototype.parameters)
+	{
+		add_to_scope(param->symbol.name, param, m_scope + 1);
+	}
+
 	if (m_lexer.match(Arrow))
 	{
+		m_scope++;
 		stmt->body.emplace_back(expression());
+		m_scope--;
 	}
 	else
 	{
-		m_lexer.expect(LeftBrace);
+		auto &old_target = m_target;
 
-		while (!m_lexer.peak(RightBrace))
-		{
-			declare_to(stmt->body);
-		}
+		m_target = stmt->body;
 
-		m_lexer.expect(RightBrace);
+		parse_scope(stmt->body);
+
+		m_target = old_target;
 	}
 
 	return stmt;
 }
 
-pars::Node* pars::Parser::parse_var()
+pars::VarDeclStmt* pars::Parser::parse_var()
 {
-	auto *stmt = new_node<VarStmt>();
+	auto *stmt = new_node<VarDeclStmt>();
+
+	if (m_lexer.peek_last(Const))
+	{
+		stmt->flags |= VarFlags::Const;
+	}
 
 	stmt->symbol = get_symbol();
 
@@ -179,8 +228,10 @@ pars::Node* pars::Parser::parse_var()
 
 	if (!was_typed && !initialized)
 	{
-		throw FrontendError(m_lexer.peak_last(), "Cannot infer type", stmt);
+		throw FrontendError(m_lexer.peek_last(), "Cannot infer type", stmt);
 	}
+
+	add_to_scope(stmt->symbol, stmt);
 
 	return stmt;
 }
@@ -245,25 +296,20 @@ pars::Symbol pars::Parser::get_symbol()
 	return symbol;
 }
 
-pars::FnPrototype pars::Parser::parse_fn_prototype()
+pars::FnPrototypeStmt pars::Parser::parse_fn_prototype()
 {
+	FnPrototypeStmt prototype;
+
+	// TODO actually handle externing inside declaration
+	prototype.is_extern = m_lexer.peek_last(Extern);
+
 	m_lexer.expect(LeftParen);
 
-	FnPrototype prototype;
-
-	while (!m_lexer.peak(RightParen))
+	while (!m_lexer.peek(RightParen))
 	{
-		TypedSymbol symbol;
+		prototype.parameters.push_back(parse_var());
 
-		symbol.name = m_lexer.expect(Identifier).lexeme;
-
-		m_lexer.expect(Colon);
-
-		symbol.type = m_lexer.expect(Identifier).lexeme;
-
-		prototype.parameters.push_back(symbol);
-
-		if (!m_lexer.peak(RightParen))
+		if (!m_lexer.peek(RightParen))
 		{
 			m_lexer.expect(Comma);
 		}
@@ -275,8 +321,68 @@ pars::FnPrototype pars::Parser::parse_fn_prototype()
 	{
 		prototype.return_type = m_lexer.expect(Identifier).lexeme;
 	}
+	else
+	{
+		prototype.return_type = "void";
+	}
 
 	return prototype;
+}
+
+pars::Parser::Scope & pars::Parser::get_current_scope()
+{
+	if (m_scope >= m_scope_table.size())
+	{
+		return m_scope_table.emplace_back();
+	}
+
+	return m_scope_table[m_scope];
+}
+
+void pars::Parser::add_to_scope(Symbol symbol, Node *node, u32 level)
+{
+	add_to_scope(symbol.name, node, level);
+}
+
+void pars::Parser::add_to_scope(std::string_view name, Node *node, u32 level)
+{
+	Scope *scope;
+
+	if (level != UINT32_MAX)
+	{
+		if (level >= m_scope_table.size())
+		{
+			for (u32 i = 0; i < level; i++)
+			{
+				m_scope_table.emplace_back();
+			}
+		}
+
+		scope = &m_scope_table[level];
+	}
+	else
+	{
+		scope = &get_current_scope();
+	}
+
+	scope->emplace(name, node);
+}
+
+pars::Node * pars::Parser::find_symbol(std::string_view name)
+{
+	// TODO: allow for parameterized up to down or down to up scope checking
+	for (auto i = 0; i <= m_scope; i++)
+	{
+		auto &scope = m_scope_table[i];
+		auto iter = scope.find(name);
+
+		if (iter != scope.end())
+		{
+			return iter->second;
+		}
+	}
+
+	return nullptr;
 }
 
 pars::Expr* pars::Parser::parse_primary()
@@ -320,7 +426,24 @@ pars::Expr* pars::Parser::parse_primary()
 	}
 	if (m_lexer.match(Identifier))
 	{
-		auto identifier = m_lexer.peak_last().lexeme;
+		auto identifier = m_lexer.peek_last().lexeme;
+
+		auto symbol = find_symbol(identifier);
+
+		UnresolvedSymbol unresolved_symbol
+		{
+			.token = m_lexer.peek_last(),
+			.name = identifier,
+		};
+
+		auto resolved_symbol = false;
+
+		if (symbol != nullptr)
+		{
+			resolved_symbol = true;
+		}
+
+		Expr *result;
 
 		if (m_lexer.match(LeftParen))
 		{
@@ -332,14 +455,24 @@ pars::Expr* pars::Parser::parse_primary()
 
 			m_lexer.expect(RightParen);
 
-			return expr;
+			result = expr;
+		}
+		else
+		{
+			auto *expr = new_node<SymbolExpr>();
+
+			expr->symbol = identifier;
+
+			result = expr;
 		}
 
-		auto *expr = new_node<SymbolExpr>();
+		if (!resolved_symbol)
+		{
+			unresolved_symbol.node = result;
+			m_unresolved_symbols.emplace_back(unresolved_symbol);
+		}
 
-		expr->symbol = identifier;
-
-		return expr;
+		return result;
 	}
 
 	auto *literal = new_node<LiteralExpr>();
@@ -354,21 +487,21 @@ pars::Expr* pars::Parser::parse_primary()
 	}
 	if (m_lexer.match(IntegerLiteral))
 	{
-		auto lexeme = m_lexer.peak_last().lexeme;
+		auto lexeme = m_lexer.peek_last().lexeme;
 		i64 n = 0;
 		std::from_chars(lexeme.begin(), lexeme.end(), n);
 		literal->value = n;
 	}
 	if (m_lexer.match(DecimalLiteral))
 	{
-		auto lexeme = m_lexer.peak_last().lexeme;
+		auto lexeme = m_lexer.peek_last().lexeme;
 		f32 n = 0;
 		std::from_chars(lexeme.begin(), lexeme.end(), n);
 		literal->value = n;
 	}
 	if (m_lexer.match(StringLiteral))
 	{
-		literal->value = m_lexer.peak_last().lexeme;
+		literal->value = m_lexer.peek_last().lexeme;
 	}
 
 	return literal;
@@ -395,7 +528,7 @@ pars::Expr* pars::Parser::parse_unary()
 {
 	if (m_lexer.match(Bang) || m_lexer.match(Minus))
 	{
-		auto op = m_lexer.peak_last();
+		auto op = m_lexer.peek_last();
 
 		auto expr = parse_unary();
 
