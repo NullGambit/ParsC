@@ -1,7 +1,7 @@
 #include "ast_printer.hpp"
 
-#include "frontend/expr.hpp"
-#include "frontend/stmt.hpp"
+#include "../expr.hpp"
+#include "../stmt.hpp"
 #include "util/fmt.hpp"
 
 void pars::AstPrinter::visit(ImportStmt *stmt)
@@ -25,9 +25,9 @@ void pars::AstPrinter::visit(VarDeclStmt *stmt)
 	fmt::println("");
 }
 
-void pars::AstPrinter::visit(FnStmt *stmt)
+void pars::AstPrinter::visit(FnPrototypeStmt *stmt)
 {
-	fmt::println("fn: {}", stmt->symbol.name);
+	fmt::println("fn prototype: {}", stmt->symbol.name);
 
 	if (stmt->symbol.attribute_id != NO_ATTRIBUTES)
 	{
@@ -49,18 +49,21 @@ void pars::AstPrinter::visit(FnStmt *stmt)
 	}
 	fmt::print("params: (");
 
-	for (auto i = 0; auto var : stmt->prototype.parameters)
+	for (auto i = 0; auto var : stmt->parameters)
 	{
 		fmt::print("{}: type<{}>", var->symbol.name, var->type);
 
-		if (i++ < stmt->prototype.parameters.size() - 1)
+		if (i++ < stmt->parameters.size() - 1)
 		{
 			fmt::print(", ");
 		}
 	}
 
-	fmt::println("): {}", stmt->prototype.return_type);
+	fmt::println("): {}", stmt->return_type);
+}
 
+void pars::AstPrinter::visit(BlockStmt *stmt)
+{
 	fmt::println("Body: ");
 
 	for (auto body_stmt : stmt->body)
@@ -71,7 +74,7 @@ void pars::AstPrinter::visit(FnStmt *stmt)
 
 void pars::AstPrinter::visit(LiteralExpr *expr)
 {
-	fmt::print("{}", std::get<i64>(expr->value));
+	fmt::print("{}", std::get<i32>(expr->value));
 }
 
 void pars::AstPrinter::visit(BinaryExpr *expr)
@@ -124,5 +127,12 @@ void pars::AstPrinter::visit(PrintlnStmt *stmt)
 
 	stmt->expr->accept(this);
 
+	fmt::println("");
+}
+
+void pars::AstPrinter::visit(ExprFnStmt *stmt)
+{
+	fmt::print("Expr fn: ");
+	stmt->expr->accept(this);
 	fmt::println("");
 }

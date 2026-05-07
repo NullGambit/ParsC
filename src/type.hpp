@@ -12,13 +12,13 @@ namespace pars
 
 	struct PrimitiveType : Type
 	{
-		enum class Kind
+		enum class Kind : u8
 		{
+			Void,
 			I32,
 			F32,
 			Bool,
 			Char,
-			Str,
 		} kind {};
 
 		bool is_equal(Type *other) override;

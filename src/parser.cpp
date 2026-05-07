@@ -3,10 +3,31 @@
 #include <charconv>
 
 #include "frontend_error.hpp"
-#include "frontend/token.hpp"
+#include "token.hpp"
 #include "util/fmt.hpp"
 
 using enum pars::TokenType;
+
+// macros are dogshit but seems like a better option than using std::function
+// which allocates. ideally would write my own that holds a stack based buffer for small captures but thats for future me to worry about
+#define COLLECT_COMMA_SEP(start, end, fn)   \
+do											\
+{											\
+	m_lexer.expect((start));				\
+											\
+	while (!m_lexer.peek((end)))			\
+	{										\
+		(fn);								\
+											\
+		if (!m_lexer.peek((end)))			\
+		{									\
+			m_lexer.expect(Comma);			\
+		}									\
+	}										\
+											\
+	m_lexer.expect((end));					\
+}											\
+while (false)								\
 
 pars::Parser::Parser()
 {
@@ -75,9 +96,27 @@ pars::Node* pars::Parser::declaration()
 		parse_attributes();
 	}
 
+	if (m_lexer.match(Extern))
+	{
+		m_lexer.expect(Fn);
+
+		auto *prototype = parse_fn_prototype();
+
+		prototype->is_extern = true;
+
+		return prototype;
+	}
 	if (m_lexer.match(Fn))
 	{
-		return parse_fn();
+		return parse_fn_prototype();
+	}
+	if (m_lexer.match(LeftBrace))
+	{
+		return parse_block();
+	}
+	if (peek<FnPrototypeStmt>() && m_lexer.match(Arrow))
+	{
+		return parse_expr_fn();
 	}
 	if (m_lexer.match(Var) || m_lexer.match(Const))
 	{
@@ -120,29 +159,6 @@ void pars::Parser::declare_to(std::vector<Node *> &nodes)
 	}
 }
 
-void pars::Parser::parse_scope(std::vector<Node*> &nodes)
-{
-	m_lexer.expect(LeftBrace);
-
-	m_scope++;
-
-	if (m_scope >= m_scope_table.size())
-	{
-		m_scope_table.emplace_back();
-	}
-
-	while (!m_lexer.peek(RightBrace))
-	{
-		declare_to(nodes);
-	}
-
-	m_scope_table[m_scope].clear();
-
-	m_scope--;
-
-	m_lexer.expect(RightBrace);
-}
-
 pars::Node* pars::Parser::parse_import()
 {
 	auto *stmt = new_node<ImportStmt>();
@@ -160,41 +176,6 @@ pars::Node* pars::Parser::parse_import()
 		{
 			break;
 		}
-	}
-
-	return stmt;
-}
-
-pars::Stmt* pars::Parser::parse_fn()
-{
-	auto *stmt = new_node<FnStmt>();
-
-	stmt->symbol = get_symbol();
-
-	add_to_scope(stmt->symbol, stmt);
-
-	stmt->prototype = parse_fn_prototype();
-
-	for (auto *param : stmt->prototype.parameters)
-	{
-		add_to_scope(param->symbol.name, param, m_scope + 1);
-	}
-
-	if (m_lexer.match(Arrow))
-	{
-		m_scope++;
-		stmt->body.emplace_back(expression());
-		m_scope--;
-	}
-	else
-	{
-		auto &old_target = m_target;
-
-		m_target = stmt->body;
-
-		parse_scope(stmt->body);
-
-		m_target = old_target;
 	}
 
 	return stmt;
@@ -296,37 +277,80 @@ pars::Symbol pars::Parser::get_symbol()
 	return symbol;
 }
 
-pars::FnPrototypeStmt pars::Parser::parse_fn_prototype()
+
+
+pars::FnPrototypeStmt* pars::Parser::parse_fn_prototype()
 {
-	FnPrototypeStmt prototype;
+	auto *prototype = new_node<FnPrototypeStmt>();
 
-	// TODO actually handle externing inside declaration
-	prototype.is_extern = m_lexer.peek_last(Extern);
+	prototype->symbol = get_symbol();
 
-	m_lexer.expect(LeftParen);
+	add_to_scope(prototype->symbol, prototype);
 
-	while (!m_lexer.peek(RightParen))
-	{
-		prototype.parameters.push_back(parse_var());
-
-		if (!m_lexer.peek(RightParen))
-		{
-			m_lexer.expect(Comma);
-		}
-	}
-
-	m_lexer.expect(RightParen);
+	COLLECT_COMMA_SEP(LeftParen, RightParen,
+		prototype->parameters.push_back(parse_var()));
 
 	if (m_lexer.match(Colon))
 	{
-		prototype.return_type = m_lexer.expect(Identifier).lexeme;
+		prototype->return_type = m_lexer.expect(Identifier).lexeme;
 	}
 	else
 	{
-		prototype.return_type = "void";
+		prototype->return_type = "void";
 	}
 
 	return prototype;
+}
+
+pars::BlockStmt* pars::Parser::parse_block()
+{
+	auto *stmt = new_node<BlockStmt>();
+
+	m_scope++;
+
+	// we must be inside a function block so add params to scope
+	if (auto *prototype = peek<FnPrototypeStmt>(); prototype)
+	{
+		stmt->owner = prototype;
+
+		for (auto *param : prototype->parameters)
+		{
+			add_to_scope(param->symbol.name, param, m_scope);
+		}
+	}
+
+	if (m_scope >= m_scope_table.size())
+	{
+		m_scope_table.emplace_back();
+	}
+
+	auto *old_target = m_target;
+
+	m_target = &stmt->body;
+
+	while (!m_lexer.peek(RightBrace))
+	{
+		declare_to(stmt->body);
+	}
+
+	m_target = old_target;
+
+	m_scope_table[m_scope].clear();
+
+	m_scope--;
+
+	m_lexer.expect(RightBrace);
+
+	return stmt;
+}
+
+pars::ExprFnStmt * pars::Parser::parse_expr_fn()
+{
+	auto *stmt = new_node<ExprFnStmt>();
+
+	stmt->expr = expression();
+
+	return stmt;
 }
 
 pars::Parser::Scope & pars::Parser::get_current_scope()
@@ -488,7 +512,7 @@ pars::Expr* pars::Parser::parse_primary()
 	if (m_lexer.match(IntegerLiteral))
 	{
 		auto lexeme = m_lexer.peek_last().lexeme;
-		i64 n = 0;
+		i32 n = 0;
 		std::from_chars(lexeme.begin(), lexeme.end(), n);
 		literal->value = n;
 	}

@@ -34,7 +34,7 @@ namespace pars
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
 
-		std::vector<Node*> &m_target = m_nodes;
+		std::vector<Node*> *m_target = &m_nodes;
 
 		// any symbol that could not be resolved such as a function or struct that was defined bellow
 		// will be added to this table to be resolved later
@@ -53,15 +53,15 @@ namespace pars
 		Node* declaration();
 		Node* statement();
 		void declare_to(std::vector<Node*> &nodes);
-		void parse_scope(std::vector<Node*> &nodes);
 		Node* parse_import();
-		Stmt* parse_fn();
 		VarDeclStmt* parse_var();
 		Node* parse_return();
 		Node* parse_println();
 		void parse_attributes();
 		Symbol get_symbol();
-		FnPrototypeStmt parse_fn_prototype();
+		FnPrototypeStmt* parse_fn_prototype();
+		BlockStmt* parse_block();
+		ExprFnStmt* parse_expr_fn();
 
 		Scope& get_current_scope();
 		void add_to_scope(Symbol symbol, Node *node, u32 level = UINT32_MAX);
@@ -77,6 +77,19 @@ namespace pars
 		Expr* parse_unary();
 		Expr* parse_factor();
 		Expr* parse_primary();
+
+		template<class T>
+		T* peek()
+		{
+			if (m_target->empty())
+			{
+				return nullptr;
+			}
+
+			auto *node = m_target->back();
+
+			return dynamic_cast<T*>(node);
+		}
 
 		std::vector<Expr*> collect_call_arguments();
 

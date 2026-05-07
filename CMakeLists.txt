@@ -11,44 +11,70 @@ include_directories(
 add_subdirectory(deps/unordered_dense/)
 add_subdirectory(deps/magic_enum/)
 
+find_package(LLVM REQUIRED CONFIG)
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
+
+include_directories(${LLVM_INCLUDE_DIRS})
+
 add_executable(ParsC src/main.cpp
         src/containers/hash_map.hpp
-        src/frontend/text_reader.hpp
-        src/frontend/text_reader.cpp
+        src/text_reader.hpp
+        src/text_reader.cpp
         src/type_defs.hpp
         src/util/fmt.cpp
         src/util/fmt.hpp
         src/util/io.cpp
         src/util/io.hpp
-        src/frontend/token.cpp
-        src/frontend/token.hpp
-        src/frontend/lexer.cpp
-        src/frontend/lexer.hpp
+        src/token.cpp
+        src/token.hpp
+        src/lexer.cpp
+        src/lexer.hpp
         src/debug/token_printer.cpp
         src/debug/token_printer.hpp
         src/overload.hpp
-        src/frontend/parser.cpp
-        src/frontend/parser.hpp
-        src/frontend/stmt.hpp
-        src/frontend/expr.hpp
-        src/frontend/location.hpp
-        src/frontend/file_manager.cpp
-        src/frontend/file_manager.hpp
-        src/frontend/node.cpp
-        src/frontend/node.hpp
-        src/frontend/type.hpp
+        src/parser.cpp
+        src/parser.hpp
+        src/stmt.hpp
+        src/expr.hpp
+        src/location.hpp
+        src/file_manager.cpp
+        src/file_manager.hpp
+        src/node.cpp
+        src/node.hpp
+        src/type.hpp
         src/memory/virtual_alloc.hpp
         src/memory/linux/linux_virtual_alloc.cpp
         src/memory/linux/linux_virtual_alloc.hpp
-        src/frontend/visitor.hpp
-        src/frontend/type.cpp
+        src/visitor.hpp
+        src/type.cpp
         src/debug/ast_printer.cpp
         src/debug/ast_printer.hpp
-        src/frontend/symbol.hpp
-        src/frontend/symbol.cpp
-        src/frontend/frontend_error.cpp
-        src/frontend/frontend_error.hpp
+        src/symbol.hpp
+        src/symbol.cpp
+        src/frontend_error.cpp
+        src/frontend_error.hpp
         src/util/macros.hpp
+        src/emit_context.hpp
+        src/compiler.cpp
+        src/compiler.hpp
+        src/expr.cpp
+        src/CompileError.cpp
+        src/CompileError.hpp
+        src/stmt.cpp
 )
 
+target_compile_definitions(ParsC PRIVATE LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.hpp)
+
+llvm_map_components_to_libnames(llvm_libs
+    core
+    support
+    irreader
+)
+
+target_link_libraries(ParsC PRIVATE LLVM)

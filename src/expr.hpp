@@ -3,20 +3,23 @@
 #include <variant>
 #include <vector>
 
+#include "emit_context.hpp"
 #include "node.hpp"
 #include "symbol.hpp"
 #include "visitor.hpp"
+
+#include "llvm/IR/IRBuilder.h"
 
 namespace pars
 {
 	struct Expr : Node
 	{
-
+		virtual llvm::Value* emit(EmitCtx &ctx) { return nullptr; }
 	};
 
 	using LiteralExprValue = std::variant
 	<
-		i64,
+		i32,
 		f32,
 		std::string_view
 	>;
@@ -24,6 +27,8 @@ namespace pars
 	struct LiteralExpr : Expr
 	{
 		LiteralExprValue value;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};
@@ -34,6 +39,8 @@ namespace pars
 		char op;
 		Expr* right;
 
+		llvm::Value *emit(EmitCtx &ctx) override;
+
 		ACCEPT
 	};
 
@@ -41,6 +48,8 @@ namespace pars
 	{
 		char op;
 		Expr* right;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};
@@ -50,6 +59,8 @@ namespace pars
 	{
 		std::string_view symbol;
 
+		llvm::Value *emit(EmitCtx &ctx) override;
+
 		ACCEPT
 	};
 
@@ -58,12 +69,16 @@ namespace pars
 		std::string_view symbol;
 		std::vector<Expr*> arguments;
 
+		llvm::Value *emit(EmitCtx &ctx) override;
+
 		ACCEPT
 	};
 
 	struct GroupExpr : Expr
 	{
 		Expr* expr;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};

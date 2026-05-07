@@ -1,18 +1,19 @@
 #include <iostream>
 #include <vector>
 
+#include "compiler.hpp"
 #include "overload.hpp"
 #include "debug/ast_printer.hpp"
 #include "debug/token_printer.hpp"
-#include "frontend/file_manager.hpp"
-#include "frontend/lexer.hpp"
-#include "frontend/parser.hpp"
-#include "frontend/token.hpp"
+#include "file_manager.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
+#include "token.hpp"
 #include "util/fmt.hpp"
 
 int main()
 {
-    auto source = pars::load_file("./tests/parsing.pars");
+    auto source = pars::load_file("./tests/compile.pars");
 
     if (!source.has_value())
     {
@@ -25,7 +26,7 @@ int main()
 
 	try
 	{
-		auto statements = parser.parse(source.value());
+		auto &statements = parser.parse(source.value());
 
 		parser.resolve_symbols();
 
@@ -39,10 +40,25 @@ int main()
 			}
 		}
 
+		std::flush(std::cout);
+
+		auto compiler = pars::Compiler{statements, pars::EmitCtx{}};
+
+		compiler.ctx.llvm_ctx = std::make_unique<llvm::LLVMContext>();
+		compiler.ctx.module = std::make_unique<llvm::Module>("main", *compiler.ctx.llvm_ctx);
+		compiler.ctx.builder = std::make_unique<llvm::IRBuilder<>>(*compiler.ctx.llvm_ctx);
+
+		for (auto *stmt : statements)
+		{
+			stmt->accept(&compiler);
+		}
+
+		compiler.ctx.module->print(llvm::outs(), nullptr);
+
 		pars::free_memory_blocks();
 	}
 	catch (std::exception &e)
 	{
-		fmt::println("{}", e.what());
+		fmt::println("\n{}", e.what());
 	}
 }

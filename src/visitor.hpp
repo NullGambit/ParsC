@@ -2,12 +2,13 @@
 
 namespace pars
 {
+	struct ExprFnStmt;
+	struct BlockStmt;
 	struct FnPrototypeStmt;
 	struct Symbol;
 	struct PrintlnStmt;
 	struct GroupExpr;
 	struct ReturnStmt;
-	struct FnStmt;
 	struct VarDeclStmt;
 	struct ImportStmt;
 	struct SymbolExpr;
@@ -28,10 +29,11 @@ namespace pars
 		virtual void visit(GroupExpr *expr) {}
 		virtual void visit(ImportStmt *stmt) {}
 		virtual void visit(VarDeclStmt *stmt) {}
-		virtual void visit(FnStmt *stmt) {}
 		virtual void visit(ReturnStmt *stmt) {}
 		virtual void visit(PrintlnStmt *stmt) {}
 		virtual void visit(Symbol *stmt) {}
 		virtual void visit(FnPrototypeStmt *stmt) {}
+		virtual void visit(BlockStmt *stmt) {}
+		virtual void visit(ExprFnStmt *stmt) {}
 	};
 }

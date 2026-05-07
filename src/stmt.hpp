@@ -2,7 +2,9 @@
 #include <string_view>
 #include <vector>
 
+#include "emit_context.hpp"
 #include "node.hpp"
+#include "symbol.hpp"
 #include "util/macros.hpp"
 
 namespace pars
@@ -35,9 +37,12 @@ namespace pars
 
 	struct FnPrototypeStmt : Stmt
 	{
+		Symbol symbol;
 		std::vector<VarDeclStmt*> parameters;
 		std::string_view return_type;
 		bool is_extern = false;
+
+		llvm::Function* emit(EmitCtx &ctx);
 
 		ACCEPT
 	};
@@ -51,11 +56,19 @@ namespace pars
 		ACCEPT
 	};
 
-	struct FnStmt : Stmt
+	struct BlockStmt : Stmt
 	{
-		FnPrototypeStmt prototype;
-		Symbol symbol;
+		FnPrototypeStmt *owner;
 		std::vector<Node*> body;
+
+		llvm::Function* emit(EmitCtx &ctx);
+
+		ACCEPT
+	};
+
+	struct ExprFnStmt : Stmt
+	{
+		Expr* expr;
 
 		ACCEPT
 	};
@@ -63,6 +76,8 @@ namespace pars
 	struct ReturnStmt : Stmt
 	{
 		Expr* expr {};
+
+		llvm::Value* emit(EmitCtx &ctx);
 
 		ACCEPT
 	};

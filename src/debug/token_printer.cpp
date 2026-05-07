@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "frontend/file_manager.hpp"
-#include "frontend/lexer.hpp"
-#include "frontend/token.hpp"
+#include "../file_manager.hpp"
+#include "../lexer.hpp"
+#include "../token.hpp"
 #include "magic_enum/magic_enum.hpp"
 #include "util/fmt.hpp"
 
