@@ -31,7 +31,6 @@ while (false)								\
 
 pars::Parser::Parser()
 {
-	m_scope_table.resize(6);
 
 	auto print_args = [](const std::vector<Expr*> &args)
 	{
@@ -80,9 +79,9 @@ void pars::Parser::resolve_symbols()
 {
 	for (auto unresolved : m_unresolved_symbols)
 	{
-		auto *symbol = find_symbol(unresolved.name);
+		auto has_symbol = m_scope_table.has_symbol(unresolved.name);
 
-		if (symbol == nullptr)
+		if (!has_symbol)
 		{
 			throw FrontendError(unresolved.token, "Symbol not defined", unresolved.node);
 		}
@@ -212,7 +211,7 @@ pars::VarDeclStmt* pars::Parser::parse_var()
 		throw FrontendError(m_lexer.peek_last(), "Cannot infer type", stmt);
 	}
 
-	add_to_scope(stmt->symbol, stmt);
+	m_scope_table.add_to_scope(stmt->symbol, stmt);
 
 	return stmt;
 }
@@ -285,7 +284,7 @@ pars::FnPrototypeStmt* pars::Parser::parse_fn_prototype()
 
 	prototype->symbol = get_symbol();
 
-	add_to_scope(prototype->symbol, prototype);
+	m_scope_table.add_to_scope(prototype->symbol, prototype);
 
 	COLLECT_COMMA_SEP(LeftParen, RightParen,
 		prototype->parameters.push_back(parse_var()));
@@ -306,7 +305,7 @@ pars::BlockStmt* pars::Parser::parse_block()
 {
 	auto *stmt = new_node<BlockStmt>();
 
-	m_scope++;
+	auto scope = m_scope_table.new_scope();
 
 	// we must be inside a function block so add params to scope
 	if (auto *prototype = peek<FnPrototypeStmt>(); prototype)
@@ -315,13 +314,8 @@ pars::BlockStmt* pars::Parser::parse_block()
 
 		for (auto *param : prototype->parameters)
 		{
-			add_to_scope(param->symbol.name, param, m_scope);
+			m_scope_table.add_to_scope(param->symbol.name, param);
 		}
-	}
-
-	if (m_scope >= m_scope_table.size())
-	{
-		m_scope_table.emplace_back();
 	}
 
 	auto *old_target = m_target;
@@ -335,10 +329,6 @@ pars::BlockStmt* pars::Parser::parse_block()
 
 	m_target = old_target;
 
-	m_scope_table[m_scope].clear();
-
-	m_scope--;
-
 	m_lexer.expect(RightBrace);
 
 	return stmt;
@@ -348,65 +338,10 @@ pars::ExprFnStmt * pars::Parser::parse_expr_fn()
 {
 	auto *stmt = new_node<ExprFnStmt>();
 
+	stmt->owner = peek<FnPrototypeStmt>();
 	stmt->expr = expression();
 
 	return stmt;
-}
-
-pars::Parser::Scope & pars::Parser::get_current_scope()
-{
-	if (m_scope >= m_scope_table.size())
-	{
-		return m_scope_table.emplace_back();
-	}
-
-	return m_scope_table[m_scope];
-}
-
-void pars::Parser::add_to_scope(Symbol symbol, Node *node, u32 level)
-{
-	add_to_scope(symbol.name, node, level);
-}
-
-void pars::Parser::add_to_scope(std::string_view name, Node *node, u32 level)
-{
-	Scope *scope;
-
-	if (level != UINT32_MAX)
-	{
-		if (level >= m_scope_table.size())
-		{
-			for (u32 i = 0; i < level; i++)
-			{
-				m_scope_table.emplace_back();
-			}
-		}
-
-		scope = &m_scope_table[level];
-	}
-	else
-	{
-		scope = &get_current_scope();
-	}
-
-	scope->emplace(name, node);
-}
-
-pars::Node * pars::Parser::find_symbol(std::string_view name)
-{
-	// TODO: allow for parameterized up to down or down to up scope checking
-	for (auto i = 0; i <= m_scope; i++)
-	{
-		auto &scope = m_scope_table[i];
-		auto iter = scope.find(name);
-
-		if (iter != scope.end())
-		{
-			return iter->second;
-		}
-	}
-
-	return nullptr;
 }
 
 pars::Expr* pars::Parser::parse_primary()
@@ -452,7 +387,7 @@ pars::Expr* pars::Parser::parse_primary()
 	{
 		auto identifier = m_lexer.peek_last().lexeme;
 
-		auto symbol = find_symbol(identifier);
+		auto symbol = m_scope_table.find_symbol(identifier);
 
 		UnresolvedSymbol unresolved_symbol
 		{

@@ -5,6 +5,7 @@
 
 #include "expr.hpp"
 #include "lexer.hpp"
+#include "scope_table.hpp"
 #include "stmt.hpp"
 #include "containers/hash_map.hpp"
 
@@ -36,15 +37,11 @@ namespace pars
 
 		std::vector<Node*> *m_target = &m_nodes;
 
+		ScopeTable m_scope_table;
+
 		// any symbol that could not be resolved such as a function or struct that was defined bellow
 		// will be added to this table to be resolved later
 		std::vector<UnresolvedSymbol> m_unresolved_symbols;
-
-		using Scope = HashMap<std::string_view, Node*>;
-
-		u32 m_scope {};
-
-		std::vector<Scope> m_scope_table;
 
 		std::vector<Expr*> m_pending_attributes;
 
@@ -62,11 +59,6 @@ namespace pars
 		FnPrototypeStmt* parse_fn_prototype();
 		BlockStmt* parse_block();
 		ExprFnStmt* parse_expr_fn();
-
-		Scope& get_current_scope();
-		void add_to_scope(Symbol symbol, Node *node, u32 level = UINT32_MAX);
-		void add_to_scope(std::string_view name, Node *node, u32 level = UINT32_MAX);
-		Node* find_symbol(std::string_view name);
 
 		// expr parsing stuff
 		// TODO replace with a pratt parser

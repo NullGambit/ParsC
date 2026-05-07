@@ -46,18 +46,18 @@ llvm::Function* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 	return fn;
 }
 
-llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
+llvm::Function* setup_function(pars::FnPrototypeStmt *prototype, pars::EmitCtx &ctx)
 {
-	auto *fn = ctx.module->getFunction(owner->symbol.name);
+	auto *fn = ctx.module->getFunction(prototype->symbol.name);
 
 	if (fn == nullptr)
 	{
-		fn = owner->emit(ctx);
+		fn = prototype->emit(ctx);
 	}
 
 	if (!fn->empty())
 	{
-		throw CompileError{fmt::format("Function {} is already defined", owner->symbol.name)};
+		throw pars::CompileError{fmt::format("Function {} is already defined", prototype->symbol.name)};
 	}
 
 	auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
@@ -70,6 +70,13 @@ llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
 	{
 		ctx.named_values[arg.getName()] = &arg;
 	}
+
+	return fn;
+}
+
+llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
+{
+	auto *fn = setup_function(owner, ctx);
 
 	for (auto *entry : body)
 	{
@@ -99,6 +106,15 @@ llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
 		fn->eraseFromParent();
 		throw CompileError{std::move(error_str)};
 	}
+
+	return fn;
+}
+
+llvm::Function * pars::ExprFnStmt::emit(EmitCtx &ctx)
+{
+	auto *fn = setup_function(owner, ctx);
+
+	ctx.builder->CreateRet(expr->emit(ctx));
 
 	return fn;
 }

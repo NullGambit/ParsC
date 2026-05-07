@@ -66,6 +66,8 @@ add_executable(ParsC src/main.cpp
         src/CompileError.cpp
         src/CompileError.hpp
         src/stmt.cpp
+        src/scope_table.cpp
+        src/scope_table.hpp
 )
 
 target_compile_definitions(ParsC PRIVATE LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)

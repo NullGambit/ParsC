@@ -1,0 +1,36 @@
+// an alternative design for destructors 
+
+fn Data<T, A = #allocator<T>>
+{
+    value: *T
+    allocator: A
+}
+
+// unless doing specialization impl blocks dont need to redefine generic params 
+impl Data 
+{
+    self(value: T) => 
+    {
+        var s = Self {}
+
+        s.value = s.allocator.alloc(value)
+
+        return s
+    }
+
+    fn op_drop() => s.allocator.free(s.value)
+}
+
+
+fn main()
+{
+    var data = Data{10}
+    var data2 = Data{20}
+
+    // the compiler will call op_drop here
+    // and will no longer be called at the end of the scope and calling drop on data again 
+    // is a compile time error
+    drop data 
+
+    // the compiler will call op_drop here for data2 since it was not manually dropped
+}

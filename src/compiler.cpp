@@ -9,3 +9,8 @@ void pars::Compiler::visit(BlockStmt *fn)
 {
 	fn->emit(ctx);
 }
+
+void pars::Compiler::visit(ExprFnStmt *fn)
+{
+	fn->emit(ctx);
+}

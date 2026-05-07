@@ -19,5 +19,6 @@ namespace pars
 
 		void visit(FnPrototypeStmt *fn) override;
 		void visit(BlockStmt *fn) override;
+		void visit(ExprFnStmt *fn) override;
 	};
 }

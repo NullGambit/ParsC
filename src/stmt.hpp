@@ -68,7 +68,10 @@ namespace pars
 
 	struct ExprFnStmt : Stmt
 	{
+		FnPrototypeStmt *owner;
 		Expr* expr;
+
+		llvm::Function* emit(EmitCtx &ctx);
 
 		ACCEPT
 	};
