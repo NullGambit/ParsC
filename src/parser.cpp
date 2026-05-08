@@ -339,6 +339,7 @@ pars::ExprFnStmt * pars::Parser::parse_expr_fn()
 	auto *stmt = new_node<ExprFnStmt>();
 
 	stmt->owner = peek<FnPrototypeStmt>();
+	stmt->owner->return_type = "i32";
 	stmt->expr = expression();
 
 	return stmt;

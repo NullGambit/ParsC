@@ -25,6 +25,13 @@ fn main()
         local_value += x
     }
 
+    // take everything by reference
+    // will only capture used symbols
+    var mutate_local2 = [&] x =>
+    {
+        local_value += x
+    }
+
     take_fn(add_local)
     take_fn(mutate_local)
 

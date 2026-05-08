@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 
+#include "CompileError.hpp"
 #include "compiler.hpp"
 #include "overload.hpp"
 #include "debug/ast_printer.hpp"
@@ -9,6 +10,7 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "token.hpp"
+#include "type.hpp"
 #include "util/fmt.hpp"
 
 int main()
@@ -19,7 +21,7 @@ int main()
     {
 	    fmt::panic("could not read source file");
     }
- 
+
 	// pars::print_tokens(source.value());
 
 	auto parser = pars::Parser();
@@ -54,6 +56,8 @@ int main()
 		}
 
 		compiler.ctx.module->print(llvm::outs(), nullptr);
+
+		pars::compile_exe(compiler.ctx, "./a");
 
 		pars::free_memory_blocks();
 	}

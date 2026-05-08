@@ -1,6 +1,6 @@
 fn add(a: i32, b: i32) => a + b
 
-fn main()
+fn main(): i32
 {
-    add(10, 20)
+    return add(10, 20)
 }

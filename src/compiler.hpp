@@ -21,4 +21,6 @@ namespace pars
 		void visit(BlockStmt *fn) override;
 		void visit(ExprFnStmt *fn) override;
 	};
+
+	void compile_exe(EmitCtx &ctx, std::string_view output_path);
 }

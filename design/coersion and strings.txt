@@ -12,11 +12,16 @@ struct String
     ptr: *char
     length: int
     capacity: int
+}
+
+impl String
+{
+    self(value: str) => Self{value.ptr, value.length, value.length * 2}
 
     // when using a String where an str is needed the compiler will see if it has an op_coerce method
     // and if the type is specialized as the desrired type
     // in this case all its really doing is making a slice with a known length
-    fn op_coerce<T: str>() => ptr[:length]
+    fn op_coerce<T: str>() => s.ptr[:s.length]
 }
 
 // always best to default to an str when only need to do readonly operations
@@ -35,8 +40,8 @@ fn main()
     // bytes is not const but will be coerced into const because there is no negative side effect
     print_str(bytes)
 
-    // newly created string object will be coerced into an str
-    print_str(String::new("hello"))
+    // newly created string object will be coerced into a str
+    print_str(String{"hello"})
 
     // will be an 32 bit int
     var n = 10
