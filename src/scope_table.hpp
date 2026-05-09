@@ -35,6 +35,14 @@ namespace pars
 		Node* find_symbol(std::string_view name);
 		bool has_symbol(std::string_view name);
 
+		template<IsNode T>
+		T* find_symbol(std::string_view name)
+		{
+			auto *node = find_symbol(name);
+
+			return dynamic_cast<T*>(node);
+		}
+
 	private:
 		u32 m_level {};
 		std::vector<Scope> m_table;

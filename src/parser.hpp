@@ -72,6 +72,9 @@ namespace pars
 
 		bool followed_by_body();
 
+		// expects an identifier and resolves its type or throws a frontend error if not resolved
+		Type* resolve_type();
+
 		template<IsNode T>
 		T* new_node()
 		{
@@ -115,6 +118,8 @@ namespace pars
 				bin->op = op[0];
 
 				expr = bin;
+
+				expr->type = bin->left->type;
 			}
 
 			return expr;

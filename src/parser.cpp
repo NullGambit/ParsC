@@ -4,6 +4,7 @@
 
 #include "frontend_error.hpp"
 #include "token.hpp"
+#include "type.hpp"
 #include "util/fmt.hpp"
 
 using enum pars::TokenType;
@@ -61,6 +62,16 @@ pars::Parser::Parser()
 	// {
 	//
 	// };
+
+	m_scope_table.add_to_scope("i8", const_cast<Integer*>(&I8Type));
+	m_scope_table.add_to_scope("u8", const_cast<Integer*>(&U8Type));
+	m_scope_table.add_to_scope("i16", const_cast<Integer*>(&I16Type));
+	m_scope_table.add_to_scope("u16", const_cast<Integer*>(&U16Type));
+	m_scope_table.add_to_scope("i32", const_cast<Integer*>(&I32Type));
+	m_scope_table.add_to_scope("u32", const_cast<Integer*>(&U32Type));
+	m_scope_table.add_to_scope("i64", const_cast<Integer*>(&I64Type));
+	m_scope_table.add_to_scope("u64", const_cast<Integer*>(&U64Type));
+	m_scope_table.add_to_scope("bool", const_cast<Bool*>(&BoolType));
 }
 
 const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
@@ -208,24 +219,20 @@ pars::VarDeclStmt* pars::Parser::parse_var()
 
 	stmt->symbol = get_symbol();
 
-	auto was_typed = false;
-	auto initialized = false;
-
 	if (m_lexer.match(Colon))
 	{
-		stmt->type = m_lexer.expect(Identifier).lexeme;
-		was_typed = true;
+		stmt->type = resolve_type();
 	}
 
 	if (m_lexer.match(Equal))
 	{
 		stmt->initializer = expression();
-		initialized = true;
+		stmt->type = stmt->initializer->type;
 	}
 
-	if (!was_typed && !initialized)
+	if (stmt->type == nullptr)
 	{
-		throw FrontendError(m_lexer.peek_last(), "Cannot infer type", stmt);
+		throw FrontendError(m_lexer.peek_last(), "Cannot infer variable type", stmt);
 	}
 
 	m_scope_table.add_to_scope(stmt->symbol, stmt);
@@ -308,11 +315,11 @@ pars::FnPrototypeStmt* pars::Parser::parse_fn_prototype()
 
 	if (m_lexer.match(Colon))
 	{
-		prototype->return_type = m_lexer.expect(Identifier).lexeme;
+		prototype->return_type = resolve_type();
 	}
 	else
 	{
-		prototype->return_type = "void";
+		prototype->return_type = const_cast<Void*>(&VoidType);
 	}
 
 	return prototype;
@@ -356,8 +363,14 @@ pars::ExprFnStmt * pars::Parser::parse_expr_fn()
 	auto *stmt = new_node<ExprFnStmt>();
 
 	stmt->owner = peek<FnPrototypeStmt>();
-	stmt->owner->return_type = "i32";
 	stmt->expr = expression();
+
+	if (!stmt->owner->return_type->is_equal(&VoidType) && !stmt->owner->return_type->is_equal(stmt->expr->type))
+	{
+		throw FrontendError{m_lexer.peek_last(), "return type does not match"};
+	}
+
+	stmt->owner->return_type = stmt->expr->type;
 
 	return stmt;
 }
@@ -398,6 +411,7 @@ pars::Expr* pars::Parser::parse_primary()
 		auto *group = new_node<GroupExpr>();
 
 		group->expr = expr;
+		group->type = expr->type;
 
 		return group;
 	}
@@ -428,6 +442,13 @@ pars::Expr* pars::Parser::parse_primary()
 
 			expr->symbol = identifier;
 
+			auto *fn = dynamic_cast<FnPrototypeStmt*>(symbol);
+
+			if (fn != nullptr)
+			{
+				expr->type = fn->return_type;
+			}
+
 			expr->arguments = collect_call_arguments();
 
 			m_lexer.expect(RightParen);
@@ -439,6 +460,13 @@ pars::Expr* pars::Parser::parse_primary()
 			auto *expr = new_node<SymbolExpr>();
 
 			expr->symbol = identifier;
+
+			auto *var = dynamic_cast<VarDeclStmt*>(symbol);
+
+			if (var != nullptr)
+			{
+				expr->type = var->type;
+			}
 
 			result = expr;
 		}
@@ -454,19 +482,17 @@ pars::Expr* pars::Parser::parse_primary()
 
 	auto *literal = new_node<LiteralExpr>();
 
-	if (m_lexer.match(True))
+	if (m_lexer.match(True) || m_lexer.match(False))
 	{
-		literal->value = true;
-	}
-	if (m_lexer.match(False))
-	{
-		literal->value = false;
+		literal->value = m_lexer.peek_last(True);
+		literal->type = const_cast<Bool*>(&BoolType);
 	}
 	if (m_lexer.match(IntegerLiteral))
 	{
 		auto lexeme = m_lexer.peek_last().lexeme;
 		i32 n = 0;
 		std::from_chars(lexeme.begin(), lexeme.end(), n);
+		literal->type = const_cast<Integer*>(&I32Type);
 		literal->value = n;
 	}
 	if (m_lexer.match(DecimalLiteral))
@@ -474,6 +500,7 @@ pars::Expr* pars::Parser::parse_primary()
 		auto lexeme = m_lexer.peek_last().lexeme;
 		f32 n = 0;
 		std::from_chars(lexeme.begin(), lexeme.end(), n);
+		literal->type = const_cast<Float*>(&F32Type);
 		literal->value = n;
 	}
 	if (m_lexer.match(StringLiteral))
@@ -487,6 +514,20 @@ pars::Expr* pars::Parser::parse_primary()
 bool pars::Parser::followed_by_body()
 {
 	return m_lexer.peek(LeftBrace) || m_lexer.peek(Arrow);
+}
+
+pars::Type* pars::Parser::resolve_type()
+{
+	auto type_name = m_lexer.expect(Identifier).lexeme;
+
+	auto *type = m_scope_table.find_symbol<Type>(type_name);
+
+	if (type == nullptr)
+	{
+		throw FrontendError{m_lexer.peek_last(), "unknown type", nullptr};
+	}
+
+	return type;
 }
 
 std::vector<pars::Expr*> pars::Parser::collect_call_arguments()
@@ -518,6 +559,8 @@ pars::Expr* pars::Parser::parse_unary()
 
 		unary->op = op.lexeme[0];
 		unary->right = expr;
+
+		expr->type = expr->type;
 
 		return unary;
 	}

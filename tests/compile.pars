@@ -1,5 +1,7 @@
 fn add(a: i32, b: i32) => a + b
 
+fn test(n: i8) => true
+
 extern fn rand(): i32
 extern fn exit(code: i32)
 extern fn srand(n: i32)

@@ -74,7 +74,7 @@ void pars::AstPrinter::visit(BlockStmt *stmt)
 
 void pars::AstPrinter::visit(LiteralExpr *expr)
 {
-	fmt::print("{}", std::get<i32>(expr->value));
+	// fmt::print("{}", std::get<i32>(expr->value));
 }
 
 void pars::AstPrinter::visit(BinaryExpr *expr)

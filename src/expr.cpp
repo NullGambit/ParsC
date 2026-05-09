@@ -30,6 +30,11 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 		[&ctx](std::string_view str)
 		{
 			return (llvm::Value*)ctx.builder->CreateGlobalString(str, ".str", 0, ctx.module.get());
+		},
+		[&ctx](bool _bool)
+		{
+			auto value = llvm::APInt(8, _bool);
+			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 		}
 	}, value);
 }

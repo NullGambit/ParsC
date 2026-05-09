@@ -9,6 +9,7 @@
 
 namespace pars
 {
+	struct Type;
 	struct Expr;
 
 	struct Stmt : Node
@@ -28,7 +29,7 @@ namespace pars
 	struct VarDeclStmt : Stmt
 	{
 		Symbol symbol;
-		std::string_view type;
+		Type *type;
 		Expr* initializer;
 		VarFlags flags;
 
@@ -39,7 +40,7 @@ namespace pars
 	{
 		Symbol symbol;
 		std::vector<VarDeclStmt*> parameters;
-		std::string_view return_type;
+		Type *return_type;
 		bool is_extern = false;
 
 		llvm::Function* emit(EmitCtx &ctx);

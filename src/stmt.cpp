@@ -5,36 +5,23 @@
 
 #include "compile_error.hpp"
 #include "expr.hpp"
+#include "type.hpp"
 #include "util/fmt.hpp"
 
 llvm::Function* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 {
-	llvm::Type *ret_type = nullptr;
-
-	static auto i32_type = llvm::Type::getInt32Ty(*ctx.llvm_ctx);
-
-	if (return_type == "i32")
-	{
-		ret_type = i32_type;
-	}
-	else
-	{
-		ret_type = llvm::Type::getVoidTy(*ctx.llvm_ctx);
-	}
-
 	std::vector<llvm::Type*> param_types;
 
 	param_types.reserve(parameters.size());
 
+	auto *llvm_ctx = ctx.llvm_ctx.get();
+
 	for (auto *param : parameters)
 	{
-		if (param->type == "i32")
-		{
-			param_types.emplace_back(i32_type);
-		}
+		param_types.emplace_back(param->type->get_llvm_type(llvm_ctx));
 	}
 
-	auto *ft = llvm::FunctionType::get(ret_type, param_types, false);
+	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, false);
 
 	auto *fn = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, symbol.name, ctx.module.get());
 
@@ -90,7 +77,7 @@ llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
 		}
 	}
 
-	if (owner->return_type == "void")
+	if (owner->return_type->is_equal(&VoidType))
 	{
 		ctx.builder->CreateRetVoid();
 	}

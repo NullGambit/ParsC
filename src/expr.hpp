@@ -12,8 +12,12 @@
 
 namespace pars
 {
+	struct Type;
+
 	struct Expr : Node
 	{
+		Type *type;
+
 		virtual llvm::Value* emit(EmitCtx &ctx) { return nullptr; }
 	};
 
@@ -21,7 +25,8 @@ namespace pars
 	<
 		i32,
 		f32,
-		std::string_view
+		std::string_view,
+		bool
 	>;
 
 	struct LiteralExpr : Expr
