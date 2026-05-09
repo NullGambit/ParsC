@@ -2,12 +2,18 @@
 
 #include <memory>
 
+#include "token.hpp"
+
 namespace pars
 {
 	struct Visitor;
 
 	struct Node
 	{
+		// the token associated with every node
+		// mainly useful for error reporting
+		Token token;
+
 		virtual ~Node() = default;
 
 		virtual void accept(Visitor *visitor) {}
@@ -17,9 +23,18 @@ namespace pars
 
 	u8 *alloc_node(u32 size);
 
+	// slightly pointless because nodes usually live as long as the compiler is running
+	// and thus would be freed up by the os after exit
+	// but why not might be useful later
 	void free_memory_blocks();
 
+	// might seem arbitrary to force only nodes to use this arena
+	// but only allocating ast nodes here will mean ast nodes will be tightly packed
+	// and no extra nonsense will be in between thus improving data locality
 	template<class T>
+	concept IsNode = std::is_base_of_v<Node, T>;
+
+	template<IsNode T>
 	T* new_node()
 	{
 		auto *node = alloc_node(sizeof(T));

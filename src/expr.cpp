@@ -69,7 +69,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 	if (fn->arg_size() != arguments.size())
 	{
-		throw CompileError{fmt::format("expected {} but got {}", fn->arg_size(), arguments.size())};
+		throw CompileError{this, fmt::format("expected {} argument but got {}", fn->arg_size(), arguments.size())};
 	}
 
 	std::vector<llvm::Value*> argv;

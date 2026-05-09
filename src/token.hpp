@@ -110,4 +110,6 @@ namespace pars
     };
 
     bool is_binary_op(TokenType type);
+
+    std::string report_token(Token token, std::string_view message);
 }

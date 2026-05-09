@@ -47,7 +47,7 @@ void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
 
     if (!target)
     {
-    	throw CompileError{fmt::format("Target lookup failed: {}", error)};
+    	throw CompileError{nullptr, fmt::format("Target lookup failed: {}", error)};
     }
 
     llvm::TargetOptions opt;
@@ -94,7 +94,7 @@ void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
 
     if (ec)
     {
-    	throw pars::CompileError{fmt::format("Cannot open output file: {}", ec.message())};
+    	throw CompileError{nullptr, fmt::format("Cannot open output file: {}", ec.message())};
     }
 
     obj_os.flush();
@@ -122,7 +122,7 @@ void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
 
     if (result != 0)
     {
-    	throw CompileError{fmt::format("Linking failed: {}", linker_error)};
+    	throw CompileError{nullptr, fmt::format("Linking failed: {}", linker_error)};
     }
 
     llvm::sys::fs::remove(obj_path);

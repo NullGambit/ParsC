@@ -4,9 +4,6 @@ extern fn rand(): i32
 extern fn exit(code: i32)
 extern fn srand(n: i32)
 extern fn time(n: i32): i32
-{
-    return 0
-}
 
 fn main(): i32
 {

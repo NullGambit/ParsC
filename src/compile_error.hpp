@@ -9,13 +9,14 @@ namespace llvm
 
 namespace pars
 {
+	struct Node;
+
 	struct CompileError : std::exception
 	{
+		Node *node;
 		std::string message;
 
-		CompileError(std::string &&message) :
-		message{message}
-		{}
+		CompileError(Node *node, std::string &&message);
 
 		const char *what() const noexcept override;
 	};

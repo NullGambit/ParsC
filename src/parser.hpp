@@ -72,6 +72,16 @@ namespace pars
 
 		bool followed_by_body();
 
+		template<IsNode T>
+		T* new_node()
+		{
+			auto *node = pars::new_node<T>();
+
+			node->token = m_lexer.peek();
+
+			return node;
+		}
+
 		template<class T>
 		T* peek()
 		{

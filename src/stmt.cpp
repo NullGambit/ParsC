@@ -57,7 +57,7 @@ llvm::Function* setup_function(pars::FnPrototypeStmt *prototype, pars::EmitCtx &
 
 	if (!fn->empty())
 	{
-		throw pars::CompileError{fmt::format("Function {} is already defined", prototype->symbol.name)};
+		throw pars::CompileError{prototype, fmt::format("Function {} is already defined", prototype->symbol.name)};
 	}
 
 	auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
@@ -104,7 +104,7 @@ llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
 	{
 		error_stream.flush();
 		fn->eraseFromParent();
-		throw CompileError{std::move(error_str)};
+		throw CompileError{this, std::move(error_str)};
 	}
 
 	return fn;

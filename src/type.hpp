@@ -125,7 +125,7 @@ virtual bool is_equal(Type const *other) const override							\
 		DEFAULT_INTEGRAL_EQUAL(Char)
 	};
 
-	static const Void VoidType;
+	static const Void VoidType {};
 	static const Integer I8Type {8, IS_SIGNED};
 	static const Integer U8Type {8, !IS_SIGNED};
 	static const Integer I16Type {16, IS_SIGNED};

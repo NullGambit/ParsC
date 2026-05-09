@@ -13,14 +13,7 @@ pars::FrontendError::FrontendError(Token token, std::string &&message, Node *nod
 		this->message = message;
 	}
 
-	auto source_file = get_source(token.location.file_id);
-
-	this->message = fmt::format("{} ({}:{}) '{}'\n\t{}",
-		source_file.path,
-		token.location.line,
-		token.location.column,
-		token.lexeme,
-		message);
+	this->message = report_token(token, message);
 }
 
 const char * pars::FrontendError::what() const noexcept
