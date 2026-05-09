@@ -106,6 +106,7 @@ llvm::Function * pars::ExprFnStmt::emit(EmitCtx &ctx)
 	return fn;
 }
 
+// TODO handle mismatched return types
 llvm::Value * pars::ReturnStmt::emit(EmitCtx &ctx)
 {
 	return ctx.builder->CreateRet(expr->emit(ctx));

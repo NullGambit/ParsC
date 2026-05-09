@@ -72,6 +72,7 @@ pars::Parser::Parser()
 	m_scope_table.add_to_scope("i64", const_cast<Integer*>(&I64Type));
 	m_scope_table.add_to_scope("u64", const_cast<Integer*>(&U64Type));
 	m_scope_table.add_to_scope("bool", const_cast<Bool*>(&BoolType));
+	m_scope_table.add_to_scope("str", const_cast<Str*>(&StrType));
 }
 
 const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
@@ -447,6 +448,7 @@ pars::Expr* pars::Parser::parse_primary()
 			if (fn != nullptr)
 			{
 				expr->type = fn->return_type;
+				expr->prototype = fn;
 			}
 
 			expr->arguments = collect_call_arguments();
@@ -506,6 +508,7 @@ pars::Expr* pars::Parser::parse_primary()
 	if (m_lexer.match(StringLiteral))
 	{
 		literal->value = m_lexer.peek_last().lexeme;
+		literal->type = const_cast<Str*>(&StrType);
 	}
 
 	return literal;

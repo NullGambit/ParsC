@@ -71,6 +71,7 @@ namespace pars
 
 	struct CallExpr : Expr
 	{
+		FnPrototypeStmt *prototype;
 		std::string_view symbol;
 		std::vector<Expr*> arguments;
 

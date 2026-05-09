@@ -5,6 +5,8 @@
 #include "llvm/IR/GlobalVariable.h"
 
 #include "overload.hpp"
+#include "stmt.hpp"
+#include "type.hpp"
 
 #include "llvm/ADT/APFloat.h"
 #include "llvm/IR/BasicBlock.h"
@@ -81,9 +83,28 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 	argv.reserve(fn->arg_size());
 
-	for (auto *arg : arguments)
+	for (auto i = 0; auto *arg : arguments)
 	{
+		auto *desired_type = prototype->parameters[i]->type;
+
+		if (!arg->type->is_equal(desired_type))
+		{
+			throw CompileError
+			{
+				this,
+				fmt::format
+				(
+					"expected type {} instead of {} at position {}",
+					desired_type->get_type_name(),
+					arg->type->get_type_name(),
+					i
+				)
+			};
+		}
+
 		argv.emplace_back(arg->emit(ctx));
+
+		i++;
 	}
 
 	return ctx.builder->CreateCall(fn, argv);

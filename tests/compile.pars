@@ -6,9 +6,12 @@ extern fn rand(): i32
 extern fn exit(code: i32)
 extern fn srand(n: i32)
 extern fn time(n: i32): i32
+extern fn printf(s: str, n: i32): i32
+extern fn puts(s: str): i32
 
-fn main(): i32
+fn main()
 {
     srand(time(0))
-    return add(rand(), rand())
+    printf("hello %d", add(rand(), rand()))
+    puts("")
 }

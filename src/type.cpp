@@ -33,3 +33,8 @@ llvm::Type * pars::Char::get_llvm_type(llvm::LLVMContext *ctx) const
 	return Integral::get_llvm_type(ctx);
 }
 
+llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);
+}
+

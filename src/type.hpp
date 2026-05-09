@@ -18,6 +18,7 @@ namespace pars
 		virtual bool is_equal(Type const *other) const = 0;
 		virtual llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const = 0;
 		virtual bool is_primitive() const { return false; }
+		virtual std::string_view get_type_name() = 0;
 	};
 
 	template<class T>
@@ -34,7 +35,7 @@ namespace pars
 		return nullptr;
 	}
 
-#define DEFAULT_TYPE_EQUAL(T) bool is_equal(Type const *other) const override { return types_match<Void>(this, other); }
+#define DEFAULT_TYPE_EQUAL(T) bool is_equal(Type const *other) const override { return types_match<T>(this, other); }
 
 #define DEFAULT_INTEGRAL_EQUAL(T)												\
 virtual bool is_equal(Type const *other) const override							\
@@ -59,16 +60,23 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return true;
 		}
+
+		std::string_view get_type_name() override
+		{
+			return "void";
+		}
 	};
 
 	struct Integral : Type
 	{
 		u8 bits;
 		bool is_signed;
+		std::string_view type_name;
 
-		Integral(u8 bits, bool is_signed) :
+		Integral(u8 bits, bool is_signed, std::string_view type_name) :
 			bits{bits},
-			is_signed{is_signed}
+			is_signed{is_signed},
+			type_name{type_name}
 		{}
 
 		bool is_primitive() const final
@@ -78,13 +86,18 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
+		std::string_view get_type_name() override
+		{
+			return type_name;
+		}
+
 		DEFAULT_INTEGRAL_EQUAL(Integral)
 	};
 
 	struct Integer : Integral
 	{
-		Integer(u8 bits, bool is_signed) :
-			Integral{bits, is_signed}
+		Integer(u8 bits, bool is_signed, std::string_view type_name) :
+			Integral{bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -94,8 +107,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct Float : Integral
 	{
-		Float(u8 bits, bool is_signed) :
-			Integral{bits, is_signed}
+		Float(u8 bits, bool is_signed, std::string_view type_name) :
+			Integral{bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -105,8 +118,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct Bool : Integral
 	{
-		Bool(u8 bits, bool is_signed) :
-			Integral{bits, is_signed}
+		Bool(u8 bits, bool is_signed, std::string_view type_name) :
+			Integral{bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -116,8 +129,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct Char : Integral
 	{
-		Char(u8 bits, bool is_signed) :
-			Integral{bits, is_signed}
+		Char(u8 bits, bool is_signed, std::string_view type_name) :
+			Integral{bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -126,17 +139,31 @@ virtual bool is_equal(Type const *other) const override							\
 	};
 
 	static const Void VoidType {};
-	static const Integer I8Type {8, IS_SIGNED};
-	static const Integer U8Type {8, !IS_SIGNED};
-	static const Integer I16Type {16, IS_SIGNED};
-	static const Integer U16Type {16, !IS_SIGNED};
-	static const Integer I32Type {32, IS_SIGNED};
-	static const Integer U32Type {32, !IS_SIGNED};
-	static const Integer I64Type {64, IS_SIGNED};
-	static const Integer U64Type {64, !IS_SIGNED};
-	static const Float F32Type {32, IS_SIGNED};
-	static const Float F64Type {64, IS_SIGNED};
-	static const Bool BoolType {8, !IS_SIGNED};
-	static const Char CharType {8, IS_SIGNED};
-	static const Char UCharType {8, !IS_SIGNED};
+	static const Integer I8Type {8, IS_SIGNED, "i8"};
+	static const Integer U8Type {8, !IS_SIGNED, "u8"};
+	static const Integer I16Type {16, IS_SIGNED, "i16"};
+	static const Integer U16Type {16, !IS_SIGNED, "u16"};
+	static const Integer I32Type {32, IS_SIGNED, "i32"};
+	static const Integer U32Type {32, !IS_SIGNED, "u32"};
+	static const Integer I64Type {64, IS_SIGNED, "i64"};
+	static const Integer U64Type {64, !IS_SIGNED, "u64"};
+	static const Float F32Type {32, IS_SIGNED, "f32"};
+	static const Float F64Type {64, IS_SIGNED, "f64"};
+	static const Bool BoolType {8, !IS_SIGNED, "bool"};
+	static const Char CharType {8, IS_SIGNED, "char"};
+	static const Char UCharType {8, !IS_SIGNED, "uchar"};
+
+	struct Str : Type
+	{
+		DEFAULT_TYPE_EQUAL(Str)
+
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		std::string_view get_type_name() override
+		{
+			return "str";
+		}
+	};
+
+	static const Str StrType {};
 }

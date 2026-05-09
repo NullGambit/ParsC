@@ -32,15 +32,15 @@ int main()
 
 		parser.resolve_symbols();
 
-		auto ast_printer = pars::AstPrinter{};
-
-		for (auto *stmt : statements)
-		{
-			if (stmt != nullptr)
-			{
-				stmt->accept(&ast_printer);
-			}
-		}
+		// auto ast_printer = pars::AstPrinter{};
+		//
+		// for (auto *stmt : statements)
+		// {
+		// 	if (stmt != nullptr)
+		// 	{
+		// 		stmt->accept(&ast_printer);
+		// 	}
+		// }
 
 		std::flush(std::cout);
 
