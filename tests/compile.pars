@@ -1,6 +1,15 @@
 fn add(a: i32, b: i32) => a + b
 
+extern fn rand(): i32
+extern fn exit(code: i32)
+extern fn srand(n: i32)
+extern fn time(n: i32): i32
+{
+    return 0
+}
+
 fn main(): i32
 {
-    return add(10, 20)
+    srand(time(0))
+    return add(rand(), rand())
 }

@@ -1,6 +1,6 @@
 #include "compiler.hpp"
 
-#include "CompileError.hpp"
+#include "compile_error.hpp"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/FileSystem.h"
@@ -105,6 +105,7 @@ void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
         "-o", output_path,
         obj_path,
         "-no-pie",         // if you used static reloc model
+        "-lm",
         // "-Wl,-e,_start"  // custom entry point (see below)
     };
 

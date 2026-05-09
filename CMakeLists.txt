@@ -63,8 +63,8 @@ add_executable(ParsC src/main.cpp
         src/compiler.cpp
         src/compiler.hpp
         src/expr.cpp
-        src/CompileError.cpp
-        src/CompileError.hpp
+        src/compile_error.cpp
+        src/compile_error.hpp
         src/stmt.cpp
         src/scope_table.cpp
         src/scope_table.hpp

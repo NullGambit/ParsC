@@ -70,6 +70,8 @@ namespace pars
 		Expr* parse_factor();
 		Expr* parse_primary();
 
+		bool followed_by_body();
+
 		template<class T>
 		T* peek()
 		{

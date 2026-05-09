@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "CompileError.hpp"
+#include "compile_error.hpp"
 #include "compiler.hpp"
 #include "overload.hpp"
 #include "debug/ast_printer.hpp"

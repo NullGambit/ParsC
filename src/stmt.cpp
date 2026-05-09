@@ -3,7 +3,7 @@
 #include <iostream>
 #include <llvm/IR/Verifier.h>
 
-#include "CompileError.hpp"
+#include "compile_error.hpp"
 #include "expr.hpp"
 #include "util/fmt.hpp"
 

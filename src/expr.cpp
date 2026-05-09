@@ -1,6 +1,6 @@
 #include "expr.hpp"
 
-#include "CompileError.hpp"
+#include "compile_error.hpp"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/GlobalVariable.h"
 

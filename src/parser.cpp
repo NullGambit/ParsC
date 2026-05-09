@@ -97,17 +97,34 @@ pars::Node* pars::Parser::declaration()
 
 	if (m_lexer.match(Extern))
 	{
+		if (m_lexer.match(Identifier) && m_lexer.peek_last().lexeme != "C")
+		{
+			throw FrontendError{m_lexer.peek_last(), "unsupported extern type found"};
+		}
+
 		m_lexer.expect(Fn);
 
 		auto *prototype = parse_fn_prototype();
 
 		prototype->is_extern = true;
 
+		if (followed_by_body())
+		{
+			throw FrontendError{m_lexer.peek(), "Extern function must not have a body", prototype};
+		}
+
 		return prototype;
 	}
 	if (m_lexer.match(Fn))
 	{
-		return parse_fn_prototype();
+		auto *prototype = parse_fn_prototype();
+
+		if (!followed_by_body())
+		{
+			throw FrontendError{m_lexer.peek_last(), "Non extern function must have a body", prototype};
+		}
+
+		return prototype;
 	}
 	if (m_lexer.match(LeftBrace))
 	{
@@ -467,11 +484,16 @@ pars::Expr* pars::Parser::parse_primary()
 	return literal;
 }
 
+bool pars::Parser::followed_by_body()
+{
+	return m_lexer.peek(LeftBrace) || m_lexer.peek(Arrow);
+}
+
 std::vector<pars::Expr*> pars::Parser::collect_call_arguments()
 {
 	std::vector<Expr*> arguments;
 
-	while (true)
+	while (!m_lexer.peek(RightParen))
 	{
 		arguments.emplace_back(expression());
 
