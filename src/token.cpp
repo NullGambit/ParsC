@@ -16,12 +16,12 @@ std::string pars::report_token(Token token, std::string_view message)
 {
 	auto source_file = get_source(token.location.file_id);
 
-	// this function is usually called on compilation stopping bugs so nothing here needs to be fast
+	// this function is usually called on compilation stopping errors so nothing here needs to be fast
 
 	std::string_view line;
 	TextReader reader {source_file.contents};
 
-	for (auto i = 1; i < token.location.line - 2 && !reader.at_end(); i++)
+	for (auto i = 1; i < token.location.line - 1 && !reader.at_end(); i++)
 	{
 		line = reader.get_line();
 		reader.skip_insignificant();

@@ -2,6 +2,7 @@
 
 namespace pars
 {
+	struct AliasType;
 	struct ExprFnStmt;
 	struct BlockStmt;
 	struct FnPrototypeStmt;
@@ -35,5 +36,6 @@ namespace pars
 		virtual void visit(FnPrototypeStmt *stmt) {}
 		virtual void visit(BlockStmt *stmt) {}
 		virtual void visit(ExprFnStmt *stmt) {}
+		virtual void visit(AliasType *stmt) {}
 	};
 }

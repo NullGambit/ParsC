@@ -5,6 +5,7 @@
 #include "emit_context.hpp"
 #include "node.hpp"
 #include "symbol.hpp"
+#include "type.hpp"
 #include "util/macros.hpp"
 
 namespace pars
@@ -76,6 +77,8 @@ namespace pars
 
 		ACCEPT
 	};
+
+
 
 	struct ReturnStmt : Stmt
 	{

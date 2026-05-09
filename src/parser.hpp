@@ -59,6 +59,7 @@ namespace pars
 		FnPrototypeStmt* parse_fn_prototype();
 		BlockStmt* parse_block();
 		ExprFnStmt* parse_expr_fn();
+		AliasType* parse_alias();
 
 		// expr parsing stuff
 		// TODO replace with a pratt parser

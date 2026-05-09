@@ -87,7 +87,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 	{
 		auto *desired_type = prototype->parameters[i]->type;
 
-		if (!arg->type->is_equal(desired_type))
+		if (!check_type_equality(arg->type, desired_type))
 		{
 			throw CompileError
 			{

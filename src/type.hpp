@@ -2,6 +2,7 @@
 #include <variant>
 
 #include "node.hpp"
+#include "symbol.hpp"
 
 namespace llvm
 {
@@ -18,8 +19,10 @@ namespace pars
 		virtual bool is_equal(Type const *other) const = 0;
 		virtual llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const = 0;
 		virtual bool is_primitive() const { return false; }
-		virtual std::string_view get_type_name() = 0;
+		virtual std::string_view get_type_name() const = 0;
 	};
+
+	bool check_type_equality(Type const *a_type, Type  const *b_type);
 
 	template<class T>
 	T const * types_match(Type const *a_type, Type  const *b_type)
@@ -61,7 +64,7 @@ virtual bool is_equal(Type const *other) const override							\
 			return true;
 		}
 
-		std::string_view get_type_name() override
+		std::string_view get_type_name() const override
 		{
 			return "void";
 		}
@@ -86,12 +89,25 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
-		std::string_view get_type_name() override
+		std::string_view get_type_name() const override
 		{
 			return type_name;
 		}
 
 		DEFAULT_INTEGRAL_EQUAL(Integral)
+	};
+
+	struct AliasType : Type
+	{
+		Symbol symbol;
+		Type *type = nullptr;
+		bool is_distinct = false;
+
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+		std::string_view get_type_name() const override;
+		bool is_equal(Type const *other) const override;
+
+		ACCEPT
 	};
 
 	struct Integer : Integral
@@ -159,7 +175,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
-		std::string_view get_type_name() override
+		std::string_view get_type_name() const override
 		{
 			return "str";
 		}

@@ -1,0 +1,13 @@
+
+alias Integer = i32
+alias UniqueInteger = distinct i32
+
+fn add(a: Integer, b: i32) => a + b
+fn add_unique(a: UniqueInteger, b: Integer) => a + b
+
+fn main()
+{
+    add(10, 20)
+    // should fail to compile
+    add_unique(20, 30)
+}

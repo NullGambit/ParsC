@@ -63,16 +63,23 @@ pars::Parser::Parser()
 	//
 	// };
 
-	m_scope_table.add_to_scope("i8", const_cast<Integer*>(&I8Type));
-	m_scope_table.add_to_scope("u8", const_cast<Integer*>(&U8Type));
-	m_scope_table.add_to_scope("i16", const_cast<Integer*>(&I16Type));
-	m_scope_table.add_to_scope("u16", const_cast<Integer*>(&U16Type));
-	m_scope_table.add_to_scope("i32", const_cast<Integer*>(&I32Type));
-	m_scope_table.add_to_scope("u32", const_cast<Integer*>(&U32Type));
-	m_scope_table.add_to_scope("i64", const_cast<Integer*>(&I64Type));
-	m_scope_table.add_to_scope("u64", const_cast<Integer*>(&U64Type));
-	m_scope_table.add_to_scope("bool", const_cast<Bool*>(&BoolType));
-	m_scope_table.add_to_scope("str", const_cast<Str*>(&StrType));
+	auto add_type_to_scope = [&](const Type *type)
+	{
+		m_scope_table.add_to_scope(type->get_type_name(), const_cast<Type*>(type));
+	};
+
+	add_type_to_scope(&I8Type);
+	add_type_to_scope(&U8Type);
+	add_type_to_scope(&I16Type);
+	add_type_to_scope(&U16Type);
+	add_type_to_scope(&I32Type);
+	add_type_to_scope(&U32Type);
+	add_type_to_scope(&I64Type);
+	add_type_to_scope(&U64Type);
+	add_type_to_scope(&BoolType);
+	add_type_to_scope(&StrType);
+	add_type_to_scope(&CharType);
+	add_type_to_scope(&UCharType);
 }
 
 const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
@@ -149,6 +156,10 @@ pars::Node* pars::Parser::declaration()
 	if (m_lexer.match(Var) || m_lexer.match(Const))
 	{
 		return parse_var();
+	}
+	if (m_lexer.match(Alias))
+	{
+		return parse_alias();
 	}
 
 	// attributes not bound to any declaration symbol
@@ -372,6 +383,23 @@ pars::ExprFnStmt * pars::Parser::parse_expr_fn()
 	}
 
 	stmt->owner->return_type = stmt->expr->type;
+
+	return stmt;
+}
+
+pars::AliasType * pars::Parser::parse_alias()
+{
+	auto stmt = new_node<AliasType>();
+
+	stmt->symbol = get_symbol();
+
+	m_lexer.expect(Equal);
+
+	stmt->is_distinct = m_lexer.match(Distinct);
+
+	stmt->type = resolve_type();
+
+	m_scope_table.add_to_scope(stmt->symbol, stmt);
 
 	return stmt;
 }

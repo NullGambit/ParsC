@@ -69,6 +69,7 @@ namespace pars
         AlignOf,
         TypeOf,
         Alias,
+        Distinct,
         Enum,
         Error,
         Async,

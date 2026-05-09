@@ -34,6 +34,7 @@ namespace pars
         {"extern", TokenType::Extern},
         {"alignof", TokenType::AlignOf},
         {"alias", TokenType::Alias},
+        {"distinct", TokenType::Distinct},
         {"for", TokenType::For},
         {"while", TokenType::While},
         {"match", TokenType::Match},

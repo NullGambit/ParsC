@@ -1,6 +1,6 @@
 fn add(a: i32, b: i32) => a + b
 
-fn test(n: i8) => true
+fn test(n: char) => true
 
 extern fn rand(): i32
 extern fn exit(code: i32)
@@ -8,10 +8,13 @@ extern fn srand(n: i32)
 extern fn time(n: i32): i32
 extern fn printf(s: str, n: i32): i32
 extern fn puts(s: str): i32
+extern fn write(fd: i32, buf: str, count: i32): i32
 
 fn main()
 {
+    write(0, "hello", 5)
     srand(time(0))
     printf("hello %d", add(rand(), rand()))
     puts("")
+    exit(0)
 }

@@ -3,6 +3,11 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
 
+bool pars::check_type_equality(Type const *a_type, Type const *b_type)
+{
+	return a_type->is_equal(b_type) || b_type->is_equal(a_type);
+}
+
 llvm::Type * pars::Void::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::Type::getVoidTy(*ctx);
@@ -11,6 +16,32 @@ llvm::Type * pars::Void::get_llvm_type(llvm::LLVMContext *ctx) const
 llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::IntegerType::get(*ctx, bits);
+}
+
+llvm::Type * pars::AliasType::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	return type->get_llvm_type(ctx);
+}
+
+std::string_view pars::AliasType::get_type_name() const
+{
+	return symbol.name;
+}
+
+bool pars::AliasType::is_equal(Type const *other) const
+{
+	if (is_distinct)
+	{
+		auto *other_alias = types_match<AliasType>(this, other);
+
+		if (other_alias)
+		{
+			return type->is_equal(other_alias->type);
+		}
+
+		return false;
+	}
+	return true;
 }
 
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
