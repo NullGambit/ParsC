@@ -18,6 +18,11 @@ llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
 	return llvm::IntegerType::get(*ctx, bits);
 }
 
+u32 pars::Integral::get_size()
+{
+	return bits / 8;
+}
+
 llvm::Type * pars::AliasType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return type->get_llvm_type(ctx);
@@ -42,6 +47,11 @@ bool pars::AliasType::is_equal(Type const *other) const
 		return false;
 	}
 	return true;
+}
+
+u32 pars::AliasType::get_size()
+{
+	return type->get_size();
 }
 
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const

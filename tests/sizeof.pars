@@ -1,0 +1,10 @@
+
+extern fn printf(s: str, n: i32): i32
+
+fn main()
+{
+    // works recursively because sizeof always has a size because it returns an i32
+    printf("%d ", sizeof(sizeof(i32)))
+    printf("%d ", sizeof(5))
+    printf("%d ", sizeof(char))
+}

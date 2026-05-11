@@ -461,6 +461,15 @@ pars::Expr* pars::Parser::parse_primary()
 		if (symbol != nullptr)
 		{
 			resolved_symbol = true;
+
+			if (auto *type = dynamic_cast<Type*>(symbol))
+			{
+				auto *expr = new_node<TypeExpr>();
+
+				expr->type = type;
+
+				return expr;
+			}
 		}
 
 		Expr *result;
@@ -508,6 +517,16 @@ pars::Expr* pars::Parser::parse_primary()
 		}
 
 		return result;
+	}
+	if (m_lexer.match(Sizeof))
+	{
+		auto *expr = new_node<SizeofExpr>();
+
+		expr->type = const_cast<Integer*>(&I32Type);
+
+		expr->expr = expression();
+
+		return expr;
 	}
 
 	auto *literal = new_node<LiteralExpr>();

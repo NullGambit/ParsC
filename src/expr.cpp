@@ -15,6 +15,8 @@
 #include "llvm/IR/Verifier.h"
 #include "util/fmt.hpp"
 
+static pars::HashMap<std::string_view, llvm::GlobalVariable*> g_static_strings;
+
 llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 {
 	return std::visit(ccc::overload
@@ -31,7 +33,18 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 		},
 		[&ctx](std::string_view str)
 		{
-			return (llvm::Value*)ctx.builder->CreateGlobalString(str, ".str", 0, ctx.module.get());
+			auto iter = g_static_strings.find(str);
+
+			if (iter != g_static_strings.end())
+			{
+				return (llvm::Value*)iter->second;
+			}
+
+			auto *global = ctx.builder->CreateGlobalString(str, ".str", 0, ctx.module.get());
+
+			g_static_strings[str] = global;
+
+			return (llvm::Value*)global;
 		},
 		[&ctx](bool _bool)
 		{
@@ -113,4 +126,10 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx)
 {
 	return expr->emit(ctx);
+}
+
+llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)
+{
+	auto value = llvm::APInt(32, expr->type->get_size());
+	return llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 }

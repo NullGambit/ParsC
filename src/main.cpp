@@ -15,7 +15,7 @@
 
 int main()
 {
-    auto source = pars::load_file("./tests/alias.pars");
+    auto source = pars::load_file("./tests/sizeof.pars");
 
     if (!source.has_value())
     {

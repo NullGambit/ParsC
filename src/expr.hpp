@@ -88,4 +88,16 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct TypeExpr : Expr
+	{
+
+	};
+
+	struct SizeofExpr : Expr
+	{
+		Expr *expr;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+	};
 }
