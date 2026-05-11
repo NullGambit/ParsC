@@ -1,0 +1,89 @@
+
+enum Animal
+{
+    Cat
+    Dog
+    Sheep
+    Cow
+}
+
+fn print_animal()
+{
+    var animal = Animal::Dog
+
+    if animal is .Dog or .Cat
+    {
+        println($"{animal} is a common pet")
+    }
+    else
+    {
+        println($"{animal} is a farm animal")
+    }
+
+    // more concise way to write this statement
+    var text = if animal is .Dot or .Cat then "common pet" else "farm animal"
+
+    println($"{animal} is a {text}")
+}
+
+fn in_range()
+{
+    var remaining = 10
+
+    if remaining is >= 0 and <= 10
+    {
+        remaining--
+    }
+
+    var count = 5
+
+    if count in 0..10
+    {
+        count++
+    }
+}
+
+fn check_element()
+{
+    var names = ["john", "henry", "allen"]
+
+    if "henry" in names 
+    {
+        println("henry is present")
+    }
+}
+
+struct CustomIn 
+{
+    numbers: i32[4]
+}
+
+impl CustomIn 
+{
+    fn op_in<T: Integral>(element: T): bool
+    {
+        for n in s.numbers 
+        {
+            if n == element 
+            {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    // alternative implementation using query system
+    fn op_in(element: i32) => from s.numbers select_first n where n == element
+}
+
+fn test_custom_in()
+{
+    var custom_in = CustomIn{[1, 2, 3, 4]}
+
+    // calls op_in for CustomIn
+    if 2 in custom_in
+    {
+        println("Found!")
+    }
+}

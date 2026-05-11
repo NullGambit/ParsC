@@ -1,0 +1,30 @@
+import std.io 
+
+struct Data
+{
+    x: i32
+}
+
+impl Data 
+{
+    fn print_x() => println(s.x)
+}
+
+fn take_ptr(data: *Data)
+{
+    // will only assign if data is nil
+    // will create the memory locally and returns a pointer to it 
+    // bad idea? possibly
+    data ?= {x: 10}
+
+    // will only call print_x if data is not nil
+    data?.print_x()
+}
+
+// will only be called if data is not nil 
+// if nil will return a NilInput error instead of calling the function 
+// the function must return either an error or an error union for this to work
+fn nil_not_allowed(@NotNil data: *Data): error
+{
+    
+}
