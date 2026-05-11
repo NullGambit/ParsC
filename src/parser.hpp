@@ -39,6 +39,8 @@ namespace pars
 
 		ScopeTable m_scope_table;
 
+		std::vector<FnPrototypeStmt*> m_function_stack;
+
 		// any symbol that could not be resolved such as a function or struct that was defined bellow
 		// will be added to this table to be resolved later
 		std::vector<UnresolvedSymbol> m_unresolved_symbols;
@@ -70,6 +72,8 @@ namespace pars
 		Expr* parse_unary();
 		Expr* parse_factor();
 		Expr* parse_primary();
+
+		FnPrototypeStmt* get_current_fn();
 
 		bool followed_by_body();
 

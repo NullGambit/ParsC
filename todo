@@ -1,0 +1,57 @@
+- variable code gen
+- type resolution patching
+- emit code for declarations first
+- truthy expr parsing such as 'a and b' or 'a or b' or !a
+- char literals
+- pow operator with **
+- floor div with //
+- stringify operator
+- string interpolation
+- println statement
+- modules
+- private functions
+- scope based externing
+- scope based privating
+- scope based attributes
+- string escaping
+- type casting
+- integral literal suffixes
+- integral literals in other bases such as hex or binary
+- module independent primitive type lookups
+- builtin type properties such as i32.max
+- builtin value properties such as my_string.length
+- improve api for compiler functions
+- add a way to code to run after types have been resolved in the module
+- vardiac arguments
+- function overloading
+- runtime type information through a Type type
+- typeid system
+- type is expression
+- control flow
+- arrays
+- for loop where clause
+- pointers
+- references
+- auto references
+- functions as parameters
+- generics
+- structs
+- readonly attribute
+- methods
+- move and copy system
+- reflection
+- traits
+- implicitly imported modules
+- defer
+- raii
+- operator overloading
+- error unions
+- enums
+- sum types
+- pattern matching
+- context system
+- mixins
+- compile time control flow
+- comptime blocks
+- closures
+- tuples and destructuring

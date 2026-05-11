@@ -254,9 +254,19 @@ pars::VarDeclStmt* pars::Parser::parse_var()
 
 pars::Node * pars::Parser::parse_return()
 {
+	auto *fn = get_current_fn();
+
+	if (fn == nullptr)
+	{
+		throw FrontendError{m_lexer.peek_last(), "cannot return outside of function"};
+	}
+
 	auto stmt = new_node<ReturnStmt>();
 
-	stmt->expr = expression();
+	if (!fn->return_type->is_equal(&VoidType))
+	{
+		stmt->expr = expression();
+	}
 
 	return stmt;
 }
@@ -343,6 +353,8 @@ pars::BlockStmt* pars::Parser::parse_block()
 
 	auto scope = m_scope_table.new_scope();
 
+	auto pop_stack = false;
+
 	// we must be inside a function block so add params to scope
 	if (auto *prototype = peek<FnPrototypeStmt>(); prototype)
 	{
@@ -352,6 +364,9 @@ pars::BlockStmt* pars::Parser::parse_block()
 		{
 			m_scope_table.add_to_scope(param->symbol.name, param);
 		}
+
+		m_function_stack.emplace_back(prototype);
+		pop_stack = true;
 	}
 
 	auto *old_target = m_target;
@@ -366,6 +381,11 @@ pars::BlockStmt* pars::Parser::parse_block()
 	m_target = old_target;
 
 	m_lexer.expect(RightBrace);
+
+	if (pop_stack)
+	{
+		m_function_stack.pop_back();
+	}
 
 	return stmt;
 }
@@ -559,6 +579,16 @@ pars::Expr* pars::Parser::parse_primary()
 	}
 
 	return literal;
+}
+
+pars::FnPrototypeStmt * pars::Parser::get_current_fn()
+{
+	if (m_function_stack.empty())
+	{
+		return nullptr;
+	}
+
+	return m_function_stack.back();
 }
 
 bool pars::Parser::followed_by_body()

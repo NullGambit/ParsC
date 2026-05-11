@@ -4,8 +4,14 @@
 
 #include "token.hpp"
 
+namespace llvm
+{
+	class Value;
+}
+
 namespace pars
 {
+	struct EmitCtx;
 	struct Visitor;
 
 	struct Node
@@ -13,6 +19,8 @@ namespace pars
 		// the token associated with every node
 		// mainly useful for error reporting
 		Token token;
+
+		virtual llvm::Value* emit(EmitCtx &ctx) { return nullptr; }
 
 		virtual ~Node() = default;
 

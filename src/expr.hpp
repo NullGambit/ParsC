@@ -17,8 +17,6 @@ namespace pars
 	struct Expr : Node
 	{
 		Type *type;
-
-		virtual llvm::Value* emit(EmitCtx &ctx) { return nullptr; }
 	};
 
 	using LiteralExprValue = std::variant

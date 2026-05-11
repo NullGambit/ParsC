@@ -21,25 +21,17 @@ std::string pars::report_token(Token token, std::string_view message)
 	std::string_view line;
 	TextReader reader {source_file.contents};
 
-	for (auto i = 1; i < token.location.line - 1 && !reader.at_end(); i++)
+	while (reader.get_current_line() <= token.location.line)
 	{
 		line = reader.get_line();
 		reader.skip_insignificant();
 	}
 
-	std::string padding;
-
-	for (auto i = 0; i < token.location.column - 2; i++)
-	{
-		padding += ' ';
-	}
-
-	return fmt::format("{} ({}:{}) '{}'\n\t{}\n{}^ Reason: {}",
+	return fmt::format("{} ({}:{}) '{}'\n\t{}\n\t^ Reason: {}",
 		source_file.path,
 		token.location.line,
 		token.location.column,
 		token.lexeme,
 		line,
-		padding,
 		message);
 }

@@ -8,7 +8,7 @@
 #include "type.hpp"
 #include "util/fmt.hpp"
 
-llvm::Function* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
+llvm::Value* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 {
 	std::vector<llvm::Type*> param_types;
 
@@ -39,7 +39,7 @@ llvm::Function* setup_function(pars::FnPrototypeStmt *prototype, pars::EmitCtx &
 
 	if (fn == nullptr)
 	{
-		fn = prototype->emit(ctx);
+		fn = static_cast<llvm::Function*>(prototype->emit(ctx));
 	}
 
 	if (!fn->empty())
@@ -61,7 +61,7 @@ llvm::Function* setup_function(pars::FnPrototypeStmt *prototype, pars::EmitCtx &
 	return fn;
 }
 
-llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
+llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 {
 	auto *fn = setup_function(owner, ctx);
 
@@ -97,7 +97,7 @@ llvm::Function* pars::BlockStmt::emit(EmitCtx &ctx)
 	return fn;
 }
 
-llvm::Function * pars::ExprFnStmt::emit(EmitCtx &ctx)
+llvm::Value * pars::ExprFnStmt::emit(EmitCtx &ctx)
 {
 	auto *fn = setup_function(owner, ctx);
 
@@ -109,5 +109,10 @@ llvm::Function * pars::ExprFnStmt::emit(EmitCtx &ctx)
 // TODO handle mismatched return types
 llvm::Value * pars::ReturnStmt::emit(EmitCtx &ctx)
 {
+	if (expr == nullptr)
+	{
+		return ctx.builder->CreateRetVoid();
+	}
+
 	return ctx.builder->CreateRet(expr->emit(ctx));
 }

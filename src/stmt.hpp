@@ -44,7 +44,7 @@ namespace pars
 		Type *return_type;
 		bool is_extern = false;
 
-		llvm::Function* emit(EmitCtx &ctx);
+		llvm::Value* emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};
@@ -63,7 +63,7 @@ namespace pars
 		FnPrototypeStmt *owner;
 		std::vector<Node*> body;
 
-		llvm::Function* emit(EmitCtx &ctx);
+		llvm::Value* emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};
@@ -73,18 +73,16 @@ namespace pars
 		FnPrototypeStmt *owner;
 		Expr* expr;
 
-		llvm::Function* emit(EmitCtx &ctx);
+		llvm::Value* emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};
-
-
 
 	struct ReturnStmt : Stmt
 	{
 		Expr* expr {};
 
-		llvm::Value* emit(EmitCtx &ctx);
+		llvm::Value* emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};
