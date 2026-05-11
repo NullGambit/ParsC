@@ -13,6 +13,8 @@
 - scope based externing
 - scope based privating
 - scope based attributes
+- handle type coercion and promotion
+- disallow arithmetic on incompatible types
 - string escaping
 - type casting
 - integral literal suffixes

@@ -80,6 +80,8 @@ pars::Parser::Parser()
 	add_type_to_scope(&StrType);
 	add_type_to_scope(&CharType);
 	add_type_to_scope(&UCharType);
+	add_type_to_scope(&F32Type);
+	add_type_to_scope(&F64Type);
 }
 
 const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
