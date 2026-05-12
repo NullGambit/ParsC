@@ -4,7 +4,7 @@
 - floor div with //
 - stringify operator
 - string interpolation
-- println statement
+- string escaping
 - modules
 - private functions
 - scope based externing
@@ -12,7 +12,6 @@
 - scope based attributes
 - handle type coercion and promotion
 - disallow arithmetic on incompatible types
-- string escaping
 - type casting
 - integral literal suffixes
 - integral literals in other bases such as hex or binary

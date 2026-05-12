@@ -3,8 +3,8 @@ extern fn printf(s: str, n: i32): i32
 
 fn main()
 {
-    var fmt: str
-    var x: i32
+    var fmt = "hello %d"
+    var x = add(10, 20)
     printf(fmt, x)
 }
 

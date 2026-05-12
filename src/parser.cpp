@@ -187,10 +187,6 @@ pars::Node * pars::Parser::statement()
 	{
 		return parse_return();
 	}
-	if (m_lexer.match(Println))
-	{
-		return parse_println();
-	}
 
 	return expression();
 }

@@ -48,7 +48,6 @@ namespace pars
         {"and", TokenType::And},
         {"or", TokenType::Or},
         {"fn", TokenType::Fn},
-        {"println", TokenType::Println}
     };
 }
 
