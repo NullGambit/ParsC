@@ -87,6 +87,11 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 {
 	auto *fn = ctx.module->getFunction(symbol);
 
+	if (fn == nullptr)
+	{
+		fn = (llvm::Function*)prototype->emit(ctx);
+	}
+
 	if (fn->arg_size() != arguments.size())
 	{
 		throw CompileError{this, fmt::format("expected {} argument but got {}", fn->arg_size(), arguments.size())};

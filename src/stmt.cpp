@@ -8,8 +8,24 @@
 #include "type.hpp"
 #include "util/fmt.hpp"
 
+llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
+{
+	auto *value = initializer->emit(ctx);
+
+	ctx.named_values[symbol.name] = value;
+
+	return value;
+}
+
 llvm::Value* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 {
+	auto *fn = ctx.module->getFunction(symbol.name);
+
+	if (fn != nullptr)
+	{
+		return fn;
+	}
+
 	std::vector<llvm::Type*> param_types;
 
 	param_types.reserve(parameters.size());
@@ -23,7 +39,7 @@ llvm::Value* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 
 	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, false);
 
-	auto *fn = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, symbol.name, ctx.module.get());
+	fn = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, symbol.name, ctx.module.get());
 
 	for (auto i = 0; auto &arg : fn->args())
 	{
@@ -51,7 +67,7 @@ llvm::Function* setup_function(pars::FnPrototypeStmt *prototype, pars::EmitCtx &
 
 	ctx.builder->SetInsertPoint(bb);
 
-	ctx.named_values.clear();
+	// ctx.named_values.clear();
 
 	for (auto &arg : fn->args())
 	{
@@ -67,14 +83,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 
 	for (auto *entry : body)
 	{
-		if (auto *expr = dynamic_cast<Expr*>(entry))
-		{
-			expr->emit(ctx);
-		}
-		else if (auto *ret = dynamic_cast<ReturnStmt*>(entry))
-		{
-			ret->emit(ctx);
-		}
+		entry->emit(ctx);
 	}
 
 	if (owner->return_type->is_equal(&VoidType))

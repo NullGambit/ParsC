@@ -24,12 +24,12 @@ namespace pars
 
 	private:
 		typedef Expr*(Parser::*BinaryRule)();
+		typedef void(Parser::*SymbolTask)(Node* node);
 
 		struct UnresolvedSymbol
 		{
-			Token token;
 			Node *node;
-			std::string_view name;
+			SymbolTask task;
 		};
 
 		Lexer m_lexer {};
@@ -41,9 +41,12 @@ namespace pars
 
 		std::vector<FnPrototypeStmt*> m_function_stack;
 
-		// any symbol that could not be resolved such as a function or struct that was defined bellow
-		// will be added to this table to be resolved later
-		std::vector<UnresolvedSymbol> m_unresolved_symbols;
+
+		// maps symbol names to a set of tasks
+		// when calling a function or using a type out of order
+		// the compiler will try to resolve these symbols after parsing is done
+		// every statement can give it sown
+		HashMap<std::string_view, std::vector<UnresolvedSymbol>> m_pending_symbols;
 
 		std::vector<Expr*> m_pending_attributes;
 
@@ -72,6 +75,12 @@ namespace pars
 		Expr* parse_unary();
 		Expr* parse_factor();
 		Expr* parse_primary();
+
+		void add_symbol_resolved_task(std::string_view name, Node *node, SymbolTask task);
+
+		void patch_call_expr_type(Node *node);
+		void patch_var_init_type(Node *node);
+		void patch_identifier_type(Node *node);
 
 		FnPrototypeStmt* get_current_fn();
 

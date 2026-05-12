@@ -98,13 +98,19 @@ const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
 
 void pars::Parser::resolve_symbols()
 {
-	for (auto unresolved : m_unresolved_symbols)
+	for (auto [name, unresolved_list] : m_pending_symbols)
 	{
-		auto has_symbol = m_scope_table.has_symbol(unresolved.name);
+		auto symbol = m_scope_table.find_symbol(name);
 
-		if (!has_symbol)
+		if (symbol == nullptr && dynamic_cast<VarDeclStmt*>(symbol) != nullptr)
 		{
-			throw FrontendError(unresolved.token, "Symbol not defined", unresolved.node);
+			auto [node, task] = unresolved_list.front();
+			throw FrontendError(node->token, fmt::format("Symbol '{}' not defined", name), node);
+		}
+
+		for (auto [node, task] : unresolved_list)
+		{
+			std::invoke(task, this, node);
 		}
 	}
 }
@@ -241,12 +247,33 @@ pars::VarDeclStmt* pars::Parser::parse_var()
 	if (m_lexer.match(Equal))
 	{
 		stmt->initializer = expression();
-		stmt->type = stmt->initializer->type;
+
+		if (auto *pending = dynamic_cast<PendingType*>(stmt->initializer->type))
+		{
+			add_symbol_resolved_task(pending->symbol, stmt, &Parser::patch_var_init_type);
+		}
+		else if (stmt->type != nullptr && !stmt->type->is_equal(stmt->initializer->type))
+		{
+			throw FrontendError
+			{
+				m_lexer.peek_last(),
+				fmt::format
+				(
+					"cannot initialize variable {} of type {} with type {}",
+					stmt->symbol.name, stmt->type->get_type_name(), stmt->initializer->type->get_type_name()
+				)
+			};
+		}
+		else
+		{
+			stmt->type = stmt->initializer->type;
+		}
 	}
 
-	if (stmt->type == nullptr)
+
+	if (stmt->type == nullptr && stmt->initializer == nullptr)
 	{
-		throw FrontendError(m_lexer.peek_last(), "Cannot infer variable type", stmt);
+		throw FrontendError(m_lexer.peek_last(), "Variable without initializer must be explicitly typed", stmt);
 	}
 
 	m_scope_table.add_to_scope(stmt->symbol, stmt);
@@ -472,29 +499,14 @@ pars::Expr* pars::Parser::parse_primary()
 
 		auto symbol = m_scope_table.find_symbol(identifier);
 
-		UnresolvedSymbol unresolved_symbol
+		if (auto *type = dynamic_cast<Type*>(symbol))
 		{
-			.token = m_lexer.peek_last(),
-			.name = identifier,
-		};
+			auto *expr = new_node<TypeExpr>();
 
-		auto resolved_symbol = false;
+			expr->type = type;
 
-		if (symbol != nullptr)
-		{
-			resolved_symbol = true;
-
-			if (auto *type = dynamic_cast<Type*>(symbol))
-			{
-				auto *expr = new_node<TypeExpr>();
-
-				expr->type = type;
-
-				return expr;
-			}
+			return expr;
 		}
-
-		Expr *result;
 
 		if (m_lexer.match(LeftParen))
 		{
@@ -502,6 +514,7 @@ pars::Expr* pars::Parser::parse_primary()
 
 			expr->symbol = identifier;
 
+			// TODO should be replaced with a check to see if its an object that can be called such as a functor
 			auto *fn = dynamic_cast<FnPrototypeStmt*>(symbol);
 
 			if (fn != nullptr)
@@ -509,36 +522,41 @@ pars::Expr* pars::Parser::parse_primary()
 				expr->type = fn->return_type;
 				expr->prototype = fn;
 			}
+			else
+			{
+				auto *type = new_node<PendingType>();
+				type->symbol = identifier;
+				expr->type = type;
+				add_symbol_resolved_task(identifier, expr, &Parser::patch_call_expr_type);
+			}
 
 			expr->arguments = collect_call_arguments();
 
 			m_lexer.expect(RightParen);
 
-			result = expr;
+			return expr;
 		}
-		else
+
+		auto *expr = new_node<SymbolExpr>();
+
+		expr->symbol = identifier;
+
+		auto *var = dynamic_cast<VarDeclStmt*>(symbol);
+
+		if (var != nullptr)
 		{
-			auto *expr = new_node<SymbolExpr>();
+			expr->type = var->type;
+			expr->symbol_node = var;
 
-			expr->symbol = identifier;
-
-			auto *var = dynamic_cast<VarDeclStmt*>(symbol);
-
-			if (var != nullptr)
+			if (expr->type == nullptr)
 			{
-				expr->type = var->type;
+				add_symbol_resolved_task(expr->symbol, expr, &Parser::patch_identifier_type);
 			}
-
-			result = expr;
 		}
 
-		if (!resolved_symbol)
-		{
-			unresolved_symbol.node = result;
-			m_unresolved_symbols.emplace_back(unresolved_symbol);
-		}
+		return expr;
 
-		return result;
+
 	}
 	if (m_lexer.match(Sizeof))
 	{
@@ -581,6 +599,70 @@ pars::Expr* pars::Parser::parse_primary()
 	}
 
 	return literal;
+}
+
+void pars::Parser::add_symbol_resolved_task(std::string_view name, Node *node, SymbolTask task)
+{
+	m_pending_symbols[name].emplace_back
+	(
+		UnresolvedSymbol
+		{
+			.node = node,
+			.task = task
+		}
+	);
+}
+
+void pars::Parser::patch_call_expr_type(Node *node)
+{
+	auto *expr = dynamic_cast<CallExpr*>(node);
+
+	if (expr != nullptr)
+	{
+		auto *symbol = m_scope_table.find_symbol(expr->symbol);
+		expr->prototype = dynamic_cast<FnPrototypeStmt*>(symbol);
+
+		auto *pending = dynamic_cast<PendingType*>(expr->type);
+
+		expr->type = expr->prototype->return_type;
+
+		pending->resolved_type = expr->type;
+	}
+}
+
+void pars::Parser::patch_var_init_type(Node *node)
+{
+	auto *var = dynamic_cast<VarDeclStmt*>(node);
+
+	if (var != nullptr)
+	{
+		auto explicit_type = var->type;
+
+		var->type = var->initializer->type;
+
+		if (explicit_type != nullptr && !explicit_type->is_equal(var->type))
+		{
+			throw FrontendError
+			{
+				var->token,
+				fmt::format
+				(
+					"cannot initialize variable {} of type {} with type {}",
+					var->symbol.name, explicit_type->get_type_name(), var->initializer->type->get_type_name()
+				)
+			};
+		}
+	}
+}
+
+void pars::Parser::patch_identifier_type(Node *node)
+{
+	auto *expr = dynamic_cast<SymbolExpr*>(node);
+
+	if (expr != nullptr)
+	{
+		expr->type = dynamic_cast<VarDeclStmt*>(expr->symbol_node)->type;
+	}
 }
 
 pars::FnPrototypeStmt * pars::Parser::get_current_fn()

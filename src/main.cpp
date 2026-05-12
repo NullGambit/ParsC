@@ -15,7 +15,7 @@
 
 int main()
 {
-    auto source = pars::load_file("./tests/sizeof.pars");
+    auto source = pars::load_file("./tests/compile.pars");
 
     if (!source.has_value())
     {
@@ -52,7 +52,7 @@ int main()
 
 		for (auto *stmt : statements)
 		{
-			stmt->accept(&compiler);
+			stmt->emit(compiler.ctx);
 		}
 
 		compiler.ctx.module->print(llvm::outs(), nullptr);

@@ -1,6 +1,3 @@
-- variable code gen
-- type resolution patching
-- emit code for declarations first
 - truthy expr parsing such as 'a and b' or 'a or b' or !a
 - char literals
 - pow operator with **

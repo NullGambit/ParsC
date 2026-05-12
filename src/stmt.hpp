@@ -34,6 +34,8 @@ namespace pars
 		Expr* initializer;
 		VarFlags flags;
 
+		llvm::Value *emit(EmitCtx &ctx) override;
+
 		ACCEPT
 	};
 

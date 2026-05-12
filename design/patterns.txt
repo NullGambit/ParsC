@@ -21,7 +21,7 @@ fn print_animal()
     }
 
     // more concise way to write this statement
-    var text = if animal is .Dot or .Cat then "common pet" else "farm animal"
+    var text = if animal is .Dog or .Cat then "common pet" else "farm animal"
 
     println($"{animal} is a {text}")
 }
@@ -74,7 +74,7 @@ impl CustomIn
     }
 
     // alternative implementation using query system
-    fn op_in(element: i32) => from s.numbers select_first n where n == element
+    fn op_in(element: i32) => $from s.numbers select_first n where n == element
 }
 
 fn test_custom_in()
@@ -85,5 +85,33 @@ fn test_custom_in()
     if 2 in custom_in
     {
         println("Found!")
+    }
+}
+
+struct PlayerData 
+{
+    score: i32 
+    level: i32 
+    name: str
+}
+
+fn test_structure_patterns()
+{
+    var player = PlayerData{score: 100, level: 20, name: "john"}
+
+    // can do exact match with just field: value 
+    // or comparisons with the appropriate operator
+    if player is {score: >= 50, level: 20, name: "john"}
+    {
+        println("player can go to next level")
+    }
+
+    var player_ptr: *PlayerData = nil
+
+    // this will not trigger because pattern matching automatically does nil checks 
+    // because player_ptr is nil the pattern will fail automatically
+    if player_ptr is {level: <= 10}
+    {
+
     }
 }

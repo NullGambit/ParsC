@@ -60,6 +60,7 @@ namespace pars
 	// for not only variables but also functions to be used when taking the address of a function
 	struct SymbolExpr : Expr
 	{
+		Node *symbol_node;
 		std::string_view symbol;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
