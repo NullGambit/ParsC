@@ -48,6 +48,8 @@ namespace pars
 		// every statement can give it sown
 		HashMap<std::string_view, std::vector<UnresolvedSymbol>> m_pending_symbols;
 
+		std::vector<UnresolvedSymbol> m_post_resolved_tasks;
+
 		std::vector<Expr*> m_pending_attributes;
 
 		HashMap<std::string_view, std::function<Expr*(const std::vector<Expr*>&)>> m_builtin_functions;

@@ -100,9 +100,9 @@ void pars::Parser::resolve_symbols()
 {
 	for (auto [name, unresolved_list] : m_pending_symbols)
 	{
-		auto symbol = m_scope_table.find_symbol(name);
+		auto has_symbol = m_scope_table.has_symbol(name);
 
-		if (symbol == nullptr && dynamic_cast<VarDeclStmt*>(symbol) != nullptr)
+		if (!has_symbol)
 		{
 			auto [node, task] = unresolved_list.front();
 			throw FrontendError(node->token, fmt::format("Symbol '{}' not defined", name), node);
@@ -112,6 +112,11 @@ void pars::Parser::resolve_symbols()
 		{
 			std::invoke(task, this, node);
 		}
+	}
+
+	for (auto [node, task] : m_post_resolved_tasks)
+	{
+		std::invoke(task, this, node);
 	}
 }
 
@@ -523,7 +528,8 @@ pars::Expr* pars::Parser::parse_primary()
 				auto *type = new_node<PendingType>();
 				type->symbol = identifier;
 				expr->type = type;
-				add_symbol_resolved_task(identifier, expr, &Parser::patch_call_expr_type);
+
+				add_symbol_resolved_task(expr->symbol, expr, &Parser::patch_call_expr_type);
 			}
 
 			expr->arguments = collect_call_arguments();
@@ -546,7 +552,13 @@ pars::Expr* pars::Parser::parse_primary()
 
 			if (expr->type == nullptr)
 			{
-				add_symbol_resolved_task(expr->symbol, expr, &Parser::patch_identifier_type);
+				m_post_resolved_tasks.emplace_back(
+					UnresolvedSymbol
+					{
+						.node = expr,
+						.task = &Parser::patch_identifier_type
+					});
+				// add_symbol_resolved_task(expr->symbol, expr, &Parser::patch_identifier_type);
 			}
 		}
 
@@ -620,7 +632,10 @@ void pars::Parser::patch_call_expr_type(Node *node)
 
 		auto *pending = dynamic_cast<PendingType*>(expr->type);
 
-		expr->type = expr->prototype->return_type;
+		if (expr->prototype != nullptr)
+		{
+			expr->type = expr->prototype->return_type;
+		}
 
 		pending->resolved_type = expr->type;
 	}

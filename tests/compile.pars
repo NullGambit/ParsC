@@ -3,9 +3,16 @@ extern fn printf(s: str, n: i32): i32
 
 fn main()
 {
+    extern fn puts(value: str): i32
+
     var fmt = "hello %d"
     var x = add(10, 20)
     printf(fmt, x)
+    puts("")
 }
 
 fn add(a: i32, b: i32) => a + b
+
+fn test()
+{
+}
