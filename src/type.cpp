@@ -1,5 +1,7 @@
 #include "type.hpp"
 
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
 
@@ -13,9 +15,19 @@ llvm::Type * pars::Void::get_llvm_type(llvm::LLVMContext *ctx) const
 	return llvm::Type::getVoidTy(*ctx);
 }
 
+llvm::Value * pars::Void::get_default_value(llvm::LLVMContext *ctx)
+{
+	return llvm::UndefValue::get(get_llvm_type(ctx));
+}
+
 llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::IntegerType::get(*ctx, bits);
+}
+
+llvm::Value * pars::Integral::get_default_value(llvm::LLVMContext *ctx)
+{
+	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, 0));
 }
 
 u32 pars::Integral::get_size()
@@ -54,6 +66,11 @@ u32 pars::AliasType::get_size()
 	return type->get_size();
 }
 
+llvm::Value * pars::AliasType::get_default_value(llvm::LLVMContext *ctx)
+{
+	return type->get_default_value(ctx);
+}
+
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);
@@ -77,5 +94,11 @@ llvm::Type * pars::Char::get_llvm_type(llvm::LLVMContext *ctx) const
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);
+}
+
+llvm::Value * pars::Str::get_default_value(llvm::LLVMContext *ctx)
+{
+	auto *ptr_type = get_llvm_type(ctx);
+	return llvm::ConstantPointerNull::get((llvm::PointerType*)ptr_type);
 }
 

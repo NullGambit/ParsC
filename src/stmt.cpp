@@ -10,7 +10,16 @@
 
 llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 {
-	auto *value = initializer->emit(ctx);
+	llvm::Value *value;
+
+	if (initializer == nullptr)
+	{
+		value = type->get_default_value(ctx.llvm_ctx.get());
+	}
+	else
+	{
+		value = initializer->emit(ctx);
+	}
 
 	ctx.named_values[symbol.name] = value;
 

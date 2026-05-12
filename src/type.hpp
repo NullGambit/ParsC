@@ -21,6 +21,7 @@ namespace pars
 		virtual bool is_primitive() const { return false; }
 		virtual std::string_view get_type_name() const = 0;
 		virtual u32 get_size() { return 1; }
+		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) = 0;
 	};
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
@@ -70,6 +71,11 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return nullptr;
 		}
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override
+		{
+			return nullptr;
+		}
 	};
 
 	struct Void : Type
@@ -87,6 +93,8 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return "void";
 		}
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
 	};
 
 	struct Integral : Type
@@ -113,6 +121,8 @@ virtual bool is_equal(Type const *other) const override							\
 			return type_name;
 		}
 
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+
 		u32 get_size() override;
 
 		DEFAULT_INTEGRAL_EQUAL(Integral)
@@ -129,6 +139,8 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_equal(Type const *other) const override;
 
 		u32 get_size() override;
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
 
 		ACCEPT
 	};
@@ -202,6 +214,8 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return "str";
 		}
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
 	};
 
 	static const Str StrType {};
