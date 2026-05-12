@@ -553,12 +553,11 @@ pars::Expr* pars::Parser::parse_primary()
 			if (expr->type == nullptr)
 			{
 				m_post_resolved_tasks.emplace_back(
-					UnresolvedSymbol
-					{
-						.node = expr,
-						.task = &Parser::patch_identifier_type
-					});
-				// add_symbol_resolved_task(expr->symbol, expr, &Parser::patch_identifier_type);
+				UnresolvedSymbol
+				{
+					.node = expr,
+					.task = &Parser::patch_identifier_type
+				});
 			}
 		}
 

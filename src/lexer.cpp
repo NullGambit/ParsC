@@ -316,15 +316,61 @@ pars::Token pars::Lexer::build_digit()
     return build_token(type);
 }
 
+
+char escaped_char(char c)
+{
+   switch (c)
+   {
+       case 'n': return '\n';
+       case 't': return '\t';
+       case '0': return '\0';
+       case 'r': return '\r';
+       case 'a': return '\a';
+       case 'b': return '\b';
+       case 'f': return '\f';
+       case 'v': return '\v';
+       case '\\': return '\\';
+       case '\"': return '\"';
+       case '\'': return '\'';
+   }
+}
+
+// buffer shared by all escaped strings
+static std::string g_escape_buffer;
+
 /*
- * TODO: handle escape sequences
  * TODO: handle wide strings
+ * TODO: add escape support for numeric values such as octal or hex (ive never had much of a use for this myself so likely wont implement for a while)
 */
 pars::Token pars::Lexer::build_string()
 {
+    auto escape_buffer_start = UINT32_MAX;
+
+    std::string_view lexeme;
+
     while (!m_reader.at_end() && m_reader.peek() != '"')
     {
-        m_reader.advance();
+        auto c = m_reader.advance();
+
+        if (m_reader.is_escape_sequence())
+        {
+            if (escape_buffer_start == UINT32_MAX)
+            {
+                auto s = m_reader.slice();
+
+                s = s.substr(0, s.size() - 2);
+
+                escape_buffer_start = g_escape_buffer.size();
+
+                g_escape_buffer += s;
+            }
+
+            g_escape_buffer += escaped_char(m_reader.peek_last());
+        }
+        else if (escape_buffer_start != UINT32_MAX)
+        {
+            g_escape_buffer += c;
+        }
     }
 
     if (!m_reader.match('"'))
@@ -332,9 +378,22 @@ pars::Token pars::Lexer::build_string()
         return build_error("unclosed string found");
     }
 
-    auto token = build_token(TokenType::StringLiteral);
+    size_t end_size;
 
-    token.lexeme = token.lexeme.substr(1, token.lexeme.size()-2);
+    if (escape_buffer_start != UINT32_MAX)
+    {
+        lexeme = std::string_view{g_escape_buffer.begin() + escape_buffer_start, g_escape_buffer.end()};
+        end_size = lexeme.size();
+    }
+    else
+    {
+        lexeme = m_reader.slice();
+        end_size = lexeme.size()-2;
+    }
+
+    auto token = build_token(TokenType::StringLiteral, lexeme);
+
+    token.lexeme = token.lexeme.substr(1, end_size);
 
     return token;
 }

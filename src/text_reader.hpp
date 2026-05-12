@@ -46,6 +46,10 @@ namespace pars
 
         u8 peek_next();
 
+        u8 peek_last();
+
+        bool is_escape_sequence();
+
         inline u32 get_offset() const
         {
             return m_offset;

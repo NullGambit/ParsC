@@ -167,3 +167,33 @@ u8 pars::TextReader::peek_next()
 
     return m_source[m_offset + 1];
 }
+
+u8 pars::TextReader::peek_last()
+{
+    if (m_offset - 1 <= 0)
+    {
+        return '\0';
+    }
+
+    return m_source[m_offset - 1];
+}
+
+bool pars::TextReader::is_escape_sequence()
+{
+    auto is_escape_start = peek_last() == '\\';
+
+    return is_escape_start &&
+        (
+                match('n')
+            ||  match('t')
+            ||  match('0')
+            ||  match('r')
+            ||  match('a')
+            ||  match('b')
+            ||  match('f')
+            ||  match('v')
+            ||  match('\\')
+            ||  match('\"')
+            ||  match('\'')
+        );
+}
