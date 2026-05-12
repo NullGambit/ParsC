@@ -24,7 +24,8 @@ namespace pars
 		i32,
 		f32,
 		std::string_view,
-		bool
+		bool,
+		char
 	>;
 
 	struct LiteralExpr : Expr

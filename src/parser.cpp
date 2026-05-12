@@ -604,6 +604,11 @@ pars::Expr* pars::Parser::parse_primary()
 		literal->value = m_lexer.peek_last().lexeme;
 		literal->type = const_cast<Str*>(&StrType);
 	}
+	if (m_lexer.match(CharLiteral))
+	{
+		literal->value = m_lexer.peek_last().lexeme[0];
+		literal->type = const_cast<Char*>(&CharType);
+	}
 
 	return literal;
 }

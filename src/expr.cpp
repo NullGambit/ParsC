@@ -50,6 +50,11 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 		{
 			auto value = llvm::APInt(8, _bool);
 			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
+		},
+		[&ctx](char _char)
+		{
+			auto value = llvm::APInt(8, _char);
+			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 		}
 	}, value);
 }

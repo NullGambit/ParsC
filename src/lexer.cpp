@@ -403,16 +403,25 @@ pars::Token pars::Lexer::build_char()
 {
     m_reader.advance();
 
+    std::string_view lexeme;
+
+    if (m_reader.is_escape_sequence())
+    {
+        g_escape_buffer += escaped_char(m_reader.peek_last());
+        lexeme = std::string_view{g_escape_buffer.begin() + g_escape_buffer.size() - 1, g_escape_buffer.end()};
+    }
+    else
+    {
+        lexeme = m_reader.slice();
+        lexeme = lexeme.substr(1);
+    }
+
     if (!m_reader.match('\''))
     {
         return build_error("unclosed or empty char found");
     }
 
-    auto token = build_token(TokenType::CharLiteral);
-
-    token.lexeme = token.lexeme.substr(1, token.lexeme.size()-2);
-
-    return token;
+    return build_token(TokenType::CharLiteral, lexeme);
 }
 
 pars::Token pars::Lexer::build_identifier()
