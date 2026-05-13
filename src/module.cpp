@@ -12,3 +12,8 @@ pars::EmitCtx pars::Module::make_ctx()
 {
 	return {ctx, llvm::IRBuilder{*ctx}, module};
 }
+
+bool pars::Module::is_equal(const Module &other)
+{
+	return file_id == other.file_id;
+}

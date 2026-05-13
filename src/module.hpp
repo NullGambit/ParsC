@@ -16,9 +16,12 @@ namespace pars
 		llvm::LLVMContext *ctx;
 		llvm::Module *module;
 		AST ast;
+		u32 file_id;
 
 		void init(std::string_view name, llvm::LLVMContext *ctx);
 
 		EmitCtx make_ctx();
+
+		bool is_equal(const Module &other);
 	};
 }

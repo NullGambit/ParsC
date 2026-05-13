@@ -61,26 +61,6 @@ pars::AST::AST()
 	// {
 	//
 	// };
-
-	auto add_type_to_scope = [&](const Type *type)
-	{
-		m_scope_table.add_to_scope(type->get_type_name(), const_cast<Type*>(type));
-	};
-
-	add_type_to_scope(&I8Type);
-	add_type_to_scope(&U8Type);
-	add_type_to_scope(&I16Type);
-	add_type_to_scope(&U16Type);
-	add_type_to_scope(&I32Type);
-	add_type_to_scope(&U32Type);
-	add_type_to_scope(&I64Type);
-	add_type_to_scope(&U64Type);
-	add_type_to_scope(&BoolType);
-	add_type_to_scope(&StrType);
-	add_type_to_scope(&CharType);
-	add_type_to_scope(&UCharType);
-	add_type_to_scope(&F32Type);
-	add_type_to_scope(&F64Type);
 }
 
 const std::vector<pars::Node*>& pars::AST::parse(SourceFile source)

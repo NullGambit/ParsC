@@ -1,5 +1,7 @@
 #include "scope_table.hpp"
 
+#include "module_manager.hpp"
+
 pars::ScopeTable::ScopeTable()
 {
 	m_table.resize(6);
@@ -62,6 +64,21 @@ void pars::ScopeTable::add_to_scope(std::string_view name, Node *node, u32 level
 
 pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 {
+	// if name starts with lowercase than perfect chance this is a builtin primitive type
+	// therefore must be a global symbol
+	if (!name.empty() && std::islower(name[0]))
+	{
+		auto symbols = find_global_symbol(name);
+
+		for (auto &symbol : symbols)
+		{
+			if (symbol.availability == GlobalSymbolAvailability::Always)
+			{
+				return symbol.node;
+			}
+		}
+	}
+
 	// TODO: allow for parameterized up to down or down to up scope checking
 	for (auto i = 0; i <= m_level; i++)
 	{

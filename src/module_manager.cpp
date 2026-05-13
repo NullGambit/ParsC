@@ -8,6 +8,8 @@ static pars::HashMap<std::filesystem::path, pars::Module> g_modules;
 
 thread_local llvm::LLVMContext g_llvm_ctx;
 
+static pars::HashMap<std::string_view, std::vector<pars::GlobalSymbol>> g_global_symbols;
+
 pars::Module* pars::get_module(const std::filesystem::path &path)
 {
 	auto iter = g_modules.find(path);
@@ -18,14 +20,18 @@ pars::Module* pars::get_module(const std::filesystem::path &path)
 
 		iter->second.init(path.c_str(), &g_llvm_ctx);
 
-		auto source = load_file(path.c_str());
+		auto maybe_source = load_file(path.c_str());
 
-		if (!source.has_value())
+		if (!maybe_source.has_value())
 		{
 			return nullptr;
 		}
 
-		auto &nodes = iter->second.ast.parse(source.value());
+		auto &source = maybe_source.value();
+
+		iter->second.file_id = source.id;
+
+		auto &nodes = iter->second.ast.parse(source);
 
 		iter->second.ast.resolve_symbols();
 
@@ -39,4 +45,21 @@ pars::Module* pars::get_module(const std::filesystem::path &path)
 	}
 
 	return &iter->second;
+}
+
+void pars::declare_global_symbol(std::string_view name, GlobalSymbol symbol)
+{
+	g_global_symbols[name].emplace_back(symbol);
+}
+
+std::span<pars::GlobalSymbol> pars::find_global_symbol(std::string_view name)
+{
+	auto iter = g_global_symbols.find(name);
+
+	if (iter == g_global_symbols.end())
+	{
+		return {};
+	}
+
+	return iter->second;
 }
