@@ -91,6 +91,16 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 		}
 	}
 
+	// auto symbols = find_global_symbol(name);
+	//
+	// for (auto &symbol : symbols)
+	// {
+	// 	if (symbol.availability == GlobalSymbolAvailability::Always || )
+	// 	{
+	// 		return symbol.node;
+	// 	}
+	// }
+
 	return nullptr;
 }
 

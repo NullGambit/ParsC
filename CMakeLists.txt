@@ -77,6 +77,11 @@ add_executable(ParsC src/main.cpp
 target_compile_definitions(ParsC PRIVATE LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.hpp)
 
+set_target_properties(ParsC PROPERTIES OUTPUT_NAME "parc")
+add_custom_command(TARGET ParsC
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ParsC> ./../../)
+
 llvm_map_components_to_libnames(llvm_libs
     core
     support

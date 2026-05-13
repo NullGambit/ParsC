@@ -24,6 +24,8 @@ namespace pars
 		u32 file_id;
 	};
 
+	void add_module_path(const std::filesystem::path &path);
+
 	Module* get_module(const std::filesystem::path &path);
 
 	void declare_global_symbol(std::string_view name, GlobalSymbol symbol);

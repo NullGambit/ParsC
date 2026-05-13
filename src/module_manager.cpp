@@ -9,6 +9,12 @@ static pars::HashMap<std::filesystem::path, pars::Module> g_modules;
 thread_local llvm::LLVMContext g_llvm_ctx;
 
 static pars::HashMap<std::string_view, std::vector<pars::GlobalSymbol>> g_global_symbols;
+static std::vector<std::filesystem::path> g_include_paths;
+
+void pars::add_module_path(const std::filesystem::path &path)
+{
+	g_include_paths.emplace_back(path);
+}
 
 pars::Module* pars::get_module(const std::filesystem::path &path)
 {

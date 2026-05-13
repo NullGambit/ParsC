@@ -17,12 +17,21 @@
 
 void init_global_symbols();
 
-int main()
+int main(int argc, char **argv)
 {
-	constexpr auto SOURCE_PATH = "./tests/compile.pars";
+	// TODO: if entry file is not provided parse and compile all files in dir
+	if (argc < 2)
+	{
+		fmt::panic("Must provide an entry file");
+	}
+
+	const auto SOURCE_PATH = argv[1];
 
 	try
 	{
+		pars::add_module_path("./std");
+		pars::add_module_path("./core");
+
 		init_global_symbols();
 
 		auto *main_module = pars::get_module(SOURCE_PATH);
