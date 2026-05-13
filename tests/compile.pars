@@ -4,7 +4,7 @@ extern fn puts(value: str): i32
 
 fn main()
 {
-    var fmt = "hello\t%c"
+    var fmt = "hello world %c"
 
     // var x = add(10, 20)
     printf(fmt, '\n')

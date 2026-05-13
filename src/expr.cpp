@@ -40,7 +40,7 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 				return (llvm::Value*)iter->second;
 			}
 
-			auto *global = ctx.builder->CreateGlobalString(str, ".str", 0, ctx.module.get());
+			auto *global = ctx.builder.CreateGlobalString(str, ".str", 0, ctx.module);
 
 			g_static_strings[str] = global;
 
@@ -66,10 +66,10 @@ llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 
 	switch (op)
 	{
-		case '+': return ctx.builder->CreateAdd(lhs, rhs);
-		case '-': return ctx.builder->CreateSub(lhs, rhs);
-		case '/': return ctx.builder->CreateFDiv(lhs, rhs);
-		case '*': return ctx.builder->CreateMul(lhs, rhs);
+		case '+': return ctx.builder.CreateAdd(lhs, rhs);
+		case '-': return ctx.builder.CreateSub(lhs, rhs);
+		case '/': return ctx.builder.CreateFDiv(lhs, rhs);
+		case '*': return ctx.builder.CreateMul(lhs, rhs);
 	}
 }
 
@@ -79,7 +79,7 @@ llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 
 	switch (op)
 	{
-		case '-': return ctx.builder->CreateNeg(rhs);
+		case '-': return ctx.builder.CreateNeg(rhs);
 	}
 }
 
@@ -130,7 +130,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 		i++;
 	}
 
-	return ctx.builder->CreateCall(fn, argv);
+	return ctx.builder.CreateCall(fn, argv);
 }
 
 llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx)

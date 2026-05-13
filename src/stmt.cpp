@@ -14,7 +14,7 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 
 	if (initializer == nullptr)
 	{
-		value = type->get_default_value(ctx.llvm_ctx.get());
+		value = type->get_default_value(ctx.llvm_ctx);
 	}
 	else
 	{
@@ -39,7 +39,7 @@ llvm::Value* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 
 	param_types.reserve(parameters.size());
 
-	auto *llvm_ctx = ctx.llvm_ctx.get();
+	auto *llvm_ctx = ctx.llvm_ctx;
 
 	for (auto *param : parameters)
 	{
@@ -48,7 +48,7 @@ llvm::Value* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 
 	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, false);
 
-	fn = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, symbol.name, ctx.module.get());
+	fn = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, symbol.name, ctx.module);
 
 	for (auto i = 0; auto &arg : fn->args())
 	{
@@ -74,7 +74,7 @@ llvm::Function* setup_function(pars::FnPrototypeStmt *prototype, pars::EmitCtx &
 
 	auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
 
-	ctx.builder->SetInsertPoint(bb);
+	ctx.builder.SetInsertPoint(bb);
 
 	// ctx.named_values.clear();
 
@@ -97,7 +97,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 
 	if (owner->return_type->is_equal(&VoidType))
 	{
-		ctx.builder->CreateRetVoid();
+		ctx.builder.CreateRetVoid();
 	}
 
 	std::string error_str;
@@ -119,7 +119,7 @@ llvm::Value * pars::ExprFnStmt::emit(EmitCtx &ctx)
 {
 	auto *fn = setup_function(owner, ctx);
 
-	ctx.builder->CreateRet(expr->emit(ctx));
+	ctx.builder.CreateRet(expr->emit(ctx));
 
 	return fn;
 }
@@ -129,8 +129,8 @@ llvm::Value * pars::ReturnStmt::emit(EmitCtx &ctx)
 {
 	if (expr == nullptr)
 	{
-		return ctx.builder->CreateRetVoid();
+		return ctx.builder.CreateRetVoid();
 	}
 
-	return ctx.builder->CreateRet(expr->emit(ctx));
+	return ctx.builder.CreateRet(expr->emit(ctx));
 }

@@ -11,9 +11,9 @@ namespace pars
 {
 	struct EmitCtx
 	{
-		std::unique_ptr<llvm::LLVMContext> llvm_ctx;
-		std::unique_ptr<llvm::IRBuilder<>> builder;
-		std::unique_ptr<llvm::Module> module;
+		llvm::LLVMContext *llvm_ctx;
+		llvm::IRBuilder<> builder;
+		llvm::Module *module;
 		HashMap<std::string_view, llvm::Value*> named_values;
 	};
 }

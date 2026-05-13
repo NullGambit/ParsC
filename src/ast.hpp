@@ -12,19 +12,19 @@
 namespace pars
 {
 	// a per module parser
-	class Parser
+	class AST
 	{
 	public:
 
-		Parser();
+		AST();
 
 		const std::vector<Node*>& parse(SourceFile source);
 
 		void resolve_symbols();
 
 	private:
-		typedef Expr*(Parser::*BinaryRule)();
-		typedef void(Parser::*SymbolTask)(Node* node);
+		typedef Expr*(AST::*BinaryRule)();
+		typedef void(AST::*SymbolTask)(Node* node);
 
 		struct UnresolvedSymbol
 		{
@@ -35,12 +35,11 @@ namespace pars
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
 
-		std::vector<Node*> *m_target = &m_nodes;
+		std::vector<Node*> *m_target;
 
 		ScopeTable m_scope_table;
 
 		std::vector<FnPrototypeStmt*> m_function_stack;
-
 
 		// maps symbol names to a set of tasks
 		// when calling a function or using a type out of order

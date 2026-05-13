@@ -17,7 +17,6 @@
 - builtin type properties such as i32.max
 - builtin value properties such as my_string.length
 - improve api for compiler functions
-- add a way to code to run after types have been resolved in the module
 - vardiac arguments
 - function overloading
 - runtime type information through a Type type

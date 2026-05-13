@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "ast.hpp"
 
 #include <charconv>
 
@@ -30,9 +30,8 @@ do											\
 }											\
 while (false)								\
 
-pars::Parser::Parser()
+pars::AST::AST()
 {
-
 	auto print_args = [](const std::vector<Expr*> &args)
 	{
 		for (auto *arg : args)
@@ -84,11 +83,13 @@ pars::Parser::Parser()
 	add_type_to_scope(&F64Type);
 }
 
-const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
+const std::vector<pars::Node*>& pars::AST::parse(SourceFile source)
 {
 	m_lexer.set_source(source);
 
-	while (m_lexer.has_next())
+	m_target = &m_nodes;
+
+	while (m_lexer.has_next() && !m_lexer.match_next(Eof))
 	{
 		declare_to(m_nodes);
 	}
@@ -96,7 +97,7 @@ const std::vector<pars::Node*>& pars::Parser::parse(SourceFile source)
 	return m_nodes;
 }
 
-void pars::Parser::resolve_symbols()
+void pars::AST::resolve_symbols()
 {
 	for (auto [name, unresolved_list] : m_pending_symbols)
 	{
@@ -120,7 +121,7 @@ void pars::Parser::resolve_symbols()
 	}
 }
 
-pars::Node* pars::Parser::declaration()
+pars::Node* pars::AST::declaration()
 {
 	if (m_lexer.match(At))
 	{
@@ -182,7 +183,7 @@ pars::Node* pars::Parser::declaration()
 	return statement();
 }
 
-pars::Node * pars::Parser::statement()
+pars::Node * pars::AST::statement()
 {
 	if (m_lexer.match(Import))
 	{
@@ -196,7 +197,7 @@ pars::Node * pars::Parser::statement()
 	return expression();
 }
 
-void pars::Parser::declare_to(std::vector<Node *> &nodes)
+void pars::AST::declare_to(std::vector<Node *> &nodes)
 {
 	auto *node = declaration();
 
@@ -207,7 +208,7 @@ void pars::Parser::declare_to(std::vector<Node *> &nodes)
 	}
 }
 
-pars::Node* pars::Parser::parse_import()
+pars::Node* pars::AST::parse_import()
 {
 	auto *stmt = new_node<ImportStmt>();
 
@@ -229,7 +230,7 @@ pars::Node* pars::Parser::parse_import()
 	return stmt;
 }
 
-pars::VarDeclStmt* pars::Parser::parse_var()
+pars::VarDeclStmt* pars::AST::parse_var()
 {
 	auto *stmt = new_node<VarDeclStmt>();
 
@@ -251,7 +252,7 @@ pars::VarDeclStmt* pars::Parser::parse_var()
 
 		if (auto *pending = dynamic_cast<PendingType*>(stmt->initializer->type))
 		{
-			add_symbol_resolved_task(pending->symbol, stmt, &Parser::patch_var_init_type);
+			add_symbol_resolved_task(pending->symbol, stmt, &AST::patch_var_init_type);
 		}
 		else if (stmt->type != nullptr && !stmt->type->is_equal(stmt->initializer->type))
 		{
@@ -282,7 +283,7 @@ pars::VarDeclStmt* pars::Parser::parse_var()
 	return stmt;
 }
 
-pars::Node * pars::Parser::parse_return()
+pars::Node * pars::AST::parse_return()
 {
 	auto *fn = get_current_fn();
 
@@ -301,7 +302,7 @@ pars::Node * pars::Parser::parse_return()
 	return stmt;
 }
 
-pars::Node * pars::Parser::parse_println()
+pars::Node * pars::AST::parse_println()
 {
 	auto *stmt = new_node<PrintlnStmt>();
 
@@ -310,7 +311,7 @@ pars::Node * pars::Parser::parse_println()
 	return stmt;
 }
 
-void pars::Parser::parse_attributes()
+void pars::AST::parse_attributes()
 {
 	if (!m_lexer.match(LeftBracket))
 	{
@@ -332,7 +333,7 @@ void pars::Parser::parse_attributes()
 	}
 }
 
-pars::Symbol pars::Parser::get_symbol()
+pars::Symbol pars::AST::get_symbol()
 {
 	auto symbol = Symbol
 	{
@@ -354,7 +355,7 @@ pars::Symbol pars::Parser::get_symbol()
 
 
 
-pars::FnPrototypeStmt* pars::Parser::parse_fn_prototype()
+pars::FnPrototypeStmt* pars::AST::parse_fn_prototype()
 {
 	auto *prototype = new_node<FnPrototypeStmt>();
 
@@ -377,7 +378,7 @@ pars::FnPrototypeStmt* pars::Parser::parse_fn_prototype()
 	return prototype;
 }
 
-pars::BlockStmt* pars::Parser::parse_block()
+pars::BlockStmt* pars::AST::parse_block()
 {
 	auto *stmt = new_node<BlockStmt>();
 
@@ -420,7 +421,7 @@ pars::BlockStmt* pars::Parser::parse_block()
 	return stmt;
 }
 
-pars::ExprFnStmt * pars::Parser::parse_expr_fn()
+pars::ExprFnStmt * pars::AST::parse_expr_fn()
 {
 	auto *stmt = new_node<ExprFnStmt>();
 
@@ -437,7 +438,7 @@ pars::ExprFnStmt * pars::Parser::parse_expr_fn()
 	return stmt;
 }
 
-pars::AliasType * pars::Parser::parse_alias()
+pars::AliasType * pars::AST::parse_alias()
 {
 	auto stmt = new_node<AliasType>();
 
@@ -454,7 +455,7 @@ pars::AliasType * pars::Parser::parse_alias()
 	return stmt;
 }
 
-pars::Expr* pars::Parser::parse_primary()
+pars::Expr* pars::AST::parse_primary()
 {
 	if (m_lexer.match(Dollar))
 	{
@@ -529,7 +530,7 @@ pars::Expr* pars::Parser::parse_primary()
 				type->symbol = identifier;
 				expr->type = type;
 
-				add_symbol_resolved_task(expr->symbol, expr, &Parser::patch_call_expr_type);
+				add_symbol_resolved_task(expr->symbol, expr, &AST::patch_call_expr_type);
 			}
 
 			expr->arguments = collect_call_arguments();
@@ -556,7 +557,7 @@ pars::Expr* pars::Parser::parse_primary()
 				UnresolvedSymbol
 				{
 					.node = expr,
-					.task = &Parser::patch_identifier_type
+					.task = &AST::patch_identifier_type
 				});
 			}
 		}
@@ -613,7 +614,7 @@ pars::Expr* pars::Parser::parse_primary()
 	return literal;
 }
 
-void pars::Parser::add_symbol_resolved_task(std::string_view name, Node *node, SymbolTask task)
+void pars::AST::add_symbol_resolved_task(std::string_view name, Node *node, SymbolTask task)
 {
 	m_pending_symbols[name].emplace_back
 	(
@@ -625,7 +626,7 @@ void pars::Parser::add_symbol_resolved_task(std::string_view name, Node *node, S
 	);
 }
 
-void pars::Parser::patch_call_expr_type(Node *node)
+void pars::AST::patch_call_expr_type(Node *node)
 {
 	auto *expr = dynamic_cast<CallExpr*>(node);
 
@@ -645,7 +646,7 @@ void pars::Parser::patch_call_expr_type(Node *node)
 	}
 }
 
-void pars::Parser::patch_var_init_type(Node *node)
+void pars::AST::patch_var_init_type(Node *node)
 {
 	auto *var = dynamic_cast<VarDeclStmt*>(node);
 
@@ -670,7 +671,7 @@ void pars::Parser::patch_var_init_type(Node *node)
 	}
 }
 
-void pars::Parser::patch_identifier_type(Node *node)
+void pars::AST::patch_identifier_type(Node *node)
 {
 	auto *expr = dynamic_cast<SymbolExpr*>(node);
 
@@ -680,7 +681,7 @@ void pars::Parser::patch_identifier_type(Node *node)
 	}
 }
 
-pars::FnPrototypeStmt * pars::Parser::get_current_fn()
+pars::FnPrototypeStmt * pars::AST::get_current_fn()
 {
 	if (m_function_stack.empty())
 	{
@@ -690,12 +691,12 @@ pars::FnPrototypeStmt * pars::Parser::get_current_fn()
 	return m_function_stack.back();
 }
 
-bool pars::Parser::followed_by_body()
+bool pars::AST::followed_by_body()
 {
 	return m_lexer.peek(LeftBrace) || m_lexer.peek(Arrow);
 }
 
-pars::Type* pars::Parser::resolve_type()
+pars::Type* pars::AST::resolve_type()
 {
 	auto type_name = m_lexer.expect(Identifier).lexeme;
 
@@ -709,7 +710,7 @@ pars::Type* pars::Parser::resolve_type()
 	return type;
 }
 
-std::vector<pars::Expr*> pars::Parser::collect_call_arguments()
+std::vector<pars::Expr*> pars::AST::collect_call_arguments()
 {
 	std::vector<Expr*> arguments;
 
@@ -726,7 +727,7 @@ std::vector<pars::Expr*> pars::Parser::collect_call_arguments()
 	return arguments;
 }
 
-pars::Expr* pars::Parser::parse_unary()
+pars::Expr* pars::AST::parse_unary()
 {
 	if (m_lexer.match(Bang) || m_lexer.match(Minus))
 	{
@@ -747,27 +748,27 @@ pars::Expr* pars::Parser::parse_unary()
 	return parse_primary();
 }
 
-pars::Expr* pars::Parser::parse_factor()
+pars::Expr* pars::AST::parse_factor()
 {
-	return parse_binary_rule<Star, ForwardSlash>(&Parser::parse_unary);
+	return parse_binary_rule<Star, ForwardSlash>(&AST::parse_unary);
 }
 
-pars::Expr* pars::Parser::parse_term()
+pars::Expr* pars::AST::parse_term()
 {
-	return parse_binary_rule<Plus, Minus>(&Parser::parse_factor);
+	return parse_binary_rule<Plus, Minus>(&AST::parse_factor);
 }
 
-pars::Expr* pars::Parser::parse_comparison()
+pars::Expr* pars::AST::parse_comparison()
 {
-	return parse_binary_rule<Less, LessEqual, Greater, GreaterEqual>(&Parser::parse_term);
+	return parse_binary_rule<Less, LessEqual, Greater, GreaterEqual>(&AST::parse_term);
 }
 
-pars::Expr* pars::Parser::parse_equality()
+pars::Expr* pars::AST::parse_equality()
 {
-	return parse_binary_rule<EqualEqual, BangEqual>(&Parser::parse_comparison);
+	return parse_binary_rule<EqualEqual, BangEqual>(&AST::parse_comparison);
 }
 
-pars::Expr* pars::Parser::expression()
+pars::Expr* pars::AST::expression()
 {
 	return parse_equality();
 }

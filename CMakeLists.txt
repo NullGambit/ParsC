@@ -37,8 +37,8 @@ add_executable(ParsC src/main.cpp
         src/debug/token_printer.cpp
         src/debug/token_printer.hpp
         src/overload.hpp
-        src/parser.cpp
-        src/parser.hpp
+        src/ast.cpp
+        src/ast.hpp
         src/stmt.hpp
         src/expr.hpp
         src/location.hpp
@@ -68,6 +68,10 @@ add_executable(ParsC src/main.cpp
         src/stmt.cpp
         src/scope_table.cpp
         src/scope_table.hpp
+        src/module_manager.cpp
+        src/module_manager.hpp
+        src/module.cpp
+        src/module.hpp
 )
 
 target_compile_definitions(ParsC PRIVATE LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)

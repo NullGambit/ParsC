@@ -14,20 +14,6 @@
 #include "llvm/Transforms/Scalar/Reassociate.h"
 #include "util/fmt.hpp"
 
-void pars::Compiler::visit(FnPrototypeStmt *fn)
-{
-	fn->emit(ctx);
-}
-
-void pars::Compiler::visit(BlockStmt *fn)
-{
-	fn->emit(ctx);
-}
-
-void pars::Compiler::visit(ExprFnStmt *fn)
-{
-	fn->emit(ctx);
-}
 
 void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
 {

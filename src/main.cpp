@@ -8,56 +8,31 @@
 #include "debug/token_printer.hpp"
 #include "file_manager.hpp"
 #include "lexer.hpp"
-#include "parser.hpp"
+#include "ast.hpp"
+#include "module.hpp"
+#include "module_manager.hpp"
 #include "token.hpp"
 #include "type.hpp"
 #include "util/fmt.hpp"
 
 int main()
 {
-    auto source = pars::load_file("./tests/compile.pars");
-
-    if (!source.has_value())
-    {
-	    fmt::panic("could not read source file");
-    }
-
-	// pars::print_tokens(source.value());
-
-	auto parser = pars::Parser();
+	constexpr auto SOURCE_PATH = "./tests/compile.pars";
 
 	try
 	{
-		auto &statements = parser.parse(source.value());
+		auto *main_module = pars::get_module(SOURCE_PATH);
 
-		parser.resolve_symbols();
-
-		// auto ast_printer = pars::AstPrinter{};
-		//
-		// for (auto *stmt : statements)
-		// {
-		// 	if (stmt != nullptr)
-		// 	{
-		// 		stmt->accept(&ast_printer);
-		// 	}
-		// }
-
-		std::flush(std::cout);
-
-		auto compiler = pars::Compiler{statements, pars::EmitCtx{}};
-
-		compiler.ctx.llvm_ctx = std::make_unique<llvm::LLVMContext>();
-		compiler.ctx.module = std::make_unique<llvm::Module>("main", *compiler.ctx.llvm_ctx);
-		compiler.ctx.builder = std::make_unique<llvm::IRBuilder<>>(*compiler.ctx.llvm_ctx);
-
-		for (auto *stmt : statements)
+		if (main_module == nullptr)
 		{
-			stmt->emit(compiler.ctx);
+			fmt::panic("Could not read main module");
 		}
 
-		compiler.ctx.module->print(llvm::outs(), nullptr);
+		main_module->module->print(llvm::outs(), nullptr);
 
-		pars::compile_exe(compiler.ctx, "./a");
+		auto ctx = main_module->make_ctx();
+
+		pars::compile_exe(ctx, "./a");
 
 		pars::free_memory_blocks();
 	}
