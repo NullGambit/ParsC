@@ -108,6 +108,17 @@ pars::Node* pars::AST::declaration()
 		parse_attributes();
 	}
 
+	if (m_lexer.match(LeftBrace))
+	{
+		while (!m_lexer.peek(RightBrace))
+		{
+			declare_to(*m_target);
+		}
+
+		m_lexer.expect(RightBrace);
+	}
+
+	// TODO: maybe replace externing with an attribute instead of a keyword
 	if (m_lexer.match(Extern))
 	{
 		if (m_lexer.match(Identifier) && m_lexer.peek_last().lexeme != "C")
@@ -117,35 +128,17 @@ pars::Node* pars::AST::declaration()
 
 		m_lexer.expect(Fn);
 
-		auto *prototype = parse_fn_prototype();
+		FnFlags flags{};
 
-		prototype->is_extern = true;
+		flags |= FnFlags::Extern;
 
-		if (followed_by_body())
-		{
-			throw FrontendError{m_lexer.peek(), "Extern function must not have a body", prototype};
-		}
+		auto *fn = parse_fn(flags);
 
-		return prototype;
+		return fn;
 	}
 	if (m_lexer.match(Fn))
 	{
-		auto *prototype = parse_fn_prototype();
-
-		if (!followed_by_body())
-		{
-			throw FrontendError{m_lexer.peek_last(), "Non extern function must have a body", prototype};
-		}
-
-		return prototype;
-	}
-	if (m_lexer.match(LeftBrace))
-	{
-		return parse_block();
-	}
-	if (peek<FnPrototypeStmt>() && m_lexer.match(Arrow))
-	{
-		return parse_expr_fn();
+		return parse_fn({});
 	}
 	if (m_lexer.match(Var) || m_lexer.match(Const))
 	{
@@ -274,7 +267,7 @@ pars::Node * pars::AST::parse_return()
 
 	auto stmt = new_node<ReturnStmt>();
 
-	if (!fn->return_type->is_equal(&VoidType))
+	if (!fn->signature.return_type->is_equal(&VoidType))
 	{
 		stmt->expr = expression();
 	}
@@ -333,89 +326,83 @@ pars::Symbol pars::AST::get_symbol()
 	return symbol;
 }
 
-
-
-pars::FnPrototypeStmt* pars::AST::parse_fn_prototype()
+pars::FnSignature pars::AST::parse_fn_signature()
 {
-	auto *prototype = new_node<FnPrototypeStmt>();
-
-	prototype->symbol = get_symbol();
-
-	m_scope_table.add_to_scope(prototype->symbol, prototype);
+	FnSignature signature;
 
 	COLLECT_COMMA_SEP(LeftParen, RightParen,
-		prototype->parameters.push_back(parse_var()));
+		signature.parameters.push_back(parse_var()));
 
-	if (m_lexer.match(Colon))
-	{
-		prototype->return_type = resolve_type();
-	}
-	else
-	{
-		prototype->return_type = const_cast<Void*>(&VoidType);
-	}
+	signature.return_type = m_lexer.match(Colon) ? resolve_type() : const_cast<Void*>(&VoidType);
 
-	return prototype;
+	return signature;
 }
 
-pars::BlockStmt* pars::AST::parse_block()
+pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 {
-	auto *stmt = new_node<BlockStmt>();
+	auto *fn = new_node<FnDecl>();
+
+	fn->symbol = get_symbol();
+	fn->flags = flags;
+
+	m_scope_table.add_to_scope(fn->symbol, fn);
+
+	fn->signature = parse_fn_signature();
 
 	auto scope = m_scope_table.new_scope();
 
-	auto pop_stack = false;
-
-	// we must be inside a function block so add params to scope
-	if (auto *prototype = peek<FnPrototypeStmt>(); prototype)
+	for (auto *param : fn->signature.parameters)
 	{
-		stmt->owner = prototype;
-
-		for (auto *param : prototype->parameters)
-		{
-			m_scope_table.add_to_scope(param->symbol.name, param);
-		}
-
-		m_function_stack.emplace_back(prototype);
-		pop_stack = true;
+		m_scope_table.add_to_scope(param->symbol.name, param);
 	}
+
+	m_function_stack.emplace_back(fn);
 
 	auto *old_target = m_target;
 
-	m_target = &stmt->body;
+	m_target = &fn->body;
 
-	while (!m_lexer.peek(RightBrace))
+	if (m_lexer.match(Arrow))
 	{
-		declare_to(stmt->body);
+		auto *expr = expression();
+
+		if (!expr->type->is_equal(&VoidType))
+		{
+			auto *ret = new_node<ReturnStmt>();
+
+			ret->expr = expr;
+
+			fn->body.emplace_back(ret);
+		}
+		else
+		{
+			fn->body.emplace_back(expr);
+		}
+
+		if (fn->signature.return_type->is_equal(&VoidType))
+		{
+			fn->signature.return_type = expr->type;
+		}
+	}
+	else if (m_lexer.match(LeftBrace))
+	{
+		while (!m_lexer.peek(RightBrace))
+		{
+			declare_to(fn->body);
+		}
+
+		m_lexer.expect(RightBrace);
+	}
+	else if (!has_flag(fn->flags, FnFlags::Extern))
+	{
+		throw FrontendError{m_lexer.peek(), "non extern function must have a body", fn};
 	}
 
 	m_target = old_target;
 
-	m_lexer.expect(RightBrace);
+	m_function_stack.pop_back();
 
-	if (pop_stack)
-	{
-		m_function_stack.pop_back();
-	}
-
-	return stmt;
-}
-
-pars::ExprFnStmt * pars::AST::parse_expr_fn()
-{
-	auto *stmt = new_node<ExprFnStmt>();
-
-	stmt->owner = peek<FnPrototypeStmt>();
-	stmt->expr = expression();
-
-	if (!stmt->owner->return_type->is_equal(&VoidType) && !stmt->owner->return_type->is_equal(stmt->expr->type))
-	{
-		throw FrontendError{m_lexer.peek_last(), "return type does not match"};
-	}
-
-	stmt->owner->return_type = stmt->expr->type;
-
-	return stmt;
+	return fn;
 }
 
 pars::AliasType * pars::AST::parse_alias()
@@ -497,11 +484,11 @@ pars::Expr* pars::AST::parse_primary()
 			expr->symbol = identifier;
 
 			// TODO should be replaced with a check to see if its an object that can be called such as a functor
-			auto *fn = dynamic_cast<FnPrototypeStmt*>(symbol);
+			auto *fn = dynamic_cast<FnDecl*>(symbol);
 
 			if (fn != nullptr)
 			{
-				expr->type = fn->return_type;
+				expr->type = fn->signature.return_type;
 				expr->prototype = fn;
 			}
 			else
@@ -613,13 +600,13 @@ void pars::AST::patch_call_expr_type(Node *node)
 	if (expr != nullptr)
 	{
 		auto *symbol = m_scope_table.find_symbol(expr->symbol);
-		expr->prototype = dynamic_cast<FnPrototypeStmt*>(symbol);
+		expr->prototype = dynamic_cast<FnDecl*>(symbol);
 
 		auto *pending = dynamic_cast<PendingType*>(expr->type);
 
 		if (expr->prototype != nullptr)
 		{
-			expr->type = expr->prototype->return_type;
+			expr->type = expr->prototype->signature.return_type;
 		}
 
 		pending->resolved_type = expr->type;
@@ -661,7 +648,7 @@ void pars::AST::patch_identifier_type(Node *node)
 	}
 }
 
-pars::FnPrototypeStmt * pars::AST::get_current_fn()
+pars::FnDecl* pars::AST::get_current_fn()
 {
 	if (m_function_stack.empty())
 	{

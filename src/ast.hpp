@@ -39,7 +39,7 @@ namespace pars
 
 		ScopeTable m_scope_table;
 
-		std::vector<FnPrototypeStmt*> m_function_stack;
+		std::vector<FnDecl*> m_function_stack;
 
 		// maps symbol names to a set of tasks
 		// when calling a function or using a type out of order
@@ -62,9 +62,8 @@ namespace pars
 		Node* parse_println();
 		void parse_attributes();
 		Symbol get_symbol();
-		FnPrototypeStmt* parse_fn_prototype();
-		BlockStmt* parse_block();
-		ExprFnStmt* parse_expr_fn();
+		FnSignature parse_fn_signature();
+		FnDecl* parse_fn(FnFlags flags);
 		AliasType* parse_alias();
 
 		// expr parsing stuff
@@ -83,7 +82,7 @@ namespace pars
 		void patch_var_init_type(Node *node);
 		void patch_identifier_type(Node *node);
 
-		FnPrototypeStmt* get_current_fn();
+		FnDecl* get_current_fn();
 
 		bool followed_by_body();
 

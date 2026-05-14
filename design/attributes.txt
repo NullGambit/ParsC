@@ -1,16 +1,19 @@
 // a struct can be a tag so it does not need a body
 struct Export
 
-// a struct can also only have fields defined in an inline way this can be useful if i change the method syntax to be inline inside the struct def
-struct Range<T>(T min, T max)
+struct Range<T>
+{
+    min: T 
+    max: T
+}
 
 struct MyComponent
 {
     @Export
-    moveSpeed: float
+    moveSpeed: f32
     // will infer what T is from its target. if there is more than one template param than it has to be explicitly typed
-    @(Export, Range(0, 1))
-    lookSpeed: float
+    @[Export, Range(0, 1)]
+    lookSpeed: f32
 }
 
 fn attribute_test()

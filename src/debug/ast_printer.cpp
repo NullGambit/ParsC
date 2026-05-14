@@ -25,9 +25,9 @@ void pars::AstPrinter::visit(VarDeclStmt *stmt)
 	fmt::println("");
 }
 
-void pars::AstPrinter::visit(FnPrototypeStmt *stmt)
+void pars::AstPrinter::visit(FnDecl *stmt)
 {
-	fmt::println("fn prototype: {}", stmt->symbol.name);
+	fmt::println("fn : {}", stmt->symbol.name);
 
 	if (stmt->symbol.attribute_id != NO_ATTRIBUTES)
 	{
@@ -49,28 +49,24 @@ void pars::AstPrinter::visit(FnPrototypeStmt *stmt)
 	}
 	fmt::print("params: (");
 
-	for (auto i = 0; auto var : stmt->parameters)
+	for (auto i = 0; auto var : stmt->signature.parameters)
 	{
 		fmt::print("{}: type<{}>", var->symbol.name, var->type);
 
-		if (i++ < stmt->parameters.size() - 1)
+		if (i++ < stmt->signature.parameters.size() - 1)
 		{
 			fmt::print(", ");
 		}
 	}
 
-	fmt::println("): {}", stmt->return_type);
-}
+	fmt::println("): {}", stmt->signature.return_type);
 
-void pars::AstPrinter::visit(BlockStmt *stmt)
-{
-	fmt::println("Body: ");
-
-	for (auto body_stmt : stmt->body)
+	for (auto *entry : stmt->body)
 	{
-		body_stmt->accept(this);
+		entry->accept(this);
 	}
 }
+
 
 void pars::AstPrinter::visit(LiteralExpr *expr)
 {
@@ -130,9 +126,11 @@ void pars::AstPrinter::visit(PrintlnStmt *stmt)
 	fmt::println("");
 }
 
-void pars::AstPrinter::visit(ExprFnStmt *stmt)
+void pars::AstPrinter::print(std::span<Node *> nodes)
 {
-	fmt::print("Expr fn: ");
-	stmt->expr->accept(this);
-	fmt::println("");
+	for (auto *node : nodes)
+	{
+		node->accept(this);
+	}
 }
+

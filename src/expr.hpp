@@ -12,6 +12,7 @@
 
 namespace pars
 {
+	struct FnDecl;
 	struct Type;
 
 	struct Expr : Node
@@ -71,7 +72,7 @@ namespace pars
 
 	struct CallExpr : Expr
 	{
-		FnPrototypeStmt *prototype;
+		FnDecl *prototype;
 		std::string_view symbol;
 		std::vector<Expr*> arguments;
 

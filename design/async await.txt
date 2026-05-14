@@ -4,7 +4,7 @@ import std.io
 // the async execution should be able to be overriden but the language should provide a good one out of the box
 async fn async_test(): Task<int>
 {
-    await Task.Wait(100)
+    await Task::Wait(100)
 
     return 10
 }

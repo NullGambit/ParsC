@@ -2,7 +2,7 @@ import std.io, std.collections
 
 fn main()
 {
-    var numbers = List(1, 2, 3, 4, 5, 6)
+    var numbers = List{1, 2, 3, 4, 5, 6}
 
     var odd_numbers = from numbers select x where x % 2 != 0
 
@@ -14,11 +14,26 @@ fn main()
         println(x)
     }
 
-    struct Data {x: int, y: int}
+    struct Data 
+    {
+        x: int 
+        y: int
+    }
 
-    var data_points = List<Data>({1, 10}, {20, 30})
+    var data_points = List<Data>{{1, 10}, {20, 30}}
 
     var modified_data = from data_points select x = data_points.x map x *= 2
 
     println(modified_data)
+}
+
+fn ecs_system(world: &World)
+{
+    // if a query is followed by a block it can be treated as a for loop 
+    // so symbols dont have to be redefined 
+    from world select transform: Transform, health: Health where Has<Floater>, IsNot<Immobile>
+    {
+        health.damage(1f)
+        transform.position.y += 0.1
+    }
 }

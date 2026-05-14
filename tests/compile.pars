@@ -1,13 +1,13 @@
 
-extern fn printf(s: str, c: char): i32
+extern fn printf(s: str, n: i32): i32
 extern fn puts(value: str): i32
 
 fn main()
 {
-    var fmt = "hello world %c"
+    var fmt = "hello world %d\n"
 
     var x = add(sizeof(i32), 20)
-    printf(fmt, '\n')
+    printf(fmt, x)
 }
 
 fn add(a: i32, b: i32) => a + b

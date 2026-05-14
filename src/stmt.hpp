@@ -25,7 +25,7 @@ namespace pars
 		Volatile = 1 << 2,
 	};
 
-	PARSE_FLAGIFY(VarFlags);
+	PARS_FLAGIFY(VarFlags);
 
 	struct VarDeclStmt : Stmt
 	{
@@ -39,16 +39,30 @@ namespace pars
 		ACCEPT
 	};
 
-	struct FnPrototypeStmt : Stmt
+	struct FnSignature
 	{
-		Symbol symbol;
 		std::vector<VarDeclStmt*> parameters;
 		Type *return_type;
-		bool is_extern = false;
 
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Function* emit(EmitCtx &ctx, std::string_view name);
+	};
 
-		ACCEPT
+	enum class FnFlags : u8
+	{
+		Extern = 1 << 0,
+		Inline = 1 << 1,
+	};
+
+	PARS_FLAGIFY(FnFlags);
+
+	struct FnDecl : Stmt
+	{
+		Symbol symbol;
+		FnSignature signature;
+		std::vector<Node*> body;
+		FnFlags flags;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
 	};
 
 	struct ImportStmt : Stmt
@@ -56,26 +70,6 @@ namespace pars
 		std::vector<std::string_view> path;
 		std::string_view alias;
 		std::vector<std::string_view> selective_imports;
-
-		ACCEPT
-	};
-
-	struct BlockStmt : Stmt
-	{
-		FnPrototypeStmt *owner;
-		std::vector<Node*> body;
-
-		llvm::Value* emit(EmitCtx &ctx) override;
-
-		ACCEPT
-	};
-
-	struct ExprFnStmt : Stmt
-	{
-		FnPrototypeStmt *owner;
-		Expr* expr;
-
-		llvm::Value* emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};

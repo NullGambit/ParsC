@@ -2,6 +2,8 @@ import std.mem
 import std.io
 
 struct CustomAllocator : Allocator
+
+impl CustomAllocator
 {
     fn alloc<T>(): T*
     {

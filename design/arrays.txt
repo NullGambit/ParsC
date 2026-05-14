@@ -5,9 +5,9 @@ fn test_arrays()
     // type will be infered from first element
     var x = [1, 2, 3]
     // size infered
-    var y: int[] = [4, 5, 6]
+    var y: i32[] = [4, 5, 6]
     // explicit size
-    var z: int[3] = [7, 8, 9]
+    var z: i32[3] = [7, 8, 9]
 
     // array programming
     var result = x + y + z
@@ -22,13 +22,13 @@ fn test_arrays()
 
     import std.containers
 
-    // can also do List<str> but will infer from new
-    var names = List("John")
+    // can also do List<str> but will infer
+    var names = List{"John"}
 
     names.add("henry")
 
-    // all containers are similair types forbid copying and must either clone or move explicitly or take a reference
-    var names_copy = names.copy()
+    // all containers are similar types forbid copying and must either clone or move explicitly or take a reference
+    var names_copy = ^names
 
     // @ moves the object and will reset it to its initial state. length = 0 capacity = 0 and data = nil
     // moved values are safe to use as long as their initial state is also safe to use
@@ -39,84 +39,88 @@ fn test_arrays()
     var names_ptr = &names
 
     // will use an allocator that can support 256 hash table entries on the stack
-    var numbers = Map<string, int, StackA<256>>()
+    var numbers = Map<string, int, StackAllocator<256>>{}
 }
 
 // any object can be iterable if it has a length field and implements op_index 
 // the compiler will then turn it into for var i in 0..list.length { var item = list[i] }
 // allocator will default to whatever is the scopes allocator at the time of creation unless specified otherwise
-struct CustomList<T, A = #allocator> : Drop, Copy
+@Readonly
+struct CustomList<T, A = #allocator<T>> : Drop, Copy
 {
-    // only methods can change this
-    @readonly
     length: int
-    @readonly
     capacity: int
     allocator: A
-    private ptr: *T
+    ptr: *T
+}
 
+// no need to redefine generics
+impl CustomList 
+{
     // accepts any number of T parameters
     Self(T... args)
     {
-        ensure_size(args.length)
+        s.ensure_size(args.length)
 
         $for item in args 
         {
-            add(item)
+            s.add(item)
         }
     }
 
     // called automatically when no longer in scope
     fn drop()
     {
-        if ptr != nil 
+        if s.ptr != nil 
         {
-            allocator.free(ptr)
+            s.allocator.free(s.ptr)
         }
 
-        length = 0
-        capacity = 0
-        ptr = nil
+        s.length = 0
+        s.capacity = 0
+        s.ptr = nil
     }
 
-    fn op_index(index: int) => ptr[index]
+    fn op_index(index: int) => s.ptr[index]
 
     // will be called when slicing 
-    fn op_slice(start, end: int) => ptr[start:end]
+    fn op_slice(start, end: int) => s.ptr[start:end]
 
     fn copy(): Self
     {
         // $bit_copy is allowed even when copying is disabled
-        var newSelf = $bit_copy(self)
+        // self and s are always equivalent but self should be preferred as a value
+        // and s for member access
+        var new_self = $bit_copy(self)
 
-        newSelf.ptr = newSelf.allocator.alloc(newSelf.capacity)
+        new_self.ptr = new_self.allocator.alloc(new_self.capacity)
 
         import std.mem
 
-        memcpy(ptr, newSelf.ptr)
+        memcpy(s.ptr, new_self.ptr)
 
-        return newSelf
+        return new_self
     }
 
     fn ensure_size(length: int = 1)
     {
         // length will shadow self.length and self.length has to be used explicitly
-        if self.length + length >= capacity
+        if s.length + length >= capacity
         {
-            capacity *= 2
-            allocator.realloc(ptr, capacity)
+            s.capacity *= 2
+            allocator.realloc(s.ptr, s.capacity)
         }
     }
 
     fn add(T item): *T
     {
-        ensure_size()
+        s.ensure_size()
 
-        var index = length++
+        var index = s.length++
 
-        ptr[index] = item
+        s.ptr[index] = item
 
-        return &ptr[index]
+        return &s.ptr[index]
     }
 }
 
@@ -124,10 +128,10 @@ fn custom_list_test()
 {
     // will infer from first argument
     // the rest can then be coerced into that type if possible
-    var list = CustomList(1, 2, 3)
+    var list = CustomList{1, 2, 3}
 
     // will do a deep copy of list
-    var list2 = list
+    var list2 = ^list
 
     // list2 will now be length 0 capacity 0 and ptr nil
     // on next call to add it will reallocate and be back to a valid state
@@ -136,7 +140,7 @@ fn custom_list_test()
     list3.add(10)
 
     // explicitly drop resource
-    list3.drop()
+    drop list3
 
     // default initializer works fine
     var list4 = CustomList<int>{}

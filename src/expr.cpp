@@ -94,7 +94,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 	if (fn == nullptr)
 	{
-		fn = (llvm::Function*)prototype->emit(ctx);
+		fn = prototype->signature.emit(ctx, symbol);
 	}
 
 	if (fn->arg_size() != arguments.size())
@@ -108,7 +108,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 	for (auto i = 0; auto *arg : arguments)
 	{
-		auto *desired_type = prototype->parameters[i]->type;
+		auto *desired_type = prototype->signature.parameters[i]->type;
 
 		if (!check_type_equality(arg->type, desired_type))
 		{

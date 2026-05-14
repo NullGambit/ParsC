@@ -6,6 +6,7 @@
 #include "compile_error.hpp"
 #include "expr.hpp"
 #include "type.hpp"
+#include "debug/ast_printer.hpp"
 #include "util/fmt.hpp"
 
 llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
@@ -26,11 +27,9 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 	return value;
 }
 
-llvm::Value* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
+llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name)
 {
-	auto *fn = ctx.module->getFunction(symbol.name);
-
-	if (fn != nullptr)
+	if (auto *fn = ctx.module->getFunction(name))
 	{
 		return fn;
 	}
@@ -48,56 +47,38 @@ llvm::Value* pars::FnPrototypeStmt::emit(EmitCtx &ctx)
 
 	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, false);
 
-	fn = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, symbol.name, ctx.module);
+	return llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, ctx.module);
+}
+
+llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
+{
+	auto *fn = signature.emit(ctx, symbol.name);
 
 	for (auto i = 0; auto &arg : fn->args())
 	{
-		arg.setName(parameters[i++]->symbol.name);
+		arg.setName(signature.parameters[i++]->symbol.name);
 	}
 
-	return fn;
-}
-
-llvm::Function* setup_function(pars::FnPrototypeStmt *prototype, pars::EmitCtx &ctx)
-{
-	auto *fn = ctx.module->getFunction(prototype->symbol.name);
-
-	if (fn == nullptr)
+	if (!has_flag(flags, FnFlags::Extern))
 	{
-		fn = static_cast<llvm::Function*>(prototype->emit(ctx));
-	}
+		auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
 
-	if (!fn->empty())
-	{
-		throw pars::CompileError{prototype, fmt::format("Function {} is already defined", prototype->symbol.name)};
-	}
+		ctx.builder.SetInsertPoint(bb);
 
-	auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
+		for (auto &arg : fn->args())
+		{
+			ctx.named_values[arg.getName()] = &arg;
+		}
 
-	ctx.builder.SetInsertPoint(bb);
+		for (auto *entry : body)
+		{
+			entry->emit(ctx);
+		}
 
-	// ctx.named_values.clear();
-
-	for (auto &arg : fn->args())
-	{
-		ctx.named_values[arg.getName()] = &arg;
-	}
-
-	return fn;
-}
-
-llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
-{
-	auto *fn = setup_function(owner, ctx);
-
-	for (auto *entry : body)
-	{
-		entry->emit(ctx);
-	}
-
-	if (owner->return_type->is_equal(&VoidType))
-	{
-		ctx.builder.CreateRetVoid();
+		if (signature.return_type->is_equal(&VoidType))
+		{
+			ctx.builder.CreateRetVoid();
+		}
 	}
 
 	std::string error_str;
@@ -107,6 +88,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 
 	if (has_error)
 	{
+		// ctx.module->print(error_stream, nullptr);
 		error_stream.flush();
 		fn->eraseFromParent();
 		throw CompileError{this, std::move(error_str)};
@@ -115,17 +97,8 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 	return fn;
 }
 
-llvm::Value * pars::ExprFnStmt::emit(EmitCtx &ctx)
-{
-	auto *fn = setup_function(owner, ctx);
-
-	ctx.builder.CreateRet(expr->emit(ctx));
-
-	return fn;
-}
-
 // TODO handle mismatched return types
-llvm::Value * pars::ReturnStmt::emit(EmitCtx &ctx)
+llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx)
 {
 	if (expr == nullptr)
 	{
