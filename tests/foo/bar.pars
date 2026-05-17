@@ -1,0 +1,7 @@
+
+fn say_yes()
+{
+    import std.io
+
+    println("yes")
+}

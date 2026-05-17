@@ -1,10 +1,17 @@
 #include "scope_table.hpp"
 
+#include <unordered_set>
+
 #include "module_manager.hpp"
 
 pars::ScopeTable::ScopeTable()
 {
 	m_table.resize(6);
+}
+
+void pars::ScopeTable::set_file_id(u16 file_id)
+{
+	m_file_id = file_id;
 }
 
 pars::AutoScope pars::ScopeTable::new_scope()
@@ -24,21 +31,32 @@ void pars::ScopeTable::go_down()
 
 void pars::ScopeTable::go_up()
 {
-	m_table[m_level].clear();
+	if (m_level <= 0)
+	{
+		return;
+	}
+
+	auto &[imports, scope] = m_table[m_level];
+
+	imports.clear();
+	scope.clear();
+
 	m_level--;
 }
 
 pars::ScopeTable::Scope& pars::ScopeTable::get_scope()
 {
-	return m_table[m_level];
+	return m_table[m_level].scope;
 }
 
-void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, u32 level)
+void pars::ScopeTable::add_import(u32 file_id)
 {
-	add_to_scope(symbol.name, node, level);
+	auto &data = m_table[m_level];
+
+	data.imports.emplace_back(file_id);
 }
 
-void pars::ScopeTable::add_to_scope(std::string_view name, Node *node, u32 level)
+void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public, u32 level)
 {
 	Scope *scope;
 
@@ -52,23 +70,35 @@ void pars::ScopeTable::add_to_scope(std::string_view name, Node *node, u32 level
 			}
 		}
 
-		scope = &m_table[level];
+		scope = &m_table[level].scope;
 	}
 	else
 	{
 		scope = &get_scope();
 	}
 
-	scope->emplace(name, node);
+	scope->emplace(symbol.name, node);
+
+	if (is_public)
+	{
+		declare_global_symbol(symbol.name,
+		{
+			.node = node,
+			.availability = GlobalSymbolAvailability::WhenImported,
+			.file_id = m_file_id
+		});
+	}
 }
 
 pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 {
+	std::span<GlobalSymbol> symbols;
+
 	// if name starts with lowercase than perfect chance this is a builtin primitive type
 	// therefore must be a global symbol
 	if (!name.empty() && std::islower(name[0]))
 	{
-		auto symbols = find_global_symbol(name);
+		symbols = find_global_symbol(name);
 
 		for (auto &symbol : symbols)
 		{
@@ -79,27 +109,36 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 		}
 	}
 
+	static std::unordered_set<u32> modules_found;
+
+	modules_found.clear();
+
 	// TODO: allow for parameterized up to down or down to up scope checking
 	for (auto i = 0; i <= m_level; i++)
 	{
-		auto &scope = m_table[i];
-		auto iter = scope.find(name);
+		auto &data = m_table[i];
+		auto iter = data.scope.find(name);
 
-		if (iter != scope.end())
+		modules_found.insert(data.imports.begin(), data.imports.end());
+
+		if (iter != data.scope.end())
 		{
 			return iter->second;
 		}
 	}
 
-	// auto symbols = find_global_symbol(name);
-	//
-	// for (auto &symbol : symbols)
-	// {
-	// 	if (symbol.availability == GlobalSymbolAvailability::Always || )
-	// 	{
-	// 		return symbol.node;
-	// 	}
-	// }
+	if (symbols.empty())
+	{
+		symbols = find_global_symbol(name);
+	}
+
+	for (auto &symbol : symbols)
+	{
+		if (symbol.availability == GlobalSymbolAvailability::Always || modules_found.contains(symbol.file_id))
+		{
+			return symbol.node;
+		}
+	}
 
 	return nullptr;
 }

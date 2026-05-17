@@ -3,14 +3,26 @@
 #include <string>
 #include <vector>
 
+#include "memory/arena.hpp"
+#include "memory/defs.hpp"
+#include "util/fmt.hpp"
 #include "util/io.hpp"
 
+// if any project exceeds this absurd file size then uh send me an email
+// also because of how virtual memory works this will not cause high memory usage
+constexpr auto FILE_BUFFERS_MAX_SIZE = MB(512);
+
 static std::vector<pars::SourceFile> g_file_index;
-static std::string g_file_buffers;
+static pars::Arena g_file_buffers;
 
 std::optional<pars::SourceFile> pars::load_file(std::string_view path)
 {
-	auto start = g_file_buffers.size();
+	if (g_file_buffers.memory == nullptr)
+	{
+		g_file_buffers.init(FILE_BUFFERS_MAX_SIZE);
+	}
+
+	auto start = g_file_buffers.occupied;
 	auto id = g_file_index.size();
 
 	auto ok = read_file(path, g_file_buffers);
@@ -20,7 +32,7 @@ std::optional<pars::SourceFile> pars::load_file(std::string_view path)
 		return std::nullopt;
 	}
 
-	auto view = std::string_view{g_file_buffers.data() + start, g_file_buffers.size() - start};
+	auto view = std::string_view{(char*)(g_file_buffers.memory + start), g_file_buffers.occupied - start};
 
 	auto src = SourceFile
 	{

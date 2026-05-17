@@ -36,7 +36,7 @@ namespace pars
         bool has_next() const;
 
     private:
-        SourceFile m_src;
+        u16 m_file_id;
         TextReader m_reader;
         std::optional<Token> m_last_token;
         std::optional<Token> m_current_token;

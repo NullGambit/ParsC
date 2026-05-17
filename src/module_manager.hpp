@@ -26,9 +26,11 @@ namespace pars
 
 	void add_module_path(const std::filesystem::path &path);
 
-	Module* get_module(const std::filesystem::path &path);
+	Module* get_module(std::filesystem::path &path);
 
 	void declare_global_symbol(std::string_view name, GlobalSymbol symbol);
+
+	std::span<Module*> get_all_modules();
 
 	std::span<GlobalSymbol> find_global_symbol(std::string_view name);
 }

@@ -1,6 +1,7 @@
 
 extern fn printf(s: str, n: i32): i32
 extern fn puts(value: str): i32
+extern fn malloc(size: i32): i32
 
 fn main()
 {
@@ -8,6 +9,17 @@ fn main()
 
     var x = add(sizeof(i32), 20)
     printf(fmt, x)
+
+    var ptr = malloc(sizeof(i32))
+
+    printf("ptr %p\n", ptr)
 }
+
+fn do_nothing()
+{
+    
+}
+
+fn do_nothing2() => do_nothing()
 
 fn add(a: i32, b: i32) => a + b

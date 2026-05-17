@@ -17,7 +17,6 @@ namespace pars
 		void visit(ReturnStmt *stmt) override;
 		void visit(SymbolExpr *expr) override;
 		void visit(CallExpr *expr) override;
-		void visit(PrintlnStmt *stmt) override;
 
 		void print(std::span<Node*> nodes);
 	};

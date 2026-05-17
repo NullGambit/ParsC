@@ -1,6 +1,8 @@
 #include "io.hpp"
 
-bool pars::read_file(const std::filesystem::path &path, std::string &buffer)
+#include "memory/arena.hpp"
+
+bool pars::read_file(const std::filesystem::path &path, Arena &buffer)
 {
     auto *file = fopen(path.c_str(), "r");
 
@@ -11,9 +13,9 @@ bool pars::read_file(const std::filesystem::path &path, std::string &buffer)
 
     auto size = std::filesystem::file_size(path);
 
-    buffer.resize(buffer.size() + size);
+    fread(buffer.memory + buffer.occupied, 1, size, file);
 
-    fread(buffer.data(), 1, size, file);
+    buffer.occupied += size;
 
     return true;
 }

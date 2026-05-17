@@ -72,6 +72,9 @@ add_executable(ParsC src/main.cpp
         src/module_manager.hpp
         src/module.cpp
         src/module.hpp
+        src/memory/defs.hpp
+        src/memory/arena.cpp
+        src/memory/arena.hpp
 )
 
 target_compile_definitions(ParsC PRIVATE LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)

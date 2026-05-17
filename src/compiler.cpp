@@ -1,6 +1,8 @@
 #include "compiler.hpp"
 
 #include "compile_error.hpp"
+#include "module.hpp"
+#include "module_manager.hpp"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/FileSystem.h"
@@ -15,7 +17,7 @@
 #include "util/fmt.hpp"
 
 
-void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
+void pars::compile_exe(std::string_view output_path)
 {
 	llvm::InitializeNativeTarget();
 	llvm::InitializeNativeTargetAsmParser();
@@ -24,34 +26,25 @@ void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
 	std::string error;
 
     auto target_triple = llvm::sys::getDefaultTargetTriple();
-
-    ctx.module->setTargetTriple(target_triple);
-
     auto *target = llvm::TargetRegistry::lookupTarget(target_triple, error);
+
+	if (!target)
+	{
+		throw CompileError{nullptr, fmt::format("Target lookup failed: {}", error)};
+	}
 
 	std::error_code ec;
 
-    if (!target)
-    {
-    	throw CompileError{nullptr, fmt::format("Target lookup failed: {}", error)};
-    }
+	llvm::TargetOptions opt;
 
-    llvm::TargetOptions opt;
+	auto cpu = "generic";
+	auto features = "";
+	auto rm = llvm::Reloc::Model::PIC_;
 
-    auto cpu = "generic";
-    auto features = "";
-    auto rm = llvm::Reloc::Model::PIC_;
-
-    std::unique_ptr<llvm::TargetMachine> machine
+	std::unique_ptr<llvm::TargetMachine> machine
 	{
-        target->createTargetMachine(target_triple, cpu, features, opt, rm)
-    };
-
-    ctx.module->setDataLayout(machine->createDataLayout());
-
-    auto obj_path = std::string{output_path} + ".o";
-
-    llvm::raw_fd_ostream obj_os (obj_path, ec, llvm::sys::fs::OF_None);
+		target->createTargetMachine(target_triple, cpu, features, opt, rm)
+	};
 
 	llvm::LoopAnalysisManager lam;
 	llvm::FunctionAnalysisManager fam;
@@ -69,31 +62,48 @@ void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
 
 	auto mpm = pb.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O0);
 
-	mpm.run(*ctx.module, mam);
+	std::vector<llvm::StringRef> linker_args =
+	{
+		"clang",           // or "gcc", "ld", "lld"
+		"-o", output_path,
+		"-no-pie",         // if you used static reloc model
+		"-lm",
+		// "-Wl,-e,_start"  // custom entry point (see below)
+	};
 
-	llvm::legacy::PassManager codegen_pm;
+	auto obj_files_start = linker_args.size();
 
-	machine->addPassesToEmitFile(codegen_pm, obj_os, nullptr,
+	for (auto *module : get_all_modules())
+	{
+		auto *llvm_module = module->module;
+
+		llvm_module->setTargetTriple(target_triple);
+		llvm_module->setDataLayout(machine->createDataLayout());
+
+		auto name = std::string{llvm_module->getName()};
+
+		std::replace(name.begin(), name.end(), '/', '_');
+
+		auto *obj_path = new std::string{name + ".o"};
+
+		llvm::raw_fd_ostream obj_os (*obj_path, ec, llvm::sys::fs::OF_None);
+
+		if (ec)
+		{
+			throw CompileError{nullptr, fmt::format("Cannot open output file: {}", ec.message())};
+		}
+
+		llvm::legacy::PassManager codegen_pm;
+
+		mpm.run(*llvm_module, mam);
+
+		machine->addPassesToEmitFile(codegen_pm, obj_os, nullptr,
 								  llvm::CodeGenFileType::ObjectFile);
 
-	codegen_pm.run(*ctx.module);
+		codegen_pm.run(*llvm_module);
 
-    if (ec)
-    {
-    	throw CompileError{nullptr, fmt::format("Cannot open output file: {}", ec.message())};
-    }
-
-    obj_os.flush();
-
-    std::vector<llvm::StringRef> linker_args =
-    {
-        "clang",           // or "gcc", "ld", "lld"
-        "-o", output_path,
-        obj_path,
-        "-no-pie",         // if you used static reloc model
-        "-lm",
-        // "-Wl,-e,_start"  // custom entry point (see below)
-    };
+		linker_args.emplace_back(*obj_path);
+	}
 
     std::string linker_error;
 
@@ -106,10 +116,13 @@ void pars::compile_exe(EmitCtx &ctx, std::string_view output_path)
         0, 0, &linker_error
     );
 
+	for (auto i = obj_files_start; i < linker_args.size(); i++)
+	{
+		llvm::sys::fs::remove(linker_args[i]);
+	}
+
     if (result != 0)
     {
     	throw CompileError{nullptr, fmt::format("Linking failed: {}", linker_error)};
     }
-
-    llvm::sys::fs::remove(obj_path);
 }

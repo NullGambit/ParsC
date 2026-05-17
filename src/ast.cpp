@@ -1,8 +1,11 @@
 #include "ast.hpp"
 
 #include <charconv>
+#include <filesystem>
 
 #include "frontend_error.hpp"
+#include "module.hpp"
+#include "module_manager.hpp"
 #include "token.hpp"
 #include "type.hpp"
 #include "util/fmt.hpp"
@@ -65,6 +68,9 @@ pars::AST::AST()
 
 const std::vector<pars::Node*>& pars::AST::parse(SourceFile source)
 {
+	m_file_id = source.id;
+	m_scope_table.set_file_id(m_file_id);
+
 	m_lexer.set_source(source);
 
 	m_target = &m_nodes;
@@ -99,6 +105,9 @@ void pars::AST::resolve_symbols()
 	{
 		std::invoke(task, this, node);
 	}
+
+	m_pending_symbols.clear();
+	m_post_resolved_tasks.clear();
 }
 
 pars::Node* pars::AST::declaration()
@@ -185,20 +194,32 @@ pars::Node* pars::AST::parse_import()
 {
 	auto *stmt = new_node<ImportStmt>();
 
-	if (m_lexer.match_next(Equal))
-	{
-		stmt->alias = m_lexer.peek_last().lexeme;
-	}
+	// if (m_lexer.match_next(Equal))
+	// {
+	// 	stmt->alias = m_lexer.peek_last().lexeme;
+	// }
+
+	std::filesystem::path path;
 
 	while (m_lexer.match(Identifier))
 	{
-		stmt->path.push_back(m_lexer.peek_last().lexeme);
+		path /= m_lexer.peek_last().lexeme;
 
 		if (!m_lexer.match(Dot))
 		{
 			break;
 		}
 	}
+
+	auto *module = get_module(path);
+
+	if (module == nullptr)
+	{
+		throw FrontendError{m_lexer.peek_last(),
+			fmt::format("Could not read module in any include paths '{}'", path.c_str()), stmt};
+	}
+
+	m_scope_table.add_import(module->ast.get_file_id());
 
 	return stmt;
 }
@@ -275,15 +296,6 @@ pars::Node * pars::AST::parse_return()
 	return stmt;
 }
 
-pars::Node * pars::AST::parse_println()
-{
-	auto *stmt = new_node<PrintlnStmt>();
-
-	stmt->expr = expression();
-
-	return stmt;
-}
-
 void pars::AST::parse_attributes()
 {
 	if (!m_lexer.match(LeftBracket))
@@ -353,7 +365,7 @@ pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 
 	for (auto *param : fn->signature.parameters)
 	{
-		m_scope_table.add_to_scope(param->symbol.name, param);
+		m_scope_table.add_to_scope(param->symbol, param);
 	}
 
 	m_function_stack.emplace_back(fn);
@@ -466,7 +478,7 @@ pars::Expr* pars::AST::parse_primary()
 	{
 		auto identifier = m_lexer.peek_last().lexeme;
 
-		auto symbol = m_scope_table.find_symbol(identifier);
+		auto *symbol = m_scope_table.find_symbol(identifier);
 
 		if (auto *type = dynamic_cast<Type*>(symbol))
 		{
@@ -551,7 +563,7 @@ pars::Expr* pars::AST::parse_primary()
 		literal->value = m_lexer.peek_last(True);
 		literal->type = const_cast<Bool*>(&BoolType);
 	}
-	if (m_lexer.match(IntegerLiteral))
+	else if (m_lexer.match(IntegerLiteral))
 	{
 		auto lexeme = m_lexer.peek_last().lexeme;
 		i32 n = 0;
@@ -559,7 +571,7 @@ pars::Expr* pars::AST::parse_primary()
 		literal->type = const_cast<Integer*>(&I32Type);
 		literal->value = n;
 	}
-	if (m_lexer.match(DecimalLiteral))
+	else if (m_lexer.match(DecimalLiteral))
 	{
 		auto lexeme = m_lexer.peek_last().lexeme;
 		f32 n = 0;
@@ -567,15 +579,19 @@ pars::Expr* pars::AST::parse_primary()
 		literal->type = const_cast<Float*>(&F32Type);
 		literal->value = n;
 	}
-	if (m_lexer.match(StringLiteral))
+	else if (m_lexer.match(StringLiteral))
 	{
 		literal->value = m_lexer.peek_last().lexeme;
 		literal->type = const_cast<Str*>(&StrType);
 	}
-	if (m_lexer.match(CharLiteral))
+	else if (m_lexer.match(CharLiteral))
 	{
 		literal->value = m_lexer.peek_last().lexeme[0];
 		literal->type = const_cast<Char*>(&CharType);
+	}
+	else
+	{
+		throw FrontendError{m_lexer.peek_last(), "Expected expression but got none", literal};
 	}
 
 	return literal;

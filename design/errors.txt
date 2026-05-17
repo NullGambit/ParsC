@@ -2,7 +2,10 @@ struct CustomError : Error
 {
     message: string
     conditionUsed: bool
+}
 
+impl CustomError
+{
     fn what() => self.message
 }
 
@@ -13,10 +16,10 @@ enum MyErrors : Error
     A
     B
     C
-    Payload(int)
+    Payload(i32)
 }
 
-fn enum_error_test(condition: bool): int?
+fn enum_error_test(condition: bool): i32?
 {
     if !condition
     {
@@ -44,8 +47,8 @@ fn catch_enum_error_test()
     }
 }
 
-// can either return an int or any error
-fn error_test(condition: bool): int?
+// can either return an i32 or any error
+fn error_test(condition: bool): i32?
 {
     // if has error will propogate error
     var result = do_stuff()?
@@ -64,7 +67,7 @@ fn error_test2()
 
     if try result
     {
-        // result is only an int here
+        // result is only an i32 here
         println(result)
     }
 
@@ -80,21 +83,21 @@ fn error_test2()
         println(result.condition)
     }
 
-    // result will from here on be only an int
+    // result will from here on be only an i32
     println(result)
 
     // if has error than use default value
     var whatever_value = result ?? 20
 }
 
-// adding ? to a type essentially just turns it into T | error so an error type can be specified directly
+// adding ? to a type essentially just turns it i32o T | error so an error type can be specified directly
 // the default Error struct can be used if you just want to return some error message
 fn generic_error_test(): error
 {
     return Error("something went wrong")
 }
 
-fn optional_error(condition: bool): int? 
+fn optional_error(condition: bool): i32? 
 {
     if condition 
     {
@@ -102,12 +105,19 @@ fn optional_error(condition: bool): int?
     }
 
     // None is an error that represents no value returned something went wrong
-    return None
+    return None{}
 }
 
 fn test_optional(): error 
 {
-    var opt = optional_error()?
+    var value = optional_error()?
 
-    println(opt) // opt is now an int here
+    println(value) // value is now an i32 here
+}
+
+fn test_optional2()
+{
+    var value = optional_error() ?? panic("value cannot be an error")
+
+    println(value) // value is now an i32 here
 }

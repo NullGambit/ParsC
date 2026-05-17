@@ -25,29 +25,22 @@ int main(int argc, char **argv)
 		fmt::panic("Must provide an entry file");
 	}
 
-	const auto SOURCE_PATH = argv[1];
+	auto source_path = std::filesystem::path{argv[1]};
 
 	try
 	{
-		pars::add_module_path("./std");
-		pars::add_module_path("./core");
+		pars::add_module_path("./");
 
 		init_global_symbols();
 
-		auto *main_module = pars::get_module(SOURCE_PATH);
+		auto *main_module = pars::get_module(source_path);
 
 		if (main_module == nullptr)
 		{
 			fmt::panic("Could not read main module");
 		}
 
-		main_module->module->print(llvm::outs(), nullptr);
-
-		auto ctx = main_module->make_ctx();
-
-		pars::compile_exe(ctx, "./a");
-
-		pars::free_memory_blocks();
+		pars::compile_exe("./a");
 	}
 	catch (std::exception &e)
 	{

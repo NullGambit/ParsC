@@ -5,7 +5,6 @@ namespace pars
 	struct AliasType;
 	struct FnDecl;
 	struct Symbol;
-	struct PrintlnStmt;
 	struct GroupExpr;
 	struct ReturnStmt;
 	struct VarDeclStmt;
@@ -29,7 +28,6 @@ namespace pars
 		virtual void visit(ImportStmt *stmt) {}
 		virtual void visit(VarDeclStmt *stmt) {}
 		virtual void visit(ReturnStmt *stmt) {}
-		virtual void visit(PrintlnStmt *stmt) {}
 		virtual void visit(Symbol *stmt) {}
 		virtual void visit(FnDecl *stmt) {}
 		virtual void visit(AliasType *stmt) {}

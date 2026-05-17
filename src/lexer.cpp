@@ -58,6 +58,7 @@ pars::Lexer::Lexer(SourceFile source)
 
 void pars::Lexer::set_source(SourceFile source)
 {
+    m_file_id = source.id;
     m_reader.set_source(source.contents);
 }
 
@@ -152,6 +153,12 @@ pars::Token pars::Lexer::advance_one()
 
 pars::Token pars::Lexer::advance()
 {
+    if (!has_next())
+    {
+        m_current_token = build_token(TokenType::Eof);
+        return m_current_token.value();
+    }
+
     m_last_token = m_current_token;
 
     if (m_next_token.has_value())
@@ -260,7 +267,7 @@ pars::Token pars::Lexer::build_token(TokenType type, std::string_view lexeme_ove
         {
             .offset = m_reader.get_offset(),
             .line = m_reader.get_current_line(),
-            .file_id = m_src.id,
+            .file_id = m_file_id,
             .column = m_reader.get_current_column(),
         },
         .type = type,

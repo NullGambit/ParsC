@@ -6,5 +6,5 @@
 
 namespace pars
 {
-	void compile_exe(EmitCtx &ctx, std::string_view output_path);
+	void compile_exe(std::string_view output_path);
 }

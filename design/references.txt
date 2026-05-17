@@ -9,6 +9,13 @@ fn take_ar(n: &&int) => println(s)
 // this is essentially how the declaration of println works
 fn take_many<A...>(a: const &&A) => println(a)
 
+var g_data = 100
+
+fn return_ref(): &i32
+{
+    return g_data
+}
+
 fn main()
 {
     var s = String("hello")
@@ -28,4 +35,15 @@ fn main()
 
     // 10 is taken as a const copy and s is taken as a const ref
     take_many(10, s)
+
+    var list = List{1, 2, 3}
+
+    // annotated as ref so will bind as reference 
+    var &my_ref = list;
+
+    // taken as reference because annotated as reference
+    var &data = return_ref()
+
+    // takes copy of the returned value. if implicit copy is disabled then will throw an error
+    var data2 = return_ref()
 }

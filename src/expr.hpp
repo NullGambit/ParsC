@@ -12,6 +12,7 @@
 
 namespace pars
 {
+	struct Module;
 	struct FnDecl;
 	struct Type;
 

@@ -1,4 +1,7 @@
+- BUG if expecting expression but got eof will make the compiler get stuck
+    even doing checks for eof seems to not work unless the file ended with a line feed
 - truthy expr parsing such as 'a and b' or 'a or b' or !a
+- bitwise operators
 - pow operator with **
 - floor div with //
 - stringify operator
@@ -13,7 +16,6 @@
 - type casting
 - integral literal suffixes
 - integral literals in other bases such as hex or binary
-- module independent primitive type lookups
 - builtin type properties such as i32.max
 - builtin value properties such as my_string.length
 - improve api for compiler functions

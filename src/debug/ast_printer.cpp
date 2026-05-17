@@ -117,15 +117,6 @@ void pars::AstPrinter::visit(CallExpr *expr)
 	}
 }
 
-void pars::AstPrinter::visit(PrintlnStmt *stmt)
-{
-	fmt::print("println ");
-
-	stmt->expr->accept(this);
-
-	fmt::println("");
-}
-
 void pars::AstPrinter::print(std::span<Node *> nodes)
 {
 	for (auto *node : nodes)

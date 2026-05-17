@@ -11,7 +11,7 @@
 
 namespace pars
 {
-	// a per module parser
+	// a per module abstract syntax tree
 	class AST
 	{
 	public:
@@ -21,6 +21,11 @@ namespace pars
 		const std::vector<Node*>& parse(SourceFile source);
 
 		void resolve_symbols();
+
+		u32 get_file_id() const
+		{
+			return m_file_id;
+		}
 
 	private:
 		typedef Expr*(AST::*BinaryRule)();
@@ -41,6 +46,8 @@ namespace pars
 
 		std::vector<FnDecl*> m_function_stack;
 
+		u32 m_file_id;
+
 		// maps symbol names to a set of tasks
 		// when calling a function or using a type out of order
 		// the compiler will try to resolve these symbols after parsing is done
@@ -59,7 +66,6 @@ namespace pars
 		Node* parse_import();
 		VarDeclStmt* parse_var();
 		Node* parse_return();
-		Node* parse_println();
 		void parse_attributes();
 		Symbol get_symbol();
 		FnSignature parse_fn_signature();
