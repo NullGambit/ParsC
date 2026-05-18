@@ -225,8 +225,16 @@ pars::Node* pars::AST::parse_import()
 			fmt::format("Could not read module in any include paths '{}'", path.c_str()), stmt};
 	}
 
-	m_scope_table.add_import(module->ast.get_file_id());
-	m_scope_table.add_to_scope(Symbol{stmt->alias}, stmt, PRIVATE_SYMBOL);
+
+	if (!stmt->alias.empty())
+	{
+		m_scope_table.add_to_scope(Symbol{stmt->alias}, stmt, PRIVATE_SYMBOL);
+	}
+	else
+	{
+		// only need to add the import if not aliased. an aliased import must only be accessed through its alias
+		m_scope_table.add_import(module->ast.get_file_id());
+	}
 
 	stmt->module = module;
 
@@ -490,7 +498,7 @@ pars::Expr* pars::AST::parse_primary()
 		auto *symbol = m_scope_table.find_symbol(identifier);
 
 		// intercept symbol if its an import alias
-		if (auto *import = dynamic_cast<ImportStmt*>(symbol); !import->alias.empty())
+		if (auto *import = dynamic_cast<ImportStmt*>(symbol); import && !import->alias.empty())
 		{
 			m_lexer.expect(Dot);
 
