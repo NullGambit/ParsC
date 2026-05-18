@@ -110,6 +110,11 @@ void pars::AST::resolve_symbols()
 	m_post_resolved_tasks.clear();
 }
 
+const pars::ScopeTable & pars::AST::get_scope_table() const
+{
+	return m_scope_table;
+}
+
 pars::Node* pars::AST::declaration()
 {
 	if (m_lexer.match(At))
@@ -194,10 +199,11 @@ pars::Node* pars::AST::parse_import()
 {
 	auto *stmt = new_node<ImportStmt>();
 
-	// if (m_lexer.match_next(Equal))
-	// {
-	// 	stmt->alias = m_lexer.peek_last().lexeme;
-	// }
+	if (m_lexer.match_next(Equal))
+	{
+		stmt->alias = m_lexer.peek_last().lexeme;
+		m_lexer.advance();
+	}
 
 	std::filesystem::path path;
 
@@ -220,6 +226,9 @@ pars::Node* pars::AST::parse_import()
 	}
 
 	m_scope_table.add_import(module->ast.get_file_id());
+	m_scope_table.add_to_scope(Symbol{stmt->alias}, stmt, PRIVATE_SYMBOL);
+
+	stmt->module = module;
 
 	return stmt;
 }
@@ -480,6 +489,16 @@ pars::Expr* pars::AST::parse_primary()
 
 		auto *symbol = m_scope_table.find_symbol(identifier);
 
+		// intercept symbol if its an import alias
+		if (auto *import = dynamic_cast<ImportStmt*>(symbol); !import->alias.empty())
+		{
+			m_lexer.expect(Dot);
+
+			identifier = m_lexer.expect(Identifier).lexeme;
+
+			symbol = import->module->ast.m_scope_table.find_local_symbol(identifier);
+		}
+
 		if (auto *type = dynamic_cast<Type*>(symbol))
 		{
 			auto *expr = new_node<TypeExpr>();
@@ -523,9 +542,7 @@ pars::Expr* pars::AST::parse_primary()
 
 		expr->symbol = identifier;
 
-		auto *var = dynamic_cast<VarDeclStmt*>(symbol);
-
-		if (var != nullptr)
+		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
 		{
 			expr->type = var->type;
 			expr->symbol_node = var;
@@ -540,6 +557,8 @@ pars::Expr* pars::AST::parse_primary()
 				});
 			}
 		}
+
+
 
 		return expr;
 

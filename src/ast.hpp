@@ -27,6 +27,8 @@ namespace pars
 			return m_file_id;
 		}
 
+		const ScopeTable& get_scope_table() const;
+
 	private:
 		typedef Expr*(AST::*BinaryRule)();
 		typedef void(AST::*SymbolTask)(Node* node);

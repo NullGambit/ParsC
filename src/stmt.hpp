@@ -10,6 +10,7 @@
 
 namespace pars
 {
+	struct Module;
 	struct Type;
 	struct Expr;
 
@@ -67,7 +68,7 @@ namespace pars
 
 	struct ImportStmt : Stmt
 	{
-		std::vector<std::string_view> path;
+		Module *module;
 		std::string_view alias;
 		std::vector<std::string_view> selective_imports;
 

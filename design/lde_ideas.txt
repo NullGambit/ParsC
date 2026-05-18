@@ -1,0 +1,4 @@
+- when hovering over functions should show how many allocations it makes and how many bytes it allocates
+should also do the same for logging. this should be very easy because of how allocators and logging works through the context system
+
+- import statements should have an annotation next to them that shows which symbols are actually used from that module

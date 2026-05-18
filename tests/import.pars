@@ -1,8 +1,8 @@
-import std.io
+import io = std.io
 import tests.foo.bar
 
 fn main()
 {
-    println("hello world")
+    io.println("hello world")
     say_yes()
 }

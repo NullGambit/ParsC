@@ -6,7 +6,7 @@
 
 void pars::AstPrinter::visit(ImportStmt *stmt)
 {
-	fmt::println("import {}", stmt->path);
+	// fmt::println("import {}", stmt->path);
 }
 
 void pars::AstPrinter::visit(VarDeclStmt *stmt)

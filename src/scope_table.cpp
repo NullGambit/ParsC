@@ -109,9 +109,12 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 		}
 	}
 
-	static std::unordered_set<u32> modules_found;
+	auto *node = find_local_symbol(name);
 
-	modules_found.clear();
+	if (node != nullptr)
+	{
+		return node;
+	}
 
 	// TODO: allow for parameterized up to down or down to up scope checking
 	for (auto i = 0; i <= m_level; i++)
@@ -119,7 +122,7 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 		auto &data = m_table[i];
 		auto iter = data.scope.find(name);
 
-		modules_found.insert(data.imports.begin(), data.imports.end());
+		m_modules_found.insert(data.imports.begin(), data.imports.end());
 
 		if (iter != data.scope.end())
 		{
@@ -134,9 +137,29 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 
 	for (auto &symbol : symbols)
 	{
-		if (symbol.availability == GlobalSymbolAvailability::Always || modules_found.contains(symbol.file_id))
+		if (symbol.availability == GlobalSymbolAvailability::Always || m_modules_found.contains(symbol.file_id))
 		{
 			return symbol.node;
+		}
+	}
+
+	return nullptr;
+}
+
+pars::Node * pars::ScopeTable::find_local_symbol(std::string_view name)
+{
+	m_modules_found.clear();
+
+	for (auto i = 0; i <= m_level; i++)
+	{
+		auto &data = m_table[i];
+		auto iter = data.scope.find(name);
+
+		m_modules_found.insert(data.imports.begin(), data.imports.end());
+
+		if (iter != data.scope.end())
+		{
+			return iter->second;
 		}
 	}
 
