@@ -77,6 +77,8 @@ add_executable(ParsC src/main.cpp
         src/memory/arena.hpp
 )
 
+set(LLVM_STATIC ON)
+
 target_compile_definitions(ParsC PRIVATE LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
 target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.hpp)
 

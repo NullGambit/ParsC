@@ -1,9 +1,11 @@
 import std.io : writeln = println, print
 import io = std.io
 import tests.foo.bar
+import tests.foo
 
 fn main()
 {
+    foo_adder(1, 20)
     writeln("hello world")
     io.print("the end")
     print("bye bye")

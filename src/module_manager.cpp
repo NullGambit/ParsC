@@ -24,6 +24,11 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 		path.replace_extension("pars");
 	}
 
+	if (is_directory(path))
+	{
+		path /= "package.pars";
+	}
+
 	auto iter = g_modules_table.find(path);
 
 	if (iter != g_modules_table.end())
@@ -31,17 +36,17 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 		return iter->second;
 	}
 
-	auto *module = new Module{path.c_str(), &g_llvm_ctx};
-
-	g_modules.emplace_back(module);
-	g_modules_table.emplace(path, module);
-
 	auto maybe_source = load_file(path.c_str());
 
 	if (!maybe_source.has_value())
 	{
 		return nullptr;
 	}
+
+	auto *module = new Module{path.c_str(), &g_llvm_ctx};
+
+	g_modules.emplace_back(module);
+	g_modules_table.emplace(path, module);
 
 	auto &nodes = module->ast.parse(maybe_source.value());
 
