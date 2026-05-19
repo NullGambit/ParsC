@@ -102,7 +102,7 @@ namespace pars
 		{
 			auto *node = pars::new_node<T>();
 
-			node->token = m_lexer.peek();
+			node->token = m_lexer.peek_last();
 
 			return node;
 		}

@@ -1,10 +1,11 @@
-import std.io : println
+import std.io : writeln = println, print
 import io = std.io
 import tests.foo.bar
 
 fn main()
 {
-    println("hello world")
+    writeln("hello world")
     io.print("the end")
+    print("bye bye")
     say_yes()
 }

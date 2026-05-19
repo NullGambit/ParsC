@@ -234,9 +234,16 @@ pars::Node* pars::AST::parse_import()
 		while (m_lexer.match(Identifier))
 		{
 			auto symbol_name = m_lexer.peek_last().lexeme;
+			auto import_name = symbol_name;
+
+			if (m_lexer.match(Equal))
+			{
+				symbol_name = m_lexer.expect(Identifier).lexeme;
+			}
+
 			auto *symbol = module->ast.m_scope_table.find_local_symbol(symbol_name);
 
-			m_scope_table.add_to_scope(Symbol{symbol_name}, symbol, PRIVATE_SYMBOL);
+			m_scope_table.add_to_scope(Symbol{import_name}, symbol, PRIVATE_SYMBOL);
 
 			if (!m_lexer.match(Comma))
 			{
@@ -544,6 +551,7 @@ pars::Expr* pars::AST::parse_primary()
 			{
 				expr->type = fn->signature.return_type;
 				expr->prototype = fn;
+				expr->symbol = fn->symbol.name;
 			}
 			else
 			{
