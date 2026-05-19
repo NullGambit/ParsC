@@ -17,16 +17,46 @@ void pars::add_module_path(const std::filesystem::path &path)
 	g_include_paths.emplace_back(path);
 }
 
+// bar.windows.pars
+// bar.linux.pars
+
+enum class ModulePlatform
+{
+	Linux,
+	Windows,
+	Darwin,
+};
+
+#if defined(__linux__)
+ModulePlatform PLATFORM = ModulePlatform::Linux;
+#elif defined(__WIN64__)
+ModulePlatform PLATFORM = ModulePlatform::Windows;
+#endif
+
 pars::Module* pars::get_module(std::filesystem::path &path)
 {
-	if (!is_directory(path) && path.extension() != "pars")
-	{
-		path.replace_extension("pars");
-	}
-
 	if (is_directory(path))
 	{
 		path /= "package.pars";
+	}
+
+	// TODO: use llvm target platform so this works with cross compilation
+	// TODO: the performance here is sucks. lots of room for optimizations.
+
+	auto p = path.string();
+
+	if (std::filesystem::exists(p + ".linux.pars") && PLATFORM == ModulePlatform::Linux)
+	{
+		path.replace_extension(".linux.pars");
+	}
+	else if (std::filesystem::exists(p + ".windows.pars") && PLATFORM == ModulePlatform::Windows)
+	{
+		path.replace_extension(".windows.pars");
+	}
+
+	if (!is_directory(path) && path.extension() != "pars")
+	{
+		path.replace_extension("pars");
 	}
 
 	auto iter = g_modules_table.find(path);

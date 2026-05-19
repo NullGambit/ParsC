@@ -2,6 +2,7 @@ import std.io : writeln = println, print
 import io = std.io
 import tests.foo.bar
 import tests.foo
+import tests.foo.platform
 
 fn main()
 {
@@ -10,4 +11,5 @@ fn main()
     io.print("the end")
     print("bye bye")
     say_yes()
+    from_platform()
 }
