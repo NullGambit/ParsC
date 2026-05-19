@@ -225,10 +225,24 @@ pars::Node* pars::AST::parse_import()
 			fmt::format("Could not read module in any include paths '{}'", path.c_str()), stmt};
 	}
 
-
 	if (!stmt->alias.empty())
 	{
 		m_scope_table.add_to_scope(Symbol{stmt->alias}, stmt, PRIVATE_SYMBOL);
+	}
+	else if (m_lexer.match(Colon))
+	{
+		while (m_lexer.match(Identifier))
+		{
+			auto symbol_name = m_lexer.peek_last().lexeme;
+			auto *symbol = module->ast.m_scope_table.find_local_symbol(symbol_name);
+
+			m_scope_table.add_to_scope(Symbol{symbol_name}, symbol, PRIVATE_SYMBOL);
+
+			if (!m_lexer.match(Comma))
+			{
+				break;
+			}
+		}
 	}
 	else
 	{
@@ -237,6 +251,7 @@ pars::Node* pars::AST::parse_import()
 	}
 
 	stmt->module = module;
+
 
 	return stmt;
 }

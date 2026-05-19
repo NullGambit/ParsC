@@ -1,3 +1,4 @@
 extern fn printf(fmt: str, s: str): i32
 
 fn println(s: str) => printf("%s\n", s)
+fn print(s: str) => printf("%s", s)

@@ -70,7 +70,6 @@ namespace pars
 	{
 		Module *module;
 		std::string_view alias;
-		std::vector<std::string_view> selective_imports;
 
 		ACCEPT
 	};
