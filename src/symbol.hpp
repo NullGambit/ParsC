@@ -23,5 +23,7 @@ namespace pars
 
 	std::span<Expr*> get_attributes(Symbol symbol);
 
+	bool has_keyword_attribute(Symbol symbol, TokenType type);
+
 	size_t get_attribute_id();
 }

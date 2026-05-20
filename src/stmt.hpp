@@ -40,21 +40,22 @@ namespace pars
 		ACCEPT
 	};
 
+	enum class FnFlags : u8
+	{
+		Extern = 1 << 0,
+		Inline = 1 << 1,
+		Private = 1 << 2,
+	};
+
+	PARS_FLAGIFY(FnFlags);
+
 	struct FnSignature
 	{
 		std::vector<VarDeclStmt*> parameters;
 		Type *return_type;
 
-		llvm::Function* emit(EmitCtx &ctx, std::string_view name);
+		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags);
 	};
-
-	enum class FnFlags : u8
-	{
-		Extern = 1 << 0,
-		Inline = 1 << 1,
-	};
-
-	PARS_FLAGIFY(FnFlags);
 
 	struct FnDecl : Stmt
 	{

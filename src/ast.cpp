@@ -132,24 +132,6 @@ pars::Node* pars::AST::declaration()
 		m_lexer.expect(RightBrace);
 	}
 
-	// TODO: maybe replace externing with an attribute instead of a keyword
-	if (m_lexer.match(Extern))
-	{
-		if (m_lexer.match(Identifier) && m_lexer.peek_last().lexeme != "C")
-		{
-			throw FrontendError{m_lexer.peek_last(), "unsupported extern type found"};
-		}
-
-		m_lexer.expect(Fn);
-
-		FnFlags flags{};
-
-		flags |= FnFlags::Extern;
-
-		auto *fn = parse_fn(flags);
-
-		return fn;
-	}
 	if (m_lexer.match(Fn))
 	{
 		return parse_fn({});
@@ -393,10 +375,19 @@ pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 {
 	auto *fn = new_node<FnDecl>();
 
-	fn->symbol = get_symbol();
 	fn->flags = flags;
+	fn->symbol = get_symbol();
 
-	m_scope_table.add_to_scope(fn->symbol, fn);
+	if (has_keyword_attribute(fn->symbol, Extern))
+	{
+		fn->flags |= FnFlags::Extern;
+	}
+	if (has_keyword_attribute(fn->symbol, Private))
+	{
+		fn->flags |= FnFlags::Private;
+	}
+
+	m_scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
 
 	fn->signature = parse_fn_signature();
 
@@ -415,6 +406,8 @@ pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 
 	if (m_lexer.match(Arrow))
 	{
+		fn->flags |= FnFlags::Inline;
+
 		auto *expr = expression();
 
 		if (!expr->type->is_equal(&VoidType))
@@ -606,6 +599,13 @@ pars::Expr* pars::AST::parse_primary()
 		return expr;
 	}
 
+	if (m_lexer.peek().type > _AttributeKeywordStart && m_lexer.peek().type < _AttributeKeywordEnd)
+	{
+		m_lexer.advance();
+
+		return new_node<KeywordExpr>();
+	}
+
 	auto *literal = new_node<LiteralExpr>();
 
 	if (m_lexer.match(True) || m_lexer.match(False))
@@ -641,7 +641,8 @@ pars::Expr* pars::AST::parse_primary()
 	}
 	else
 	{
-		throw FrontendError{m_lexer.peek_last(), "Expected expression but got none", literal};
+		throw FrontendError{m_lexer.peek_last(),
+			fmt::format("Expected expression but got {}", m_lexer.peek().lexeme), literal};
 	}
 
 	return literal;

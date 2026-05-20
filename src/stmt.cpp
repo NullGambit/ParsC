@@ -27,7 +27,7 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 	return value;
 }
 
-llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name)
+llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags)
 {
 	if (auto *fn = ctx.module->getFunction(name))
 	{
@@ -47,12 +47,26 @@ llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name)
 
 	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, false);
 
-	return llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, ctx.module);
+	auto linkage = llvm::Function::InternalLinkage;
+
+	if (has_flag(flags, FnFlags::Extern) || !has_flag(flags, FnFlags::Private))
+	{
+		linkage = llvm::Function::ExternalLinkage;
+	}
+
+	auto *fn = llvm::Function::Create(ft, linkage, name, ctx.module);
+
+	if (has_flag(flags, FnFlags::Inline))
+	{
+		fn->addFnAttr(llvm::Attribute::AlwaysInline);
+	}
+
+	return fn;
 }
 
 llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 {
-	auto *fn = signature.emit(ctx, symbol.name);
+	auto *fn = signature.emit(ctx, symbol.name, flags);
 
 	for (auto i = 0; auto &arg : fn->args())
 	{

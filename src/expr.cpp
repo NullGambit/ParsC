@@ -101,7 +101,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 	if (fn == nullptr)
 	{
-		fn = prototype->signature.emit(ctx, symbol);
+		fn = prototype->signature.emit(ctx, symbol, prototype->flags);
 	}
 
 	if (fn->arg_size() != arguments.size())

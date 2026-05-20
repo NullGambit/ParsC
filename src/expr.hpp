@@ -102,4 +102,10 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 	};
+
+	// mainly used for attributes
+	// empty because all nodes store a token already
+	struct KeywordExpr : Expr
+	{
+	};
 }

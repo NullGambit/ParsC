@@ -14,6 +14,17 @@ std::span<pars::Expr *> pars::get_attributes(Symbol symbol)
 	return std::span{g_attributes.begin() + symbol.attribute_id, symbol.attribute_count};
 }
 
+bool pars::has_keyword_attribute(Symbol symbol, TokenType type)
+{
+	auto attributes = get_attributes(symbol);
+
+	return std::ranges::any_of(attributes.begin(), attributes.end(),
+		[type](Expr const *expr)
+		{
+			return expr->token.type == type;
+		});
+}
+
 size_t pars::get_attribute_id()
 {
 	auto size = g_attributes.size();
