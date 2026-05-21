@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 namespace pars
 {
@@ -16,6 +17,7 @@ namespace pars
 	struct CallExpr;
 	struct UnaryExpr;
 	struct BinaryExpr;
+	struct Node;
 
 	struct Visitor
 	{
@@ -35,5 +37,7 @@ namespace pars
 		virtual void visit(AliasType *stmt) {}
 		virtual void visit(SizeofExpr *stmt) {}
 		virtual void visit(TypeExpr *stmt) {}
+
+		void visit_nodes(const std::vector<Node*> &nodes);
 	};
 }

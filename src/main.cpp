@@ -59,6 +59,7 @@ void init_global_symbols()
 		});
 	};
 
+	declare_global_type(&pars::VoidType);
 	declare_global_type(&pars::I8Type);
 	declare_global_type(&pars::U8Type);
 	declare_global_type(&pars::I16Type);

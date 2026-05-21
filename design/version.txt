@@ -1,0 +1,29 @@
+
+// within the project config file the user can define certain symbols
+// and this can also be done through the command line
+// finally it can be done through pars code (useful for quick testing and debugging)
+
+
+// this is the third option
+// this can only be done within the global scope
+version DoCoolStuff = true
+
+import std.io 
+
+version DoCoolStuff 
+{
+    fn do_cool_stuff()
+    {
+        println("im doing cool stuff")
+    }
+}
+
+// can also be used to check platform
+version Linux 
+{
+    fn print_platform()
+    {
+        println("im on linux")
+    }
+}
+

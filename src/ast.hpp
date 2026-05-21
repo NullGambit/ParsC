@@ -11,6 +11,9 @@
 
 namespace pars
 {
+	struct ParseCtx;
+	struct GlobalSymbol;
+
 	// a per module abstract syntax tree
 	class AST
 	{
@@ -18,16 +21,11 @@ namespace pars
 
 		AST();
 
-		const std::vector<Node*>& parse(SourceFile source);
+		const std::vector<Node*>& parse(ParseCtx *ctx);
 
-		void resolve_symbols();
+		ParseCtx* get_ctx() const;
 
-		u32 get_file_id() const
-		{
-			return m_file_id;
-		}
-
-		const ScopeTable& get_scope_table() const;
+		u32 get_file_id() const;
 
 	private:
 		typedef Expr*(AST::*BinaryRule)();
@@ -39,22 +37,14 @@ namespace pars
 			SymbolTask task;
 		};
 
+		ParseCtx *m_ctx;
+
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
 
 		std::vector<Node*> *m_target;
 
-		ScopeTable m_scope_table;
-
 		std::vector<FnDecl*> m_function_stack;
-
-		u32 m_file_id;
-
-		// maps symbol names to a set of tasks
-		// when calling a function or using a type out of order
-		// the compiler will try to resolve these symbols after parsing is done
-		// every statement can give it sown
-		HashMap<std::string_view, std::vector<UnresolvedSymbol>> m_pending_symbols;
 
 		std::vector<UnresolvedSymbol> m_post_resolved_tasks;
 
@@ -84,18 +74,9 @@ namespace pars
 		Expr* parse_factor();
 		Expr* parse_primary();
 
-		void add_symbol_resolved_task(std::string_view name, Node *node, SymbolTask task);
-
-		void patch_call_expr_type(Node *node);
-		void patch_var_init_type(Node *node);
-		void patch_identifier_type(Node *node);
-
 		FnDecl* get_current_fn();
 
 		bool followed_by_body();
-
-		// expects an identifier and resolves its type or throws a frontend error if not resolved
-		Type* resolve_type();
 
 		template<IsNode T>
 		T* new_node()

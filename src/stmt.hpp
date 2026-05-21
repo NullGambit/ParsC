@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <string_view>
 #include <vector>
 
@@ -31,6 +32,7 @@ namespace pars
 	struct VarDeclStmt : Stmt
 	{
 		Symbol symbol;
+		std::string_view type_name;
 		Type *type;
 		Expr* initializer;
 		VarFlags flags;
@@ -45,6 +47,7 @@ namespace pars
 		Extern = 1 << 0,
 		Inline = 1 << 1,
 		Private = 1 << 2,
+		ArrowFn = 1 << 3,
 	};
 
 	PARS_FLAGIFY(FnFlags);
@@ -52,7 +55,8 @@ namespace pars
 	struct FnSignature
 	{
 		std::vector<VarDeclStmt*> parameters;
-		Type *return_type;
+		Type *return_type {};
+		std::string_view return_type_name;
 
 		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags);
 	};
@@ -69,10 +73,18 @@ namespace pars
 		ACCEPT
 	};
 
+	struct NamedSymbol
+	{
+		std::string_view name;
+		std::string_view symbol;
+	};
+
 	struct ImportStmt : Stmt
 	{
 		Module *module;
+		std::filesystem::path path;
 		std::string_view alias;
+		std::vector<NamedSymbol> selective_imports;
 
 		ACCEPT
 	};

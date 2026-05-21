@@ -58,13 +58,12 @@ virtual bool is_equal(Type const *other) const override							\
 	struct PendingType : Type
 	{
 		std::string_view symbol;
-		Type *resolved_type = nullptr;
 
 		DEFAULT_TYPE_EQUAL(PendingType)
 
 		std::string_view get_type_name() const override
 		{
-			return "<TYPE PENDING>";
+			return symbol;
 		}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override

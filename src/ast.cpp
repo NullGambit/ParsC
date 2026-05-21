@@ -6,6 +6,7 @@
 #include "frontend_error.hpp"
 #include "module.hpp"
 #include "module_manager.hpp"
+#include "parse_ctx.hpp"
 #include "token.hpp"
 #include "type.hpp"
 #include "util/fmt.hpp"
@@ -66,53 +67,35 @@ pars::AST::AST()
 	// };
 }
 
-const std::vector<pars::Node*>& pars::AST::parse(SourceFile source)
+const std::vector<pars::Node*>& pars::AST::parse(ParseCtx *ctx)
 {
-	m_file_id = source.id;
-	m_scope_table.set_file_id(m_file_id);
+	m_ctx = ctx;
 
-	m_lexer.set_source(source);
+	m_lexer.set_source(ctx->source_file);
 
 	m_target = &m_nodes;
+
+	// only need to record global symbols right now
+	m_ctx->scope_table.set_lock(0);
 
 	while (m_lexer.has_next() && !m_lexer.match_next(Eof))
 	{
 		declare_to(m_nodes);
 	}
 
+	m_ctx->scope_table.set_lock(ScopeTable::UNLOCKED_LEVEL);
+
 	return m_nodes;
 }
 
-void pars::AST::resolve_symbols()
+pars::ParseCtx * pars::AST::get_ctx() const
 {
-	for (auto [name, unresolved_list] : m_pending_symbols)
-	{
-		auto has_symbol = m_scope_table.has_symbol(name);
-
-		if (!has_symbol)
-		{
-			auto [node, task] = unresolved_list.front();
-			throw FrontendError(node->token, fmt::format("Symbol '{}' not defined", name), node);
-		}
-		//
-		// for (auto [node, task] : unresolved_list)
-		// {
-		// 	std::invoke(task, this, node);
-		// }
-	}
-	//
-	// for (auto [node, task] : m_post_resolved_tasks)
-	// {
-	// 	std::invoke(task, this, node);
-	// }
-
-	m_pending_symbols.clear();
-	m_post_resolved_tasks.clear();
+	return m_ctx;
 }
 
-const pars::ScopeTable & pars::AST::get_scope_table() const
+u32 pars::AST::get_file_id() const
 {
-	return m_scope_table;
+	return m_ctx->source_file.id;
 }
 
 pars::Node* pars::AST::declaration()
@@ -179,6 +162,10 @@ void pars::AST::declare_to(std::vector<Node *> &nodes)
 
 pars::Node* pars::AST::parse_import()
 {
+	// TODO: a multithreading optimization that i can make here is
+	// since i know i might need a module with a specific path later.
+	// while this module is parsing tell the module manager to prewarm this imports module
+	// and by prewarm i mean fully parse and compile
 	auto *stmt = new_node<ImportStmt>();
 
 	if (m_lexer.match_next(Equal))
@@ -187,11 +174,9 @@ pars::Node* pars::AST::parse_import()
 		m_lexer.advance();
 	}
 
-	std::filesystem::path path;
-
 	while (m_lexer.match(Identifier))
 	{
-		path /= m_lexer.peek_last().lexeme;
+		stmt->path /= m_lexer.peek_last().lexeme;
 
 		if (!m_lexer.match(Dot))
 		{
@@ -199,19 +184,7 @@ pars::Node* pars::AST::parse_import()
 		}
 	}
 
-	auto *module = get_module(path);
-
-	if (module == nullptr)
-	{
-		throw FrontendError{m_lexer.peek_last(),
-			fmt::format("Could not read module in any include paths '{}'", path.c_str()), stmt};
-	}
-
-	if (!stmt->alias.empty())
-	{
-		m_scope_table.add_to_scope(Symbol{stmt->alias}, stmt, PRIVATE_SYMBOL);
-	}
-	else if (m_lexer.match(Colon))
+	if (m_lexer.match(Colon))
 	{
 		while (m_lexer.match(Identifier))
 		{
@@ -223,9 +196,7 @@ pars::Node* pars::AST::parse_import()
 				symbol_name = m_lexer.expect(Identifier).lexeme;
 			}
 
-			auto *symbol = module->ast.m_scope_table.find_local_symbol(symbol_name);
-
-			m_scope_table.add_to_scope(Symbol{import_name}, symbol, PRIVATE_SYMBOL);
+			stmt->selective_imports.emplace_back(symbol_name, import_name);
 
 			if (!m_lexer.match(Comma))
 			{
@@ -233,14 +204,6 @@ pars::Node* pars::AST::parse_import()
 			}
 		}
 	}
-	else
-	{
-		// only need to add the import if not aliased. an aliased import must only be accessed through its alias
-		m_scope_table.add_import(module->ast.get_file_id());
-	}
-
-	stmt->module = module;
-
 
 	return stmt;
 }
@@ -258,47 +221,26 @@ pars::VarDeclStmt* pars::AST::parse_var()
 
 	if (m_lexer.match(Colon))
 	{
-		stmt->type = resolve_type();
+		stmt->type_name = m_lexer.expect(Identifier).lexeme;
 	}
 
 	if (m_lexer.match(Equal))
 	{
 		stmt->initializer = expression();
 
-		if (auto *pending = dynamic_cast<PendingType*>(stmt->initializer->type))
-		{
-			add_symbol_resolved_task(pending->symbol, stmt, &AST::patch_var_init_type);
-		}
-		else if (stmt->type != nullptr && !stmt->type->is_equal(stmt->initializer->type))
-		{
-			throw FrontendError
-			{
-				m_lexer.peek_last(),
-				fmt::format
-				(
-					"cannot initialize variable {} of type {} with type {}",
-					stmt->symbol.name, stmt->type->get_type_name(), stmt->initializer->type->get_type_name()
-				)
-			};
-		}
-		else
-		{
-			stmt->type = stmt->initializer->type;
-		}
 	}
 
-
-	if (stmt->type == nullptr && stmt->initializer == nullptr)
+	if (stmt->type_name.empty() && stmt->initializer == nullptr)
 	{
 		throw FrontendError(m_lexer.peek_last(), "Variable without initializer must be explicitly typed", stmt);
 	}
 
-	m_scope_table.add_to_scope(stmt->symbol, stmt);
+	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 
 	return stmt;
 }
 
-pars::Node * pars::AST::parse_return()
+pars::Node* pars::AST::parse_return()
 {
 	auto *fn = get_current_fn();
 
@@ -307,9 +249,9 @@ pars::Node * pars::AST::parse_return()
 		throw FrontendError{m_lexer.peek_last(), "cannot return outside of function"};
 	}
 
-	auto stmt = new_node<ReturnStmt>();
+	auto *stmt = new_node<ReturnStmt>();
 
-	if (!fn->signature.return_type->is_equal(&VoidType))
+	if (fn->signature.return_type_name != "void")
 	{
 		stmt->expr = expression();
 	}
@@ -366,7 +308,14 @@ pars::FnSignature pars::AST::parse_fn_signature()
 	COLLECT_COMMA_SEP(LeftParen, RightParen,
 		signature.parameters.push_back(parse_var()));
 
-	signature.return_type = m_lexer.match(Colon) ? resolve_type() : const_cast<Void*>(&VoidType);
+	if (m_lexer.match(Colon))
+	{
+		signature.return_type_name = m_lexer.expect(Identifier).lexeme;
+	}
+	else
+	{
+		signature.return_type_name = "void";
+	}
 
 	return signature;
 }
@@ -387,16 +336,9 @@ pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 		fn->flags |= FnFlags::Private;
 	}
 
-	m_scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
+	m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
 
 	fn->signature = parse_fn_signature();
-
-	auto scope = m_scope_table.new_scope();
-
-	for (auto *param : fn->signature.parameters)
-	{
-		m_scope_table.add_to_scope(param->symbol, param);
-	}
 
 	m_function_stack.emplace_back(fn);
 
@@ -406,27 +348,13 @@ pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 
 	if (m_lexer.match(Arrow))
 	{
-		fn->flags |= FnFlags::Inline;
+		fn->flags |= FnFlags::Inline | FnFlags::ArrowFn;
 
-		auto *expr = expression();
+		// auto *ret = new_node<ReturnStmt>();
+		//
+		// ret->expr = expression();
 
-		if (!expr->type->is_equal(&VoidType))
-		{
-			auto *ret = new_node<ReturnStmt>();
-
-			ret->expr = expr;
-
-			fn->body.emplace_back(ret);
-		}
-		else
-		{
-			fn->body.emplace_back(expr);
-		}
-
-		if (fn->signature.return_type->is_equal(&VoidType))
-		{
-			fn->signature.return_type = expr->type;
-		}
+		fn->body.emplace_back(expression());
 	}
 	else if (m_lexer.match(LeftBrace))
 	{
@@ -459,9 +387,13 @@ pars::AliasType * pars::AST::parse_alias()
 
 	stmt->is_distinct = m_lexer.match(Distinct);
 
-	stmt->type = resolve_type();
+	auto *pending = new_node<PendingType>();
 
-	m_scope_table.add_to_scope(stmt->symbol, stmt);
+	pending->symbol = m_lexer.expect(Identifier).lexeme;
+
+	stmt->type = pending;
+
+	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 
 	return stmt;
 }
@@ -510,26 +442,26 @@ pars::Expr* pars::AST::parse_primary()
 	{
 		auto identifier = m_lexer.peek_last().lexeme;
 
-		auto *symbol = m_scope_table.find_symbol(identifier);
+		// auto *symbol = m_ctx->scope_table.find_symbol(identifier);
 
 		// intercept symbol if its an import alias
-		if (auto *import = dynamic_cast<ImportStmt*>(symbol); import && !import->alias.empty())
-		{
-			m_lexer.expect(Dot);
+		// if (auto *import = dynamic_cast<ImportStmt*>(symbol); import && !import->alias.empty())
+		// {
+		// 	m_lexer.expect(Dot);
+		//
+		// 	identifier = m_lexer.expect(Identifier).lexeme;
+		//
+		// 	symbol = import->module->ast.m_scope_table.find_local_symbol(identifier);
+		// }
 
-			identifier = m_lexer.expect(Identifier).lexeme;
-
-			symbol = import->module->ast.m_scope_table.find_local_symbol(identifier);
-		}
-
-		if (auto *type = dynamic_cast<Type*>(symbol))
-		{
-			auto *expr = new_node<TypeExpr>();
-
-			expr->type = type;
-
-			return expr;
-		}
+		// if (auto *type = dynamic_cast<Type*>(symbol))
+		// {
+		// 	auto *expr = new_node<TypeExpr>();
+		//
+		// 	expr->type = type;
+		//
+		// 	return expr;
+		// }
 
 		if (m_lexer.match(LeftParen))
 		{
@@ -538,22 +470,22 @@ pars::Expr* pars::AST::parse_primary()
 			expr->symbol = identifier;
 
 			// TODO should be replaced with a check to see if its an object that can be called such as a functor
-			auto *fn = dynamic_cast<FnDecl*>(symbol);
-
-			if (fn != nullptr)
-			{
-				expr->type = fn->signature.return_type;
-				expr->prototype = fn;
-				expr->symbol = fn->symbol.name;
-			}
-			else
-			{
-				auto *type = new_node<PendingType>();
-				type->symbol = identifier;
-				expr->type = type;
-
-				add_symbol_resolved_task(expr->symbol, expr, &AST::patch_call_expr_type);
-			}
+			// auto *fn = dynamic_cast<FnDecl*>(symbol);
+			//
+			// if (fn != nullptr)
+			// {
+			// 	expr->type = fn->signature.return_type;
+			// 	expr->prototype = fn;
+			// 	expr->symbol = fn->symbol.name;
+			// }
+			// else
+			// {
+			// 	auto *type = new_node<PendingType>();
+			// 	type->symbol = identifier;
+			// 	expr->type = type;
+			//
+			// 	add_symbol_resolved_task(expr->symbol, expr, &AST::patch_call_expr_type);
+			// }
 
 			expr->arguments = collect_call_arguments();
 
@@ -566,27 +498,23 @@ pars::Expr* pars::AST::parse_primary()
 
 		expr->symbol = identifier;
 
-		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
-		{
-			expr->type = var->type;
-			expr->symbol_node = var;
-
-			if (expr->type == nullptr)
-			{
-				m_post_resolved_tasks.emplace_back(
-				UnresolvedSymbol
-				{
-					.node = expr,
-					.task = &AST::patch_identifier_type
-				});
-			}
-		}
-
-
+		// if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
+		// {
+		// 	expr->type = var->type;
+		// 	expr->symbol_node = var;
+		//
+		// 	if (expr->type == nullptr)
+		// 	{
+		// 		m_post_resolved_tasks.emplace_back(
+		// 		UnresolvedSymbol
+		// 		{
+		// 			.node = expr,
+		// 			.task = &AST::patch_identifier_type
+		// 		});
+		// 	}
+		// }
 
 		return expr;
-
-
 	}
 	if (m_lexer.match(Sizeof))
 	{
@@ -648,73 +576,6 @@ pars::Expr* pars::AST::parse_primary()
 	return literal;
 }
 
-void pars::AST::add_symbol_resolved_task(std::string_view name, Node *node, SymbolTask task)
-{
-	m_pending_symbols[name].emplace_back
-	(
-		UnresolvedSymbol
-		{
-			.node = node,
-			.task = task
-		}
-	);
-}
-
-void pars::AST::patch_call_expr_type(Node *node)
-{
-	auto *expr = dynamic_cast<CallExpr*>(node);
-
-	if (expr != nullptr)
-	{
-		auto *symbol = m_scope_table.find_symbol(expr->symbol);
-		expr->prototype = dynamic_cast<FnDecl*>(symbol);
-
-		auto *pending = dynamic_cast<PendingType*>(expr->type);
-
-		if (expr->prototype != nullptr)
-		{
-			expr->type = expr->prototype->signature.return_type;
-		}
-
-		pending->resolved_type = expr->type;
-	}
-}
-
-void pars::AST::patch_var_init_type(Node *node)
-{
-	auto *var = dynamic_cast<VarDeclStmt*>(node);
-
-	if (var != nullptr)
-	{
-		auto explicit_type = var->type;
-
-		var->type = var->initializer->type;
-
-		if (explicit_type != nullptr && !explicit_type->is_equal(var->type))
-		{
-			throw FrontendError
-			{
-				var->token,
-				fmt::format
-				(
-					"cannot initialize variable {} of type {} with type {}",
-					var->symbol.name, explicit_type->get_type_name(), var->initializer->type->get_type_name()
-				)
-			};
-		}
-	}
-}
-
-void pars::AST::patch_identifier_type(Node *node)
-{
-	auto *expr = dynamic_cast<SymbolExpr*>(node);
-
-	if (expr != nullptr)
-	{
-		expr->type = dynamic_cast<VarDeclStmt*>(expr->symbol_node)->type;
-	}
-}
-
 pars::FnDecl* pars::AST::get_current_fn()
 {
 	if (m_function_stack.empty())
@@ -728,20 +589,6 @@ pars::FnDecl* pars::AST::get_current_fn()
 bool pars::AST::followed_by_body()
 {
 	return m_lexer.peek(LeftBrace) || m_lexer.peek(Arrow);
-}
-
-pars::Type* pars::AST::resolve_type()
-{
-	auto type_name = m_lexer.expect(Identifier).lexeme;
-
-	auto *type = m_scope_table.find_symbol<Type>(type_name);
-
-	if (type == nullptr)
-	{
-		throw FrontendError{m_lexer.peek_last(), "unknown type", nullptr};
-	}
-
-	return type;
 }
 
 std::vector<pars::Expr*> pars::AST::collect_call_arguments()

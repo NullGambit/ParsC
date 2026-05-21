@@ -83,7 +83,7 @@ llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 	}
 }
 
-llvm::Value * pars::SymbolExpr::emit(EmitCtx &ctx)
+llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 {
 	PendingType pending;
 

@@ -56,30 +56,18 @@ void pars::ScopeTable::add_import(u32 file_id)
 	data.imports.emplace_back(file_id);
 }
 
-void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public, u32 level)
+void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public)
 {
-	Scope *scope;
-
-	if (level != UINT32_MAX)
+	if (m_level > m_locked_level && m_locked_level != UNLOCKED_LEVEL)
 	{
-		if (level >= m_table.size())
-		{
-			for (u32 i = 0; i < level; i++)
-			{
-				m_table.emplace_back();
-			}
-		}
+		return;
+	}
 
-		scope = &m_table[level].scope;
-	}
-	else
-	{
-		scope = &get_scope();
-	}
+	auto *scope = &get_scope();
 
 	scope->emplace(symbol.name, node);
 
-	if (is_public)
+	if (is_public && m_level == 0)
 	{
 		declare_global_symbol(symbol.name,
 		{

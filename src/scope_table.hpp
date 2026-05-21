@@ -18,6 +18,9 @@ namespace pars
 	{
 	public:
 		using Scope = HashMap<std::string_view, Node*>;
+		using Level = u16;
+
+		static constexpr u16 UNLOCKED_LEVEL = UINT16_MAX;
 
 		struct ScopeData
 		{
@@ -35,6 +38,11 @@ namespace pars
 			return m_level;
 		}
 
+		void set_lock(u16 level)
+		{
+			m_locked_level = level;
+		}
+
 		[[nodiscard]]
 		AutoScope new_scope();
 
@@ -44,7 +52,7 @@ namespace pars
 
 		void add_import(u32 file_id);
 
-		void add_to_scope(Symbol symbol, Node *node, bool is_public = true, u32 level = UINT32_MAX);
+		void add_to_scope(Symbol symbol, Node *node, bool is_public = true);
 		Node* find_symbol(std::string_view name) const;
 		Node* find_local_symbol(std::string_view name) const;
 		bool has_symbol(std::string_view name);
@@ -57,9 +65,15 @@ namespace pars
 			return dynamic_cast<T*>(node);
 		}
 
+		const std::vector<ScopeData>& get_table() const
+		{
+			return m_table;
+		}
+
 	private:
 		u16 m_file_id {};
-		u32 m_level {};
+		u16 m_level {};
+		u16 m_locked_level = UNLOCKED_LEVEL;
 		std::vector<ScopeData> m_table;
 		inline static std::unordered_set<u32> m_modules_found;
 	};

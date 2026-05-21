@@ -2,7 +2,9 @@
 
 #include "containers/hash_map.hpp"
 #include "module.hpp"
-#include "type_checker.hpp"
+#include "analyzer.hpp"
+#include "parse_ctx.hpp"
+#include "resolver.hpp"
 #include "util/fmt.hpp"
 
 pars::HashMap<std::string, pars::Module*> g_modules_table;
@@ -79,18 +81,21 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	g_modules.emplace_back(module);
 	g_modules_table.emplace(path, module);
 
-	auto &nodes = module->ast.parse(maybe_source.value());
+	auto *parse_ctx = new ParseCtx{.scope_table = {}, .source_file = maybe_source.value()};
 
-	module->ast.resolve_symbols();
+	parse_ctx->scope_table.set_file_id(parse_ctx->source_file.id);
 
-	auto type_checker = TypeChecker{module->ast};
+	auto &nodes = module->ast.parse(parse_ctx);
 
-	for (auto *node : nodes)
-	{
-		node->accept(&type_checker);
-	}
+	auto resolver = Resolver{parse_ctx};
 
-	auto ctx = EmitCtx{&g_llvm_ctx, llvm::IRBuilder{g_llvm_ctx}, module->module};
+	resolver.resolve(nodes);
+
+	auto analyzer = Analyzer{parse_ctx};
+
+	analyzer.analyze(nodes);
+
+	auto ctx = module->make_ctx();
 
 	// compile the entire module
 	for (auto *node : nodes)
