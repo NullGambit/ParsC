@@ -2,6 +2,8 @@
 
 namespace pars
 {
+	struct TypeExpr;
+	struct SizeofExpr;
 	struct AliasType;
 	struct FnDecl;
 	struct Symbol;
@@ -31,5 +33,7 @@ namespace pars
 		virtual void visit(Symbol *stmt) {}
 		virtual void visit(FnDecl *stmt) {}
 		virtual void visit(AliasType *stmt) {}
+		virtual void visit(SizeofExpr *stmt) {}
+		virtual void visit(TypeExpr *stmt) {}
 	};
 }

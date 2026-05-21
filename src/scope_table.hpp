@@ -45,8 +45,8 @@ namespace pars
 		void add_import(u32 file_id);
 
 		void add_to_scope(Symbol symbol, Node *node, bool is_public = true, u32 level = UINT32_MAX);
-		Node* find_symbol(std::string_view name);
-		Node* find_local_symbol(std::string_view name);
+		Node* find_symbol(std::string_view name) const;
+		Node* find_local_symbol(std::string_view name) const;
 		bool has_symbol(std::string_view name);
 
 		template<IsNode T>

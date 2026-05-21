@@ -18,6 +18,8 @@
 - improve api for compiler functions
 - vardiac arguments
 - function overloading
+- mutable stack allocated variables
+- apply operators
 - runtime type information through a Type type
 - typeid system
 - type is expression

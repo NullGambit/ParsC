@@ -1,6 +1,11 @@
-import std.io
 
 fn main()
 {
-    println("hello world")
+    fn add(a: i32, b: i32) => a + b
+
+    var x = add(10, 20)
+    var y = mul(10, 20)
 }
+
+fn mul(a: i32, b: i32) => a * b
+

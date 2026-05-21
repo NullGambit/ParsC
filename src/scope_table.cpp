@@ -90,7 +90,7 @@ void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public, u
 	}
 }
 
-pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
+pars::Node* pars::ScopeTable::find_symbol(std::string_view name) const
 {
 	std::span<GlobalSymbol> symbols;
 
@@ -146,7 +146,7 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name)
 	return nullptr;
 }
 
-pars::Node * pars::ScopeTable::find_local_symbol(std::string_view name)
+pars::Node * pars::ScopeTable::find_local_symbol(std::string_view name) const
 {
 	m_modules_found.clear();
 

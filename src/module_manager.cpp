@@ -2,6 +2,7 @@
 
 #include "containers/hash_map.hpp"
 #include "module.hpp"
+#include "type_checker.hpp"
 #include "util/fmt.hpp"
 
 pars::HashMap<std::string, pars::Module*> g_modules_table;
@@ -81,6 +82,13 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	auto &nodes = module->ast.parse(maybe_source.value());
 
 	module->ast.resolve_symbols();
+
+	auto type_checker = TypeChecker{module->ast};
+
+	for (auto *node : nodes)
+	{
+		node->accept(&type_checker);
+	}
 
 	auto ctx = EmitCtx{&g_llvm_ctx, llvm::IRBuilder{g_llvm_ctx}, module->module};
 

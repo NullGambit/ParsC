@@ -75,6 +75,8 @@ add_executable(ParsC src/main.cpp
         src/memory/defs.hpp
         src/memory/arena.cpp
         src/memory/arena.hpp
+        src/type_checker.cpp
+        src/type_checker.hpp
 )
 
 set(LLVM_STATIC ON)

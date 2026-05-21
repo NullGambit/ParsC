@@ -86,6 +86,9 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 
 		for (auto *entry : body)
 		{
+			// set insert point back to this functions basic block in case
+			// there is a local function being emitted
+			ctx.builder.SetInsertPoint(bb);
 			entry->emit(ctx);
 		}
 
@@ -102,7 +105,7 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 
 	if (has_error)
 	{
-		// ctx.module->print(error_stream, nullptr);
+		ctx.module->print(error_stream, nullptr);
 		error_stream.flush();
 		fn->eraseFromParent();
 		throw CompileError{this, std::move(error_str)};

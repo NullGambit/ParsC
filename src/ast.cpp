@@ -94,17 +94,17 @@ void pars::AST::resolve_symbols()
 			auto [node, task] = unresolved_list.front();
 			throw FrontendError(node->token, fmt::format("Symbol '{}' not defined", name), node);
 		}
-
-		for (auto [node, task] : unresolved_list)
-		{
-			std::invoke(task, this, node);
-		}
+		//
+		// for (auto [node, task] : unresolved_list)
+		// {
+		// 	std::invoke(task, this, node);
+		// }
 	}
-
-	for (auto [node, task] : m_post_resolved_tasks)
-	{
-		std::invoke(task, this, node);
-	}
+	//
+	// for (auto [node, task] : m_post_resolved_tasks)
+	// {
+	// 	std::invoke(task, this, node);
+	// }
 
 	m_pending_symbols.clear();
 	m_post_resolved_tasks.clear();

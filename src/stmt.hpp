@@ -65,6 +65,8 @@ namespace pars
 		FnFlags flags;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
 	};
 
 	struct ImportStmt : Stmt

@@ -93,7 +93,7 @@ namespace pars
 
 	struct TypeExpr : Expr
 	{
-
+		ACCEPT
 	};
 
 	struct SizeofExpr : Expr
@@ -101,6 +101,8 @@ namespace pars
 		Expr *expr;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
 	};
 
 	// mainly used for attributes
