@@ -58,11 +58,11 @@ void pars::Analyzer::visit(FnDecl *fn)
 	else
 	{
 		fn->signature.return_type = resolve_type(fn->signature.return_type_name, fn);
-	}
 
-	for (auto *node : fn->body)
-	{
-		node->accept(this);
+		for (auto *node : fn->body)
+		{
+			node->accept(this);
+		}
 	}
 
 	m_function_stack.pop_back();

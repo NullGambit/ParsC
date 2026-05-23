@@ -261,6 +261,8 @@ pars::Node* pars::AST::parse_return()
 
 void pars::AST::parse_attributes()
 {
+	// TODO: instead of calling expression have a finer grained way to get attributes
+	// currently this will not report errors if you randomly use a keyword somewhere
 	if (!m_lexer.match(LeftBracket))
 	{
 		m_pending_attributes.emplace_back(expression());

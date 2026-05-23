@@ -85,9 +85,7 @@ llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 
 llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 {
-	PendingType pending;
-
-	if (type == nullptr || type->is_equal(&pending))
+	if (type == nullptr)
 	{
 		throw CompileError{this, fmt::format("unknown symbol '{}'", symbol)};
 	}
