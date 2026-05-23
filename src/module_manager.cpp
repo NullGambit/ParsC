@@ -4,7 +4,6 @@
 #include "module.hpp"
 #include "analyzer.hpp"
 #include "parse_ctx.hpp"
-#include "resolver.hpp"
 #include "util/fmt.hpp"
 
 pars::HashMap<std::string, pars::Module*> g_modules_table;
@@ -86,10 +85,6 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	parse_ctx->scope_table.set_file_id(parse_ctx->source_file.id);
 
 	auto &nodes = module->ast.parse(parse_ctx);
-
-	auto resolver = Resolver{parse_ctx};
-
-	resolver.resolve(nodes);
 
 	auto analyzer = Analyzer{parse_ctx};
 

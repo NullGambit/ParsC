@@ -84,18 +84,26 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 			ctx.named_values[arg.getName()] = &arg;
 		}
 
-		for (auto *entry : body)
+		if (has_flag(flags, FnFlags::ArrowFn))
 		{
-			// set insert point back to this functions basic block in case
-			// there is a local function being emitted
-			ctx.builder.SetInsertPoint(bb);
-			entry->emit(ctx);
+			ctx.builder.CreateRet(body.front()->emit(ctx));
+		}
+		else
+		{
+			for (auto *entry : body)
+			{
+				// set insert point back to this functions basic block in case
+				// there is a local function being emitted
+				ctx.builder.SetInsertPoint(bb);
+				entry->emit(ctx);
+			}
+
+			if (signature.return_type->is_equal(&VoidType))
+			{
+				ctx.builder.CreateRetVoid();
+			}
 		}
 
-		if (signature.return_type->is_equal(&VoidType))
-		{
-			ctx.builder.CreateRetVoid();
-		}
 	}
 
 	std::string error_str;

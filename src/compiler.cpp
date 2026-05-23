@@ -77,7 +77,7 @@ void pars::compile_exe(std::string_view output_path)
 	{
 		auto *llvm_module = module->module;
 
-		llvm_module->setTargetTriple(target_triple);
+		llvm_module->setTargetTriple(llvm::Triple(target_triple));
 		llvm_module->setDataLayout(machine->createDataLayout());
 
 		auto name = std::string{llvm_module->getName()};

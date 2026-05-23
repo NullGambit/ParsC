@@ -11,6 +11,7 @@ namespace llvm
 
 namespace pars
 {
+	struct Type;
 	struct EmitCtx;
 	struct Visitor;
 

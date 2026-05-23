@@ -11,28 +11,21 @@ using enum pars::TokenType;
 
 void pars::Analyzer::visit(CallExpr *expr)
 {
+	for (auto *arg : expr->arguments)
+	{
+		arg->accept(this);
+	}
 	expr->prototype = m_ctx->scope_table.find_symbol<FnDecl>(expr->symbol);
+	expr->prototype->accept(this);
 	expr->symbol = expr->prototype->symbol.name;
 	expr->type = expr->prototype->signature.return_type;
-	// add_symbol_task(expr->prototype->signature.return_type, expr->symbol,
-	// 	{
-	// 		.node = expr,
-	// 		.fn = [this, expr](Node *node)
-	// 		{
-	//
-	// 		}
-	// 	});
 }
 
 void pars::Analyzer::visit(FnDecl *fn)
 {
-	if (has_flag(fn->flags, FnFlags::ArrowFn))
+	if (fn->signature.return_type != nullptr)
 	{
-		fn->signature.return_type = dynamic_cast<Expr*>(fn->body.front())->type;
-	}
-	else
-	{
-		fn->signature.return_type = resolve_type(fn->signature.return_type_name, fn);
+		return;
 	}
 
 	for (auto *param : fn->signature.parameters)
@@ -50,6 +43,19 @@ void pars::Analyzer::visit(FnDecl *fn)
 	}
 
 	m_function_stack.emplace_back(fn);
+
+	if (has_flag(fn->flags, FnFlags::ArrowFn))
+	{
+		auto *expr = dynamic_cast<Expr*>(fn->body.front());
+
+		expr->accept(this);
+
+		fn->signature.return_type = expr->type;
+	}
+	else
+	{
+		fn->signature.return_type = resolve_type(fn->signature.return_type_name, fn);
+	}
 
 	for (auto *node : fn->body)
 	{
@@ -131,13 +137,13 @@ void pars::Analyzer::visit(ReturnStmt *stmt)
 {
 	stmt->expr->accept(this);
 
-	// auto *fn = get_current_fn();
-	//
-	// if (!fn->signature.return_type->is_equal(stmt->expr->type))
-	// {
-	// 	throw FrontendError{stmt->token, fmt::format("Expected {} in return statement but got {}",
-	// 		fn->signature.return_type->get_type_name(), stmt->expr->type->get_type_name())};
-	// }
+	auto *fn = get_current_fn();
+
+	if (!fn->signature.return_type->is_equal(stmt->expr->type))
+	{
+		throw FrontendError{stmt->token, fmt::format("Expected {} in return statement but got {}",
+			fn->signature.return_type->get_type_name(), stmt->expr->type->get_type_name())};
+	}
 }
 
 void pars::Analyzer::visit(AliasType *alias)
