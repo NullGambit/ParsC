@@ -1,6 +1,8 @@
 #pragma once
 #include <string_view>
 
+#include "node.hpp"
+#include "parse_ctx.hpp"
 #include "visitor.hpp"
 #include "containers/hash_map.hpp"
 
@@ -46,5 +48,13 @@ namespace pars
 		Type* resolve_type(std::string_view name, Node *node);
 
 		void add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task);
+
+		Node* find_symbol(std::string_view name, Token &error_token);
+
+		template<IsNode T>
+		T* find_symbol(std::string_view name, Token &error_token)
+		{
+			return dynamic_cast<T*>(find_symbol(name, error_token));
+		}
 	};
 }

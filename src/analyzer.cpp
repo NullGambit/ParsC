@@ -15,7 +15,7 @@ void pars::Analyzer::visit(CallExpr *expr)
 	{
 		arg->accept(this);
 	}
-	expr->prototype = m_ctx->scope_table.find_symbol<FnDecl>(expr->symbol);
+	expr->prototype = find_symbol<FnDecl>(expr->symbol, expr->token);
 	expr->prototype->accept(this);
 	expr->symbol = expr->prototype->symbol.name;
 	expr->type = expr->prototype->signature.return_type;
@@ -120,7 +120,7 @@ void pars::Analyzer::visit(ImportStmt *stmt)
 	{
 		m_ctx->scope_table.add_to_scope(Symbol{stmt->alias}, stmt, PRIVATE_SYMBOL);
 	}
-	else
+	else if (stmt->selective_imports.empty())
 	{
 		m_ctx->scope_table.add_import(stmt->module->ast.get_file_id());
 	}
@@ -156,12 +156,7 @@ void pars::Analyzer::visit(AliasType *alias)
 
 void pars::Analyzer::visit(SymbolExpr *expr)
 {
-	auto *symbol = m_ctx->scope_table.find_symbol(expr->symbol);
-
-	if (symbol == nullptr)
-	{
-		throw FrontendError{expr->token, fmt::format("unknown symbol '{}'", expr->symbol)};
-	}
+	auto *symbol = find_symbol(expr->symbol, expr->token);
 
 	if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
 	{
@@ -225,6 +220,18 @@ void pars::Analyzer::add_symbol_task(Type *type, std::string_view symbol, Symbol
 	{
 		m_symbol_tasks[symbol] = std::move(task);
 	}
+}
+
+pars::Node* pars::Analyzer::find_symbol(std::string_view name, Token &error_token)
+{
+	auto *symbol = m_ctx->scope_table.find_symbol(name);
+
+	if (symbol == nullptr)
+	{
+		throw FrontendError{error_token, fmt::format("unknown symbol '{}'", name)};
+	}
+
+	return symbol;
 }
 
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)
