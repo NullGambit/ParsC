@@ -29,13 +29,6 @@ namespace pars
 
 	private:
 		typedef Expr*(AST::*BinaryRule)();
-		typedef void(AST::*SymbolTask)(Node* node);
-
-		struct UnresolvedSymbol
-		{
-			Node *node;
-			SymbolTask task;
-		};
 
 		ParseCtx *m_ctx;
 
@@ -45,8 +38,6 @@ namespace pars
 		std::vector<Node*> *m_target;
 
 		std::vector<FnDecl*> m_function_stack;
-
-		std::vector<UnresolvedSymbol> m_post_resolved_tasks;
 
 		std::vector<Expr*> m_pending_attributes;
 

@@ -433,59 +433,20 @@ pars::Expr* pars::AST::parse_primary()
 
 		auto *group = new_node<GroupExpr>();
 
-		group->expr = expr;
+		group->inner = expr;
 		group->type = expr->type;
 
 		return group;
 	}
 	if (m_lexer.match(Identifier))
 	{
-		auto identifier = m_lexer.peek_last().lexeme;
-
-		// auto *symbol = m_ctx->scope_table.find_symbol(identifier);
-
-		// intercept symbol if its an import alias
-		// if (auto *import = dynamic_cast<ImportStmt*>(symbol); import && !import->alias.empty())
-		// {
-		// 	m_lexer.expect(Dot);
-		//
-		// 	identifier = m_lexer.expect(Identifier).lexeme;
-		//
-		// 	symbol = import->module->ast.m_scope_table.find_local_symbol(identifier);
-		// }
-
-		// if (auto *type = dynamic_cast<Type*>(symbol))
-		// {
-		// 	auto *expr = new_node<TypeExpr>();
-		//
-		// 	expr->type = type;
-		//
-		// 	return expr;
-		// }
+		const auto identifier = m_lexer.peek_last().lexeme;
 
 		if (m_lexer.match(LeftParen))
 		{
 			auto *expr = new_node<CallExpr>();
 
 			expr->symbol = identifier;
-
-			// TODO should be replaced with a check to see if its an object that can be called such as a functor
-			// auto *fn = dynamic_cast<FnDecl*>(symbol);
-			//
-			// if (fn != nullptr)
-			// {
-			// 	expr->type = fn->signature.return_type;
-			// 	expr->prototype = fn;
-			// 	expr->symbol = fn->symbol.name;
-			// }
-			// else
-			// {
-			// 	auto *type = new_node<PendingType>();
-			// 	type->symbol = identifier;
-			// 	expr->type = type;
-			//
-			// 	add_symbol_resolved_task(expr->symbol, expr, &AST::patch_call_expr_type);
-			// }
 
 			expr->arguments = collect_call_arguments();
 
@@ -497,22 +458,6 @@ pars::Expr* pars::AST::parse_primary()
 		auto *expr = new_node<SymbolExpr>();
 
 		expr->symbol = identifier;
-
-		// if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
-		// {
-		// 	expr->type = var->type;
-		// 	expr->symbol_node = var;
-		//
-		// 	if (expr->type == nullptr)
-		// 	{
-		// 		m_post_resolved_tasks.emplace_back(
-		// 		UnresolvedSymbol
-		// 		{
-		// 			.node = expr,
-		// 			.task = &AST::patch_identifier_type
-		// 		});
-		// 	}
-		// }
 
 		return expr;
 	}

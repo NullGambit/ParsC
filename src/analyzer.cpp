@@ -15,8 +15,11 @@ void pars::Analyzer::visit(CallExpr *expr)
 	{
 		arg->accept(this);
 	}
+
 	expr->prototype = find_symbol<FnDecl>(expr->symbol, expr->token);
+
 	expr->prototype->accept(this);
+
 	expr->symbol = expr->prototype->symbol.name;
 	expr->type = expr->prototype->signature.return_type;
 }
@@ -70,12 +73,7 @@ void pars::Analyzer::visit(VarDeclStmt *stmt)
 	// var x: T
 	if (!stmt->type_name.empty())
 	{
-		stmt->type = dynamic_cast<Type*>(m_ctx->scope_table.find_symbol(stmt->type_name));
-
-		if (stmt->type == nullptr)
-		{
-			throw FrontendError{stmt->token, fmt::format("unknown type name '{}'", stmt->type_name)};
-		}
+		stmt->type = resolve_type(stmt->type_name, stmt);
 	}
 
 	// var x = E
@@ -181,6 +179,17 @@ void pars::Analyzer::visit(BinaryExpr *expr)
 	}
 
 	expr->type = expr->left->type;
+}
+
+void pars::Analyzer::visit(GroupExpr* expr)
+{
+	expr->inner->accept(this);
+	expr->type = expr->inner->type;
+}
+
+void pars::Analyzer::visit(SizeofExpr* expr)
+{
+	expr->expr->accept(this);
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)

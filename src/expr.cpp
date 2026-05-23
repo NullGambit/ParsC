@@ -142,7 +142,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx)
 {
-	return expr->emit(ctx);
+	return inner->emit(ctx);
 }
 
 llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)

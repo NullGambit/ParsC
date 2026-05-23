@@ -84,7 +84,7 @@ namespace pars
 
 	struct GroupExpr : Expr
 	{
-		Expr* expr;
+		Expr* inner;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 

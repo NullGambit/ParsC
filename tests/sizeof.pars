@@ -1,5 +1,5 @@
-
-extern fn printf(s: str, n: i32): i32
+@extern
+fn printf(s: str, n: i32): i32
 
 fn main()
 {
