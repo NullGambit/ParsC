@@ -48,6 +48,7 @@ namespace pars
         {"and", TokenType::And},
         {"or", TokenType::Or},
         {"fn", TokenType::Fn},
+        {"cast", TokenType::Cast},
     };
 }
 

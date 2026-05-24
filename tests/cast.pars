@@ -1,0 +1,20 @@
+
+fn take_byte(b: u8)
+{
+}
+
+fn take_n(b: i32)
+{
+}
+
+fn main()
+{
+    const b: u8
+    var n: i32 = 10
+
+    take_byte(cast(u8)n)
+    // can use any expression to type cast
+    take_byte(cast(b)n)
+
+    take_n(n)
+}

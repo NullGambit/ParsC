@@ -86,6 +86,7 @@ namespace pars
         Continue,
         Break,
         Default,
+        Cast,
         Identifier,
         StringLiteral,
         CharLiteral,

@@ -127,4 +127,14 @@ namespace pars
 
 		llvm::Value* emit(EmitCtx& ctx) override;
 	};
+
+	struct CastExpr : Expr
+	{
+		Expr *type_expr;
+		Expr *target;
+
+		llvm::Value* emit(EmitCtx& ctx) override;
+
+		ACCEPT
+	};
 }

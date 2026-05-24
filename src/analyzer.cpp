@@ -232,6 +232,17 @@ void pars::Analyzer::visit(MemberAccessExpr* expr)
 	expr->type = expr->accessor->type;
 }
 
+void pars::Analyzer::visit(CastExpr* expr)
+{
+	expr->type_expr->accept(this);
+
+	expr->type = expr->type_expr->type;
+
+	expr->target->accept(this);
+
+	expr->target->type = expr->type;
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);

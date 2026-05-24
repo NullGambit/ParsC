@@ -165,3 +165,15 @@ llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx)
 
 	return prop;
 }
+
+llvm::Value* pars::CastExpr::emit(EmitCtx& ctx)
+{
+	auto *value = target->emit(ctx);
+
+	auto *target_type = type->get_llvm_type(ctx.llvm_ctx);
+
+	// TODO: handle signness correctly
+	const auto op = llvm::CastInst::getCastOpcode(value, true, target_type, true);
+
+	return ctx.builder.CreateCast(op, value, target_type);
+}

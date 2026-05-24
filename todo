@@ -8,7 +8,6 @@
 - string interpolation
 - scope based attributes
 - handle type coercion and promotion
-- type casting
 - currently shadowing works fine. but this was unintended. in the future i might want to consider disallowing it.
 - integral literal suffixes
 - integral literals in other bases such as hex or binary

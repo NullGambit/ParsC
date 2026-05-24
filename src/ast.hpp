@@ -103,7 +103,7 @@ namespace pars
 			{
 				auto op = m_lexer.peek_last().lexeme;
 
-				auto right = std::invoke(rule, this);
+				auto *right = std::invoke(rule, this);
 
 				auto *bin = new_node<BinaryExpr>();
 

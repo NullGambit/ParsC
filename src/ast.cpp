@@ -482,7 +482,20 @@ pars::Expr* pars::AST::parse_primary()
 
 		return expr;
 	}
+	if (m_lexer.match(Cast))
+	{
+		m_lexer.expect(LeftParen);
 
+		auto *expr = new_node<CastExpr>();
+
+		expr->type_expr = expression();
+
+		m_lexer.expect(RightParen);
+
+		expr->target = expression();
+
+		return expr;
+	}
 	if (m_lexer.peek().type > _AttributeKeywordStart && m_lexer.peek().type < _AttributeKeywordEnd)
 	{
 		m_lexer.advance();
