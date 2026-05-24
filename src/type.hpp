@@ -22,6 +22,7 @@ namespace pars
 		virtual std::string_view get_type_name() const = 0;
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) = 0;
+		virtual llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name) { return nullptr; }
 	};
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
@@ -121,6 +122,8 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+
+		llvm::Value* get_property(llvm::LLVMContext* ctx, std::string_view name) override;
 
 		u32 get_size() override;
 

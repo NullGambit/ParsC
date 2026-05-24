@@ -5,6 +5,8 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
 
+#include <cmath>
+
 bool pars::check_type_equality(Type const *a_type, Type const *b_type)
 {
 	return a_type->is_equal(b_type) || b_type->is_equal(a_type);
@@ -28,6 +30,40 @@ llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
 llvm::Value * pars::Integral::get_default_value(llvm::LLVMContext *ctx)
 {
 	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, 0));
+}
+
+llvm::Value* pars::Integral::get_property(llvm::LLVMContext* ctx, std::string_view name)
+{
+	auto is_min = false;
+
+	if (name == "min")
+	{
+		is_min = true;
+	}
+	else if (name != "max")
+	{
+		return nullptr;
+	}
+
+	auto modified_bits = bits;
+
+	if (is_signed)
+	{
+		modified_bits--;
+	}
+
+	auto value = (u64)std::pow(2, modified_bits);
+
+	if (is_signed && is_min)
+	{
+		value = -value;
+	}
+	else if (is_min)
+	{
+		value = 0;
+	}
+
+	return llvm::ConstantInt::get(*ctx, llvm::APInt(128, value, is_signed));
 }
 
 u32 pars::Integral::get_size()

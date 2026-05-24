@@ -120,4 +120,11 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct TypePropExpr : Expr
+	{
+		std::string_view property_name;
+
+		llvm::Value* emit(EmitCtx& ctx) override;
+	};
 }

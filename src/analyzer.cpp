@@ -206,6 +206,30 @@ void pars::Analyzer::visit(MemberAccessExpr* expr)
 
 		m_ctx = old_ctx;
 	}
+	if (auto *type = dynamic_cast<Type*>(symbol))
+	{
+		auto *prop_expr = new_node<TypePropExpr>();
+
+		auto *prop_symbol = dynamic_cast<SymbolExpr*>(expr->accessor);
+
+		if (prop_symbol == nullptr)
+		{
+			throw FrontendError{symbol->token, "Expected identifier for type property access"};
+		}
+
+		prop_expr->property_name = prop_symbol->symbol;
+
+		prop_expr->type = type;
+
+		expr->accessor = prop_expr;
+		prop_expr->token = expr->token;
+	}
+	else
+	{
+		expr->accessor->accept(this);
+	}
+
+	expr->type = expr->accessor->type;
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)

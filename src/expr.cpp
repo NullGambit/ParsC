@@ -153,3 +153,15 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
 {
 	return accessor->emit(ctx);
 }
+
+llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx)
+{
+	auto *prop = type->get_property(ctx.llvm_ctx, property_name);
+
+	if (prop == nullptr)
+	{
+		throw CompileError{this, fmt::format("property '{}' does not exist for type {}", property_name, type->get_type_name())};
+	}
+
+	return prop;
+}

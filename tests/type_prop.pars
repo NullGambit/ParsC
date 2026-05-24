@@ -1,0 +1,8 @@
+@extern
+fn printf(fmt: str, n: u32): i32
+
+fn main()
+{
+    var max = u32.max
+    printf("i32 max = %d\n", max)
+}
