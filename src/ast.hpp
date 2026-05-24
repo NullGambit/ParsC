@@ -109,7 +109,7 @@ namespace pars
 
 				bin->left = expr;
 				bin->right = right;
-				bin->op = op[0];
+				bin->op = op;
 
 				expr = bin;
 

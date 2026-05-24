@@ -64,18 +64,23 @@ llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 	auto lhs = left->emit(ctx);
 	auto rhs = right->emit(ctx);
 
-	switch (op)
+	switch (op[0])
 	{
 		case '+': return ctx.builder.CreateAdd(lhs, rhs);
 		case '-': return ctx.builder.CreateSub(lhs, rhs);
 		case '/': return ctx.builder.CreateFDiv(lhs, rhs);
 		case '*': return ctx.builder.CreateMul(lhs, rhs);
 	}
+
+	if (op == "==")
+	{
+		return ctx.builder.CreateICmpEQ(lhs, rhs);
+	}
 }
 
 llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 {
-	auto rhs = right->emit(ctx);
+	auto *rhs = right->emit(ctx);
 
 	switch (op)
 	{

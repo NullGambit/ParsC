@@ -202,7 +202,7 @@ virtual bool is_equal(Type const *other) const override							\
 	static const Integer U64Type {64, !IS_SIGNED, "u64"};
 	static const Float F32Type {32, IS_SIGNED, "f32"};
 	static const Float F64Type {64, IS_SIGNED, "f64"};
-	static const Bool BoolType {8, !IS_SIGNED, "bool"};
+	static const Bool BoolType {1, !IS_SIGNED, "bool"};
 	static const Char CharType {8, IS_SIGNED, "char"};
 	static const Char UCharType {8, !IS_SIGNED, "uchar"};
 

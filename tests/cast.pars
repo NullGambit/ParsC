@@ -3,6 +3,10 @@ fn take_byte(b: u8)
 {
 }
 
+fn take_n(b: i32)
+{
+}
+
 fn main()
 {
     const b: u8

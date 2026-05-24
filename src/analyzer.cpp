@@ -178,7 +178,14 @@ void pars::Analyzer::visit(BinaryExpr *expr)
 		throw FrontendError{expr->token, "binary expression operands types do not match"};
 	}
 
-	expr->type = expr->left->type;
+	if (expr->op == "==")
+	{
+		expr->type = const_cast<Bool*>(&BoolType);
+	}
+	else
+	{
+		expr->type = expr->left->type;
+	}
 }
 
 void pars::Analyzer::visit(GroupExpr* expr)

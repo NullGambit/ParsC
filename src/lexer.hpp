@@ -11,6 +11,24 @@ namespace pars
 {
     enum class TokenType : u8;
 
+    enum class OpType
+    {
+        _ComparisonStart,
+        Equal,
+        UnEqual,
+        Less,
+        Greater,
+        LessEqual,
+        GreaterEqual,
+        _ComparisonEnd,
+        _BinaryStart,
+        Add,
+        Sub,
+        Mul,
+        Div,
+        _BinaryEnd,
+    };
+
     class Lexer
     {
     public:
