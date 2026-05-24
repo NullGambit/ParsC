@@ -132,6 +132,8 @@ namespace pars
 	{
 		Expr *type_expr;
 		Expr *target;
+		// useful for correct integer casting when doing code gen
+		Type *original_type;
 
 		llvm::Value* emit(EmitCtx& ctx) override;
 

@@ -172,8 +172,20 @@ llvm::Value* pars::CastExpr::emit(EmitCtx& ctx)
 
 	auto *target_type = type->get_llvm_type(ctx.llvm_ctx);
 
-	// TODO: handle signness correctly
-	const auto op = llvm::CastInst::getCastOpcode(value, true, target_type, true);
+	// this is a bit of a hacky solution but its ok enough
+	auto a_integral = dynamic_cast<Integral*>(type);
+	auto b_integral = dynamic_cast<Integral*>(original_type);
+
+	auto src_signed = true;
+	auto dst_signed = true;
+
+	if (a_integral != nullptr && b_integral != nullptr)
+	{
+		src_signed = b_integral->is_signed;
+		dst_signed = a_integral->is_signed;
+	}
+
+	const auto op = llvm::CastInst::getCastOpcode(value, src_signed, target_type, dst_signed);
 
 	return ctx.builder.CreateCast(op, value, target_type);
 }

@@ -239,7 +239,7 @@ void pars::Analyzer::visit(CastExpr* expr)
 	expr->type = expr->type_expr->type;
 
 	expr->target->accept(this);
-
+	expr->original_type = expr->target->type;
 	expr->target->type = expr->type;
 }
 
