@@ -8,6 +8,6 @@ fn add_unique(a: UniqueInteger, b: Integer) => a + b
 fn main()
 {
     add(10, 20)
-    // should fail to compile
-    add_unique(20, 30)
+    // should fail to compile without cast
+    add_unique(cast(UniqueInteger)20, 30)
 }
