@@ -148,3 +148,8 @@ llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)
 	auto value = llvm::APInt(32, expr->type->get_size());
 	return llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 }
+
+llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
+{
+	return accessor->emit(ctx);
+}

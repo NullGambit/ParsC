@@ -125,9 +125,9 @@ void pars::Analyzer::visit(ImportStmt *stmt)
 
 	for (auto [import_name, symbol_name] : stmt->selective_imports)
 	{
-		auto *symbol = stmt->module->ast.get_ctx()->scope_table.find_local_symbol(symbol_name);
+		auto *symbol = stmt->module->ast.get_ctx()->scope_table.find_local_symbol(import_name);
 
-		m_ctx->scope_table.add_to_scope(Symbol{import_name}, symbol, PRIVATE_SYMBOL);
+		m_ctx->scope_table.add_to_scope(Symbol{symbol_name}, symbol, PRIVATE_SYMBOL);
 	}
 }
 
@@ -190,6 +190,22 @@ void pars::Analyzer::visit(GroupExpr* expr)
 void pars::Analyzer::visit(SizeofExpr* expr)
 {
 	expr->expr->accept(this);
+}
+
+void pars::Analyzer::visit(MemberAccessExpr* expr)
+{
+	auto *symbol = find_symbol(expr->target_symbol, expr->token);
+
+	if (auto *import = dynamic_cast<ImportStmt*>(symbol))
+	{
+		auto *old_ctx = m_ctx;
+
+		m_ctx = import->module->ast.get_ctx();
+
+		expr->accessor->accept(this);
+
+		m_ctx = old_ctx;
+	}
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)

@@ -456,6 +456,15 @@ pars::Expr* pars::AST::parse_primary()
 
 			return expr;
 		}
+		if (m_lexer.match(Dot))
+		{
+			auto *expr = new_node<MemberAccessExpr>();
+
+			expr->target_symbol = identifier;
+			expr->accessor = expression();
+
+			return expr;
+		}
 
 		auto *expr = new_node<SymbolExpr>();
 

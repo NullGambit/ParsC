@@ -30,6 +30,7 @@ namespace pars
 		void visit(BinaryExpr *expr) override;
 		void visit(GroupExpr* expr) override;
 		void visit(SizeofExpr* expr) override;
+		void visit(MemberAccessExpr* expr) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 

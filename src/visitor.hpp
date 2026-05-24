@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct MemberAccessExpr;
 	struct TypeExpr;
 	struct SizeofExpr;
 	struct AliasType;
@@ -29,6 +30,7 @@ namespace pars
 		virtual void visit(LiteralExpr *expr) {}
 		virtual void visit(SymbolExpr *expr) {}
 		virtual void visit(GroupExpr *expr) {}
+		virtual void visit(MemberAccessExpr *expr) {}
 		virtual void visit(ImportStmt *stmt) {}
 		virtual void visit(VarDeclStmt *stmt) {}
 		virtual void visit(ReturnStmt *stmt) {}

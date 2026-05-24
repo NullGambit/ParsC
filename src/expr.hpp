@@ -110,4 +110,14 @@ namespace pars
 	struct KeywordExpr : Expr
 	{
 	};
+
+	struct MemberAccessExpr : Expr
+	{
+		std::string_view target_symbol;
+		Expr *accessor;
+
+		llvm::Value* emit(EmitCtx& ctx) override;
+
+		ACCEPT
+	};
 }
