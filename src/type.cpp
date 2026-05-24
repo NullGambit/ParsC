@@ -29,7 +29,7 @@ llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
 
 llvm::Value * pars::Integral::get_default_value(llvm::LLVMContext *ctx)
 {
-	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, 0));
+	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, 0, is_signed));
 }
 
 llvm::Value* pars::Integral::get_property(llvm::LLVMContext* ctx, std::string_view name)
@@ -52,7 +52,7 @@ llvm::Value* pars::Integral::get_property(llvm::LLVMContext* ctx, std::string_vi
 		modified_bits--;
 	}
 
-	auto value = (u64)std::pow(2, modified_bits);
+	auto value = (u64)std::pow(2, modified_bits) - 1;
 
 	if (is_signed && is_min)
 	{
@@ -63,7 +63,7 @@ llvm::Value* pars::Integral::get_property(llvm::LLVMContext* ctx, std::string_vi
 		value = 0;
 	}
 
-	return llvm::ConstantInt::get(*ctx, llvm::APInt(128, value, is_signed));
+	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, value, is_signed));
 }
 
 u32 pars::Integral::get_size()
