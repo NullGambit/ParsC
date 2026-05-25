@@ -42,7 +42,7 @@ namespace pars
 	struct BinaryExpr : Expr
 	{
 		Expr* left;
-		std::string_view op;
+		TokenType op;
 		Expr* right;
 
 		llvm::Value *emit(EmitCtx &ctx) override;

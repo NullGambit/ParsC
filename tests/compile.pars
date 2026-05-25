@@ -3,7 +3,7 @@ fn printf(fmt: str, n: bool): i32
 
 fn main()
 {
-    printf("%d\n", 10 == 20)
+    printf("%d\n", true and true)
 }
 
 

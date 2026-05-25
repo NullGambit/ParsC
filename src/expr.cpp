@@ -48,7 +48,7 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 		},
 		[&ctx](bool _bool)
 		{
-			auto value = llvm::APInt(8, _bool);
+			auto value = llvm::APInt(1, _bool);
 			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 		},
 		[&ctx](char _char)
@@ -64,17 +64,22 @@ llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 	auto lhs = left->emit(ctx);
 	auto rhs = right->emit(ctx);
 
-	switch (op[0])
-	{
-		case '+': return ctx.builder.CreateAdd(lhs, rhs);
-		case '-': return ctx.builder.CreateSub(lhs, rhs);
-		case '/': return ctx.builder.CreateFDiv(lhs, rhs);
-		case '*': return ctx.builder.CreateMul(lhs, rhs);
-	}
+	using enum TokenType;
 
-	if (op == "==")
+	switch (op)
 	{
-		return ctx.builder.CreateICmpEQ(lhs, rhs);
+		case Plus: return ctx.builder.CreateAdd(lhs, rhs);
+		case Minus: return ctx.builder.CreateSub(lhs, rhs);
+		case ForwardSlash: return ctx.builder.CreateFDiv(lhs, rhs);
+		case Star: return ctx.builder.CreateMul(lhs, rhs);
+		case Equal: return ctx.builder.CreateICmpEQ(lhs, rhs);
+		case BangEqual: return ctx.builder.CreateICmpNE(lhs, rhs);
+		case GreaterEqual: return ctx.builder.CreateICmpSGT(lhs, rhs);
+		case LessEqual: return ctx.builder.CreateICmpSLE(lhs, rhs);
+		case Less: return ctx.builder.CreateICmpSLT(lhs, rhs);
+		case Greater: return ctx.builder.CreateICmpSGT(lhs, rhs);
+		case And: return ctx.builder.CreateLogicalAnd(lhs, rhs);
+		case Or: return ctx.builder.CreateLogicalOr(lhs, rhs);
 	}
 }
 
@@ -85,6 +90,7 @@ llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 	switch (op)
 	{
 		case '-': return ctx.builder.CreateNeg(rhs);
+		case '!': return ctx.builder.CreateNot(rhs);
 	}
 }
 

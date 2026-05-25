@@ -28,6 +28,7 @@ namespace pars
 		void visit(AliasType *alias) override;
 		void visit(SymbolExpr *expr) override;
 		void visit(BinaryExpr *expr) override;
+		void visit(UnaryExpr *expr) override;
 		void visit(GroupExpr* expr) override;
 		void visit(SizeofExpr* expr) override;
 		void visit(MemberAccessExpr* expr) override;

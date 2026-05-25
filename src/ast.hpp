@@ -59,6 +59,8 @@ namespace pars
 		// TODO replace with a pratt parser
 		Expr* expression();
 		Expr* parse_equality();
+		Expr* parse_or();
+		Expr* parse_and();
 		Expr* parse_comparison();
 		Expr* parse_term();
 		Expr* parse_unary();
@@ -101,7 +103,7 @@ namespace pars
 
 			while ((m_lexer.match(T) || ...))
 			{
-				auto op = m_lexer.peek_last().lexeme;
+				const auto op = m_lexer.peek_last();
 
 				auto *right = std::invoke(rule, this);
 
@@ -109,7 +111,7 @@ namespace pars
 
 				bin->left = expr;
 				bin->right = right;
-				bin->op = op;
+				bin->op = op.type;
 
 				expr = bin;
 

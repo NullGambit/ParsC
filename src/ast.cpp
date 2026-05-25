@@ -618,8 +618,18 @@ pars::Expr* pars::AST::parse_equality()
 	return parse_binary_rule<EqualEqual, BangEqual>(&AST::parse_comparison);
 }
 
+pars::Expr * pars::AST::parse_or()
+{
+	return parse_binary_rule<Or>(&AST::parse_equality);
+}
+
+pars::Expr * pars::AST::parse_and()
+{
+	return parse_binary_rule<And>(&AST::parse_or);
+}
+
 pars::Expr* pars::AST::expression()
 {
-	return parse_equality();
+	return parse_and();
 }
 

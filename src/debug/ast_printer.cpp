@@ -2,6 +2,7 @@
 
 #include "../expr.hpp"
 #include "../stmt.hpp"
+#include "magic_enum/magic_enum.hpp"
 #include "util/fmt.hpp"
 
 void pars::AstPrinter::visit(ImportStmt *stmt)
@@ -76,7 +77,7 @@ void pars::AstPrinter::visit(LiteralExpr *expr)
 void pars::AstPrinter::visit(BinaryExpr *expr)
 {
 	expr->left->accept(this);
-	fmt::print(" {} ", expr->op);
+	fmt::print(" {} ", magic_enum::enum_name(expr->op));
 	expr->right->accept(this);
 }
 

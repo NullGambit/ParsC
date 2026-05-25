@@ -1,0 +1,11 @@
+@[extern, private]
+fn printf(fmt: str, n: bool): i32
+
+fn main()
+{
+    var a = true
+    var b = !a
+    var c = a and b or !b
+
+    printf("result %d\n", c)
+}
