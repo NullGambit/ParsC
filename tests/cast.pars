@@ -7,6 +7,10 @@ fn take_n(b: i32)
 {
 }
 
+fn take_f(b: f32)
+{
+}
+
 fn main()
 {
     const b: u8
@@ -17,4 +21,6 @@ fn main()
     take_byte(cast(b)n)
 
     take_n(n)
+
+    take_f(cast(f32)-3 / cast(f32)2)
 }

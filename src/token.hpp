@@ -12,9 +12,8 @@ namespace pars
         Colon,
         Question,
 
-        _BinaryStart,
-
         _ComparisonStart,
+
         Greater,
         GreaterEqual,
         Less,
@@ -23,7 +22,10 @@ namespace pars
         Or,
         BangEqual,
         EqualEqual,
+
         _ComparisonEnd,
+
+        _BinaryStart,
 
         Equal,
         Minus,
@@ -31,6 +33,7 @@ namespace pars
         ForwardSlash,
         Star,
         Percent,
+
         _BinaryEnd,
 
         _UnaryStart,

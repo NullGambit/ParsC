@@ -7,6 +7,8 @@
 
 #include <cmath>
 
+#include "emit_context.hpp"
+
 bool pars::check_type_equality(Type const *a_type, Type const *b_type)
 {
 	return a_type->is_equal(b_type) || b_type->is_equal(a_type);
@@ -112,14 +114,112 @@ llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
 	return Integral::get_llvm_type(ctx);
 }
 
+llvm::Value * pars::Integer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	using enum TokenType;
+
+	switch (op)
+	{
+		case Plus: return ctx.builder.CreateAdd(lhs, rhs);
+		case Minus: return ctx.builder.CreateSub(lhs, rhs);
+		case ForwardSlash: return is_signed ? ctx.builder.CreateSDiv(lhs, rhs) : ctx.builder.CreateUDiv(lhs, rhs);
+		case Star: return ctx.builder.CreateMul(lhs, rhs);
+		default: return nullptr;
+	}
+}
+
+llvm::Value * pars::Integer::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
+{
+	if (op == TokenType::Minus)
+	{
+		return ctx.builder.CreateNeg(rhs);
+	}
+
+	return nullptr;
+}
+
 llvm::Type * pars::Float::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return Integral::get_llvm_type(ctx);
+	return llvm::Type::getFloatTy(*ctx);
+}
+
+llvm::Value * pars::Float::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	using enum TokenType;
+
+	switch (op)
+	{
+		case Plus: return ctx.builder.CreateFAdd(lhs, rhs);
+		case Minus: return ctx.builder.CreateFSub(lhs, rhs);
+		case ForwardSlash: return ctx.builder.CreateFDiv(lhs, rhs);
+		case Star: return ctx.builder.CreateFMul(lhs, rhs);
+		default: return nullptr;
+	}
+}
+
+llvm::Value * pars::Float::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
+{
+	if (op == TokenType::Minus)
+	{
+		return ctx.builder.CreateFNeg(rhs);
+	}
+
+	return nullptr;
 }
 
 llvm::Type * pars::Bool::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);
+}
+
+llvm::Value * pars::Bool::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	using enum TokenType;
+
+	auto *type = lhs->getType();
+
+	if (type->isIntegerTy())
+	{
+		switch (op)
+		{
+			case EqualEqual: return ctx.builder.CreateICmpEQ(lhs, rhs);
+			case BangEqual: return ctx.builder.CreateICmpNE(lhs, rhs);
+			case GreaterEqual: return ctx.builder.CreateICmpSGT(lhs, rhs);
+			case LessEqual: return ctx.builder.CreateICmpSLE(lhs, rhs);
+			case Less: return ctx.builder.CreateICmpSLT(lhs, rhs);
+			case Greater: return ctx.builder.CreateICmpSGT(lhs, rhs);
+		}
+	}
+
+	if (type->isFloatTy())
+	{
+		switch (op)
+		{
+			case EqualEqual: return ctx.builder.CreateFCmpOEQ(lhs, rhs);
+			case BangEqual: return ctx.builder.CreateFCmpONE(lhs, rhs);
+			case GreaterEqual: return ctx.builder.CreateFCmpOGE(lhs, rhs);
+			case LessEqual: return ctx.builder.CreateFCmpOLE(lhs, rhs);
+			case Less: return ctx.builder.CreateFCmpOLT(lhs, rhs);
+			case Greater: return ctx.builder.CreateFCmpOGT(lhs, rhs);
+		}
+	}
+
+	switch (op)
+	{
+		case And: return ctx.builder.CreateLogicalAnd(lhs, rhs);
+		case Or: return ctx.builder.CreateLogicalOr(lhs, rhs);
+		default: return nullptr;
+	}
+}
+
+llvm::Value * pars::Bool::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
+{
+	if (op == TokenType::Bang)
+	{
+		return ctx.builder.CreateNot(rhs);
+	}
+
+	return nullptr;
 }
 
 llvm::Type * pars::Char::get_llvm_type(llvm::LLVMContext *ctx) const

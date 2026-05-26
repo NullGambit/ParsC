@@ -1,9 +1,9 @@
 @[extern, private]
-fn printf(fmt: str, n: bool): i32
+fn printf(fmt: str, n: char): i32
 
 fn main()
 {
-    printf("%d\n", true and true)
+    printf("%d\n", 'a' + 'b')
 }
 
 

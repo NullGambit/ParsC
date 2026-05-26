@@ -492,7 +492,7 @@ pars::Expr* pars::AST::parse_primary()
 
 		m_lexer.expect(RightParen);
 
-		expr->target = expression();
+		expr->target = parse_unary();
 
 		return expr;
 	}
@@ -583,14 +583,12 @@ pars::Expr* pars::AST::parse_unary()
 	{
 		auto op = m_lexer.peek_last();
 
-		auto expr = parse_unary();
+		auto *expr = parse_unary();
 
 		auto *unary = new_node<UnaryExpr>();
 
 		unary->op = op.lexeme[0];
 		unary->right = expr;
-
-		expr->type = expr->type;
 
 		return unary;
 	}

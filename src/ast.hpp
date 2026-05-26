@@ -114,8 +114,6 @@ namespace pars
 				bin->op = op.type;
 
 				expr = bin;
-
-				expr->type = bin->left->type;
 			}
 
 			return expr;

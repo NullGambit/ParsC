@@ -64,34 +64,41 @@ llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 	auto lhs = left->emit(ctx);
 	auto rhs = right->emit(ctx);
 
-	using enum TokenType;
+	auto *result = type->op_binary(ctx, op, lhs, rhs);
 
-	switch (op)
+	if (result == nullptr)
 	{
-		case Plus: return ctx.builder.CreateAdd(lhs, rhs);
-		case Minus: return ctx.builder.CreateSub(lhs, rhs);
-		case ForwardSlash: return ctx.builder.CreateFDiv(lhs, rhs);
-		case Star: return ctx.builder.CreateMul(lhs, rhs);
-		case Equal: return ctx.builder.CreateICmpEQ(lhs, rhs);
-		case BangEqual: return ctx.builder.CreateICmpNE(lhs, rhs);
-		case GreaterEqual: return ctx.builder.CreateICmpSGT(lhs, rhs);
-		case LessEqual: return ctx.builder.CreateICmpSLE(lhs, rhs);
-		case Less: return ctx.builder.CreateICmpSLT(lhs, rhs);
-		case Greater: return ctx.builder.CreateICmpSGT(lhs, rhs);
-		case And: return ctx.builder.CreateLogicalAnd(lhs, rhs);
-		case Or: return ctx.builder.CreateLogicalOr(lhs, rhs);
+		throw CompileError{this,
+			fmt::format("Cannot use binary operator '{}' on operands {}", token.lexeme, type->get_type_name())};
 	}
+
+	return result;
 }
 
 llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 {
 	auto *rhs = right->emit(ctx);
 
-	switch (op)
+	TokenType tk_type {};
+
+	if (op == '!')
 	{
-		case '-': return ctx.builder.CreateNeg(rhs);
-		case '!': return ctx.builder.CreateNot(rhs);
+		tk_type = TokenType::Bang;
 	}
+	if (op == '-')
+	{
+		tk_type = TokenType::Minus;
+	}
+
+	auto *result = type->op_unary(ctx, tk_type, rhs);
+
+	if (result == nullptr)
+	{
+		throw CompileError{this,
+			fmt::format("Cannot use unary operator '{}' on operands {}", token.lexeme, type->get_type_name())};
+	}
+
+	return result;
 }
 
 llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)

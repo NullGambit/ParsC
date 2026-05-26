@@ -23,6 +23,9 @@ namespace pars
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) = 0;
 		virtual llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name) { return nullptr; }
+
+		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
+		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
 	};
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
@@ -155,6 +158,9 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
+		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
+
 		DEFAULT_INTEGRAL_EQUAL(Integer)
 	};
 
@@ -166,6 +172,9 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
+		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
+
 		DEFAULT_INTEGRAL_EQUAL(Float)
 	};
 
@@ -176,6 +185,9 @@ virtual bool is_equal(Type const *other) const override							\
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
+		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
 
 		DEFAULT_INTEGRAL_EQUAL(Bool)
 	};
