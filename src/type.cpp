@@ -182,6 +182,7 @@ llvm::Value * pars::Float::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
 		case ForwardSlash: return ctx.builder.CreateFDiv(lhs, rhs);
 		case Star: return ctx.builder.CreateFMul(lhs, rhs);
 		case Percent: return ctx.builder.CreateFRem(lhs, rhs);
+		case StarStar: return ctx.builder.CreateBinaryIntrinsic(llvm::Intrinsic::pow, lhs, rhs);
 		default: return nullptr;
 	}
 }

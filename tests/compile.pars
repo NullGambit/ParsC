@@ -1,9 +1,9 @@
 @[extern, private]
-fn printf(fmt: str, n: i32): i32
+fn printf(fmt: str, n: f32): i32
 
 fn main()
 {
-    printf("%d\n", 2 * 2 ** 4)
+    printf("%d\n", 2.0 * 2.0 ** 4.0)
 }
 
 
