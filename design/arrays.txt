@@ -20,12 +20,12 @@ fn test_arrays()
         println(n)
     }
 
-    import std.containers
+    import std.list
 
     // can also do List<str> but will infer
-    var names = List{"John"}
+    var names = List::new("John")
 
-    names.add("henry")
+    nameself.add("henry")
 
     // all containers are similar types forbid copying and must either clone or move explicitly or take a reference
     var names_copy = ^names
@@ -58,46 +58,47 @@ struct CustomList<T, A = #allocator<T>> : Drop, Copy
 impl CustomList 
 {
     // accepts any number of T parameters
-    Self(T... args)
+    @static
+    fn new<Arg...>(args: &Args): Self
     {
-        s.ensure_size(args.length)
+        var self = Self{}
+
+        self.ensure_size(argself.length)
 
         $for item in args 
         {
-            s.add(item)
+            self.add(item)
         }
     }
 
     // called automatically when no longer in scope
     fn drop()
     {
-        if s.ptr != nil 
+        if self.ptr != nil 
         {
-            s.allocator.free(s.ptr)
+            self.allocator.free(self.ptr)
         }
 
-        s.length = 0
-        s.capacity = 0
-        s.ptr = nil
+        self.length = 0
+        self.capacity = 0
+        self.ptr = nil
     }
 
-    fn op_index(index: int) => s.ptr[index]
+    fn op_index(index: int) => self.ptr[index]
 
     // will be called when slicing 
-    fn op_slice(start, end: int) => s.ptr[start:end]
+    fn op_slice(start, end: int) => self.ptr[start:end]
 
     fn copy(): Self
     {
         // $bit_copy is allowed even when copying is disabled
-        // self and s are always equivalent but self should be preferred as a value
-        // and s for member access
         var new_self = $bit_copy(self)
 
         new_self.ptr = new_self.allocator.alloc(new_self.capacity)
 
         import std.mem
 
-        memcpy(s.ptr, new_self.ptr)
+        memcpy(self.ptr, new_self.ptr)
 
         return new_self
     }
@@ -105,22 +106,22 @@ impl CustomList
     fn ensure_size(length: int = 1)
     {
         // length will shadow self.length and self.length has to be used explicitly
-        if s.length + length >= capacity
+        if self.length + length >= capacity
         {
-            s.capacity *= 2
-            allocator.realloc(s.ptr, s.capacity)
+            self.capacity *= 2
+            allocator.realloc(self.ptr, self.capacity)
         }
     }
 
     fn add(T item): *T
     {
-        s.ensure_size()
+        self.ensure_size()
 
-        var index = s.length++
+        var index = self.length++
 
-        s.ptr[index] = item
+        self.ptr[index] = item
 
-        return &s.ptr[index]
+        return &self.ptr[index]
     }
 }
 
@@ -128,7 +129,7 @@ fn custom_list_test()
 {
     // will infer from first argument
     // the rest can then be coerced into that type if possible
-    var list = CustomList{1, 2, 3}
+    var list = CustomList::new(1, 2, 3)
 
     // will do a deep copy of list
     var list2 = ^list

@@ -4,9 +4,14 @@
 
 static std::vector<pars::Expr*> g_attributes;
 
-void pars::set_attributes(std::vector<Expr*> &attributes)
+u32 pars::set_attributes(std::vector<Expr*> &attributes)
 {
+	const auto n = g_attributes.size();
+	const auto id = n == 0 ? n : n - 1;
+
 	g_attributes.insert(g_attributes.begin(), attributes.begin(), attributes.end());
+
+	return id;
 }
 
 std::span<pars::Expr *> pars::get_attributes(Symbol symbol)
@@ -21,12 +26,7 @@ bool pars::has_keyword_attribute(Symbol symbol, TokenType type)
 	return std::ranges::any_of(attributes.begin(), attributes.end(),
 		[type](Expr const *expr)
 		{
-			return expr->token.type == type;
+			return expr != nullptr && expr->token.type == type;
 		});
 }
 
-size_t pars::get_attribute_id()
-{
-	auto size = g_attributes.size();
-	return  size == 0 ? 0 : size + 1;
-}

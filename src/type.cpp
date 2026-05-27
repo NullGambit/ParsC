@@ -122,8 +122,9 @@ llvm::Value * pars::Integer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *
 	{
 		case Plus: return ctx.builder.CreateAdd(lhs, rhs);
 		case Minus: return ctx.builder.CreateSub(lhs, rhs);
-		case ForwardSlash: return is_signed ? ctx.builder.CreateSDiv(lhs, rhs) : ctx.builder.CreateUDiv(lhs, rhs);
 		case Star: return ctx.builder.CreateMul(lhs, rhs);
+		case ForwardSlash: return is_signed ? ctx.builder.CreateSDiv(lhs, rhs) : ctx.builder.CreateUDiv(lhs, rhs);
+		case Percent: return is_signed ? ctx.builder.CreateSRem(lhs, rhs) : ctx.builder.CreateURem(lhs, rhs);
 		default: return nullptr;
 	}
 }
@@ -153,6 +154,7 @@ llvm::Value * pars::Float::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
 		case Minus: return ctx.builder.CreateFSub(lhs, rhs);
 		case ForwardSlash: return ctx.builder.CreateFDiv(lhs, rhs);
 		case Star: return ctx.builder.CreateFMul(lhs, rhs);
+		case Percent: return ctx.builder.CreateFRem(lhs, rhs);
 		default: return nullptr;
 	}
 }

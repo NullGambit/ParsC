@@ -292,10 +292,8 @@ pars::Symbol pars::AST::get_symbol()
 
 	if (!m_pending_attributes.empty())
 	{
-		symbol.attribute_id = get_attribute_id();
 		symbol.attribute_count = m_pending_attributes.size();
-
-		set_attributes(m_pending_attributes);
+		symbol.attribute_id = set_attributes(m_pending_attributes);
 
 		m_pending_attributes.clear();
 	}
@@ -598,7 +596,7 @@ pars::Expr* pars::AST::parse_unary()
 
 pars::Expr* pars::AST::parse_factor()
 {
-	return parse_binary_rule<Star, ForwardSlash>(&AST::parse_unary);
+	return parse_binary_rule<Star, ForwardSlash, Percent>(&AST::parse_unary);
 }
 
 pars::Expr* pars::AST::parse_term()
