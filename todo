@@ -1,8 +1,12 @@
 - BUG if expecting expression but got eof will make the compiler get stuck
     even doing checks for eof seems to not work unless the file ended with a line feed
 - bitwise operators
-- pow operator with **
+- named function arguments
+- default function parameters
+- default value expression. either {} or with the default keyword or with T.init
+- block statement parsing and analysis
 - floor div with //
+- mutable stack allocated variables
 - stringify operator
 - string interpolation
 - scope based attributes
@@ -10,14 +14,12 @@
 - currently shadowing works fine. but this was unintended. in the future i might want to consider disallowing it.
 - integral literal suffixes
 - typeof operator
-- named function arguments
 - assert statement
 - integral literals in other bases such as hex or binary
 - builtin value properties such as my_string.length
 - improve api for compiler functions
 - vardiac arguments
 - function overloading
-- mutable stack allocated variables
 - apply operators
 - runtime type information through a Type type
 - typeid system

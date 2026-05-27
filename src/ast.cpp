@@ -594,9 +594,14 @@ pars::Expr* pars::AST::parse_unary()
 	return parse_primary();
 }
 
+pars::Expr * pars::AST::parse_exp()
+{
+	return parse_binary_rule<StarStar>(&AST::parse_unary);
+}
+
 pars::Expr* pars::AST::parse_factor()
 {
-	return parse_binary_rule<Star, ForwardSlash, Percent>(&AST::parse_unary);
+	return parse_binary_rule<Star, ForwardSlash, Percent>(&AST::parse_exp);
 }
 
 pars::Expr* pars::AST::parse_term()

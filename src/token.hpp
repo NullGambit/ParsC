@@ -32,6 +32,7 @@ namespace pars
         Plus,
         ForwardSlash,
         Star,
+        StarStar,
         Percent,
 
         _BinaryEnd,

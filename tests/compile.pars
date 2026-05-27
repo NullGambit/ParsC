@@ -1,20 +1,9 @@
 @[extern, private]
 fn printf(fmt: str, n: i32): i32
 
-@extern
-fn srand(seed: i32)
-
-@extern
-fn rand(): i32
-
-@extern
-fn time(n: i32): i32
-
 fn main()
 {
-    srand(time(0))
-
-    printf("%d\n", rand() % 100)
+    printf("%d\n", 2 * 2 ** 4)
 }
 
 

@@ -123,6 +123,33 @@ llvm::Value * pars::Integer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *
 		case Plus: return ctx.builder.CreateAdd(lhs, rhs);
 		case Minus: return ctx.builder.CreateSub(lhs, rhs);
 		case Star: return ctx.builder.CreateMul(lhs, rhs);
+		case StarStar:
+		{
+			auto to_float = [&ctx, this](llvm::Value *value)
+			{
+				[[likely]]
+				if (value->getType()->isIntegerTy())
+				{
+					auto *type = llvm::Type::getFloatTy(*ctx.llvm_ctx);
+					return is_signed ? ctx.builder.CreateSIToFP(value, type) : ctx.builder.CreateUIToFP(value, type);
+				}
+
+				return value;
+			};
+
+			lhs = to_float(lhs);
+			rhs = to_float(rhs);
+
+			// should probably use powi but causes a crash despite any type casts
+			auto *result = ctx.builder.CreateBinaryIntrinsic(llvm::Intrinsic::pow, lhs, rhs);
+
+			if (is_signed)
+			{
+				return ctx.builder.CreateFPToSI(result, get_llvm_type(ctx.llvm_ctx));
+			}
+
+			return ctx.builder.CreateFPToUI(result, get_llvm_type(ctx.llvm_ctx));
+		}
 		case ForwardSlash: return is_signed ? ctx.builder.CreateSDiv(lhs, rhs) : ctx.builder.CreateUDiv(lhs, rhs);
 		case Percent: return is_signed ? ctx.builder.CreateSRem(lhs, rhs) : ctx.builder.CreateURem(lhs, rhs);
 		default: return nullptr;

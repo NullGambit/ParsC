@@ -110,7 +110,19 @@ pars::Token pars::Lexer::advance_one()
 
             return build_token(Equal);
         }
-        case '*': return build_token('=', StarEqual, Star);
+        case '*':
+        {
+            if (m_reader.match('*'))
+            {
+                return build_token(StarStar);
+            }
+            if (m_reader.match('='))
+            {
+                return build_token(StarEqual);
+            }
+
+            return build_token(Star);
+        }
         case '/': return build_token('=', SlashEqual, ForwardSlash);
         case '<': return build_token('=', LessEqual, Less);
         case '>': return build_token('=', GreaterEqual, Greater);

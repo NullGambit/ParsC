@@ -62,6 +62,7 @@ namespace pars
 		Expr* parse_or();
 		Expr* parse_and();
 		Expr* parse_comparison();
+		Expr* parse_exp();
 		Expr* parse_term();
 		Expr* parse_unary();
 		Expr* parse_factor();
