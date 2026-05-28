@@ -240,6 +240,31 @@ pars::VarDeclStmt* pars::AST::parse_var()
 	return stmt;
 }
 
+pars::VarDeclStmt * pars::AST::parse_fn_param()
+{
+	auto *stmt = new_node<VarDeclStmt>();
+
+	stmt->symbol = get_symbol();
+
+	m_lexer.expect(Colon);
+
+	if (m_lexer.match(Const))
+	{
+		stmt->flags |= VarFlags::Const;
+	}
+
+	stmt->type_name = m_lexer.expect(Identifier).lexeme;
+
+	if (m_lexer.match(Equal))
+	{
+		stmt->initializer = expression();
+	}
+
+	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
+
+	return stmt;
+}
+
 pars::Node* pars::AST::parse_return()
 {
 	auto *fn = get_current_fn();
@@ -305,8 +330,33 @@ pars::FnSignature pars::AST::parse_fn_signature()
 {
 	FnSignature signature;
 
-	COLLECT_COMMA_SEP(LeftParen, RightParen,
-		signature.parameters.push_back(parse_var()));
+	m_lexer.expect(LeftParen);
+
+	while (!m_lexer.peek(RightParen))
+	{
+		auto *param = parse_fn_param();
+
+		if (param->initializer != nullptr)
+		{
+			if (!m_lexer.peek(RightParen))
+			{
+				throw FrontendError{param->token, "Parameters with default values must appear last"};
+			}
+		}
+		else
+		{
+			signature.callable_arity++;
+		}
+
+		signature.parameters.push_back(param);
+
+		if (!m_lexer.peek(RightParen))
+		{
+			m_lexer.expect(Comma);
+		}
+	}
+
+	m_lexer.expect(RightParen);
 
 	if (m_lexer.match(Colon))
 	{

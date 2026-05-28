@@ -8,8 +8,6 @@ fn test(a: i32, b: i32 = 10)
 
 fn main()
 {
-    test(10, 1)
     test(10)
+    test(10, 20)
 }
-
-

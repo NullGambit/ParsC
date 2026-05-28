@@ -120,18 +120,21 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 		fn = prototype->signature.emit(ctx, symbol, prototype->flags);
 	}
 
-	if (fn->arg_size() != arguments.size())
+	if (arguments.size() < prototype->signature.callable_arity || arguments.size() > prototype->signature.parameters.size())
 	{
-		throw CompileError{this, fmt::format("expected {} argument but got {}", fn->arg_size(), arguments.size())};
+		throw CompileError{this, fmt::format("expected {} argument but got {}",
+			prototype->signature.callable_arity, arguments.size())};
 	}
 
 	std::vector<llvm::Value*> argv;
 
 	argv.reserve(fn->arg_size());
 
-	for (auto i = 0; auto *arg : arguments)
+	u32 index {};
+
+	for (auto *arg : arguments)
 	{
-		auto *desired_type = prototype->signature.parameters[i]->type;
+		auto *desired_type = prototype->signature.parameters[index]->type;
 
 		if (!check_type_equality(arg->type, desired_type))
 		{
@@ -143,14 +146,22 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 					"expected type {} instead of {} at position {}",
 					desired_type->get_type_name(),
 					arg->type->get_type_name(),
-					i
+					index
 				)
 			};
 		}
 
 		argv.emplace_back(arg->emit(ctx));
 
-		i++;
+		index++;
+	}
+
+	// default params
+	for (auto i = index; i < prototype->signature.parameters.size(); i++)
+	{
+		auto *param = prototype->signature.parameters[index];
+
+		argv.emplace_back(param->emit(ctx));
 	}
 
 	return ctx.builder.CreateCall(fn, argv);

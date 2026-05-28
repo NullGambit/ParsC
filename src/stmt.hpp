@@ -55,6 +55,8 @@ namespace pars
 	struct FnSignature
 	{
 		std::vector<VarDeclStmt*> parameters;
+		// the amount of non default parameters
+		u32 callable_arity {};
 		Type *return_type {};
 		std::string_view return_type_name;
 

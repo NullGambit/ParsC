@@ -48,6 +48,7 @@ namespace pars
 		void declare_to(std::vector<Node*> &nodes);
 		Node* parse_import();
 		VarDeclStmt* parse_var();
+		VarDeclStmt* parse_fn_param();
 		Node* parse_return();
 		void parse_attributes();
 		Symbol get_symbol();
