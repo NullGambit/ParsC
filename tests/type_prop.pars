@@ -5,4 +5,5 @@ fn main()
 {
     var max = u32.max
     printf("u32 max = %u\n", max)
+    printf("u32 max = %u\n", u32.init)
 }

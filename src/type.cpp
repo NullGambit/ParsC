@@ -9,6 +9,16 @@
 
 #include "emit_context.hpp"
 
+llvm::Value * pars::Type::get_property(llvm::LLVMContext *ctx, std::string_view name)
+{
+	if (name == "init")
+	{
+		return get_default_value(ctx);
+	}
+
+	return nullptr;
+}
+
 bool pars::check_type_equality(Type const *a_type, Type const *b_type)
 {
 	return a_type->is_equal(b_type) || b_type->is_equal(a_type);
@@ -36,6 +46,11 @@ llvm::Value * pars::Integral::get_default_value(llvm::LLVMContext *ctx)
 
 llvm::Value* pars::Integral::get_property(llvm::LLVMContext* ctx, std::string_view name)
 {
+	if (auto *value = Type::get_property(ctx, name))
+	{
+		return value;
+	}
+
 	auto is_min = false;
 
 	if (name == "min")
