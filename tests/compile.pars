@@ -1,15 +1,19 @@
 @[extern, private]
 fn printf(fmt: str, n: i32): i32
 
-fn test(a: i32, b: i32 = 10)
+fn default(x: i32, y: i32 = {})
 {
-    printf("value = %d\n", a + b)
+    printf("result = %d\n", x + y)
 }
 
 fn main()
 {
-    test(10, 1)
-    test(10)
+    var x: i32 = {} + {}
+
+    printf("value = %d\n", x)
+
+    default(10)
+    default(10, 20)
 }
 
 

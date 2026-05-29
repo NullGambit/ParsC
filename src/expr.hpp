@@ -139,4 +139,20 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct NamedExpr
+	{
+		std::string_view name;
+		Expr *value;
+	};
+
+	// represents any brace initialized value. also used for default value initializations
+	struct AnonInitExpr : Expr
+	{
+		std::vector<NamedExpr> values;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }

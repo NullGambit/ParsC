@@ -9,22 +9,34 @@
 
 using enum pars::TokenType;
 
-void pars::Analyzer::visit(CallExpr *expr)
+void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 {
-	for (auto *arg : expr->arguments)
-	{
-		arg->accept(this);
-	}
-
 	expr->prototype = find_symbol<FnDecl>(expr->symbol, expr->token);
 
-	expr->prototype->accept(this);
+	expr->prototype->accept(this, {});
+
+	auto index = 0;
+
+	for (auto *arg : expr->arguments)
+	{
+		arg->accept(this, {expr->prototype->signature.parameters[index++]->type});
+	}
+
+	for (auto i = index; i < expr->prototype->signature.parameters.size(); i++)
+	{
+		auto *param = expr->prototype->signature.parameters[i];
+
+		if (param->initializer != nullptr)
+		{
+			param->initializer->accept(this, {expr->prototype->signature.parameters[i]->type});
+		}
+	}
 
 	expr->symbol = expr->prototype->symbol.name;
 	expr->type = expr->prototype->signature.return_type;
 }
 
-void pars::Analyzer::visit(FnDecl *fn)
+void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 {
 	if (fn->signature.return_type != nullptr)
 	{
@@ -51,7 +63,8 @@ void pars::Analyzer::visit(FnDecl *fn)
 	{
 		auto *expr = dynamic_cast<Expr*>(fn->body.front());
 
-		expr->accept(this);
+		// TODO resolve return type if manually typed
+		expr->accept(this, {fn->signature.return_type});
 
 		fn->signature.return_type = expr->type;
 	}
@@ -61,14 +74,14 @@ void pars::Analyzer::visit(FnDecl *fn)
 
 		for (auto *node : fn->body)
 		{
-			node->accept(this);
+			node->accept(this, {fn->signature.return_type});
 		}
 	}
 
 	m_function_stack.pop_back();
 }
 
-void pars::Analyzer::visit(VarDeclStmt *stmt)
+void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 {
 	// var x: T
 	if (!stmt->type_name.empty())
@@ -79,7 +92,13 @@ void pars::Analyzer::visit(VarDeclStmt *stmt)
 	// var x = E
 	if (stmt->initializer != nullptr)
 	{
-		stmt->initializer->accept(this);
+		stmt->initializer->accept(this, {stmt->type});
+
+		// var x = {}
+		if (stmt->initializer->type == nullptr)
+		{
+			throw FrontendError{stmt->token, "Cannot infer type from initializer"};
+		}
 
 		if (stmt->type_name.empty())
 		{
@@ -104,7 +123,7 @@ void pars::Analyzer::visit(VarDeclStmt *stmt)
 	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 }
 
-void pars::Analyzer::visit(ImportStmt *stmt)
+void pars::Analyzer::visit(ImportStmt *stmt, VisitCtx ctx)
 {
 	stmt->module = get_module(stmt->path);
 
@@ -131,11 +150,11 @@ void pars::Analyzer::visit(ImportStmt *stmt)
 	}
 }
 
-void pars::Analyzer::visit(ReturnStmt *stmt)
+void pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 {
-	stmt->expr->accept(this);
-
 	auto *fn = get_current_fn();
+
+	stmt->expr->accept(this, {fn->signature.return_type});
 
 	if (!fn->signature.return_type->is_equal(stmt->expr->type))
 	{
@@ -144,7 +163,7 @@ void pars::Analyzer::visit(ReturnStmt *stmt)
 	}
 }
 
-void pars::Analyzer::visit(AliasType *alias)
+void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
 	alias->type = resolve_type(dynamic_cast<PendingType*>(alias->type)->symbol, alias);
 
@@ -152,7 +171,7 @@ void pars::Analyzer::visit(AliasType *alias)
 	m_ctx->scope_table.add_to_scope(alias->symbol, alias);
 }
 
-void pars::Analyzer::visit(SymbolExpr *expr)
+void pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 {
 	auto *symbol = find_symbol(expr->symbol, expr->token);
 
@@ -168,10 +187,10 @@ void pars::Analyzer::visit(SymbolExpr *expr)
 	expr->symbol_node = symbol;
 }
 
-void pars::Analyzer::visit(BinaryExpr *expr)
+void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 {
-	expr->left->accept(this);
-	expr->right->accept(this);
+	expr->left->accept(this, ctx);
+	expr->right->accept(this, ctx);
 
 	if (!expr->left->type->is_equal(expr->right->type))
 	{
@@ -188,9 +207,9 @@ void pars::Analyzer::visit(BinaryExpr *expr)
 	}
 }
 
-void pars::Analyzer::visit(UnaryExpr *expr)
+void pars::Analyzer::visit(UnaryExpr *expr, VisitCtx ctx)
 {
-	expr->right->accept(this);
+	expr->right->accept(this, ctx);
 
 	if (expr->op == '!')
 	{
@@ -202,18 +221,18 @@ void pars::Analyzer::visit(UnaryExpr *expr)
 	}
 }
 
-void pars::Analyzer::visit(GroupExpr* expr)
+void pars::Analyzer::visit(GroupExpr* expr, VisitCtx ctx)
 {
-	expr->inner->accept(this);
+	expr->inner->accept(this, ctx);
 	expr->type = expr->inner->type;
 }
 
-void pars::Analyzer::visit(SizeofExpr* expr)
+void pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 {
-	expr->expr->accept(this);
+	expr->expr->accept(this, ctx);
 }
 
-void pars::Analyzer::visit(MemberAccessExpr* expr)
+void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 {
 	auto *symbol = find_symbol(expr->target_symbol, expr->token);
 
@@ -223,7 +242,7 @@ void pars::Analyzer::visit(MemberAccessExpr* expr)
 
 		m_ctx = import->module->ast.get_ctx();
 
-		expr->accessor->accept(this);
+		expr->accessor->accept(this, ctx);
 
 		m_ctx = old_ctx;
 	}
@@ -247,21 +266,26 @@ void pars::Analyzer::visit(MemberAccessExpr* expr)
 	}
 	else
 	{
-		expr->accessor->accept(this);
+		expr->accessor->accept(this, ctx);
 	}
 
 	expr->type = expr->accessor->type;
 }
 
-void pars::Analyzer::visit(CastExpr* expr)
+void pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 {
-	expr->type_expr->accept(this);
+	expr->type_expr->accept(this, ctx);
 
 	expr->type = expr->type_expr->type;
 
-	expr->target->accept(this);
+	expr->target->accept(this, {expr->type});
 	expr->original_type = expr->target->type;
 	expr->target->type = expr->type;
+}
+
+void pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
+{
+	expr->type = ctx.type;
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)

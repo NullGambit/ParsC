@@ -96,7 +96,6 @@ namespace pars
         Match,
         Continue,
         Break,
-        Default,
         Cast,
         Identifier,
         StringLiteral,

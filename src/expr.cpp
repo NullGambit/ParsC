@@ -218,3 +218,11 @@ llvm::Value* pars::CastExpr::emit(EmitCtx& ctx)
 
 	return ctx.builder.CreateCast(op, value, target_type);
 }
+
+llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx)
+{
+	if (values.empty())
+	{
+		return type->get_default_value(ctx.llvm_ctx);
+	}
+}

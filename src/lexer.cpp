@@ -6,7 +6,9 @@
 #include "token.hpp"
 #include "containers/hash_map.hpp"
 #include "magic_enum/magic_enum.hpp"
+#include "memory/arena.hpp"
 #include "util/fmt.hpp"
+#include "memory/defs.hpp"
 
 namespace pars
 {
@@ -40,7 +42,6 @@ namespace pars
         {"match", TokenType::Match},
         {"continue", TokenType::Continue},
         {"break", TokenType::Break},
-        {"default", TokenType::Default},
         {"signed", TokenType::Signed},
         {"sizeof", TokenType::Sizeof},
         {"error", TokenType::Error},
@@ -355,8 +356,9 @@ char escaped_char(char c)
    }
 }
 
+static constexpr auto ESCAPE_BUFFER_SIZE = MB(128);
 // buffer shared by all escaped strings
-static std::string g_escape_buffer;
+static pars::Arena g_escape_buffer;
 
 /*
  * TODO: handle wide strings
@@ -376,20 +378,26 @@ pars::Token pars::Lexer::build_string()
         {
             if (escape_buffer_start == UINT32_MAX)
             {
+                if (g_escape_buffer.memory == nullptr)
+                {
+                    g_escape_buffer.init(ESCAPE_BUFFER_SIZE);
+                }
+
                 auto s = m_reader.slice();
 
                 s = s.substr(0, s.size() - 2);
 
-                escape_buffer_start = g_escape_buffer.size();
+                escape_buffer_start = g_escape_buffer.occupied;
 
-                g_escape_buffer += s;
+                g_escape_buffer.write(reinterpret_cast<const u8*>(s.data()), s.size());
             }
 
-            g_escape_buffer += escaped_char(m_reader.peek_last());
+            const auto echar = escaped_char(m_reader.peek_last());
+            g_escape_buffer.write(reinterpret_cast<const u8*>(&echar), 1);
         }
         else if (escape_buffer_start != UINT32_MAX)
         {
-            g_escape_buffer += c;
+            g_escape_buffer.write(&c, 1);
         }
     }
 
@@ -402,7 +410,9 @@ pars::Token pars::Lexer::build_string()
 
     if (escape_buffer_start != UINT32_MAX)
     {
-        lexeme = std::string_view{g_escape_buffer.begin() + escape_buffer_start, g_escape_buffer.end()};
+        lexeme = std::string_view{
+            reinterpret_cast<const char *>(g_escape_buffer.memory + escape_buffer_start),
+            g_escape_buffer.occupied - escape_buffer_start};
         end_size = lexeme.size();
     }
     else
@@ -427,8 +437,11 @@ pars::Token pars::Lexer::build_char()
 
     if (m_reader.is_escape_sequence())
     {
-        g_escape_buffer += escaped_char(m_reader.peek_last());
-        lexeme = std::string_view{g_escape_buffer.begin() + g_escape_buffer.size() - 1, g_escape_buffer.end()};
+        const auto echar = escaped_char(m_reader.peek_last());
+        g_escape_buffer.write(reinterpret_cast<const u8 *>(&echar), 1);
+        lexeme = std::string_view{
+            reinterpret_cast<const char *>(g_escape_buffer.memory + g_escape_buffer.occupied - 1),
+            1};
     }
     else
     {

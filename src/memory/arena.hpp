@@ -11,6 +11,6 @@ namespace pars
 		void init(u64 capacity);
 		void free();
 
-		u8* write(u8 *bytes, u64 size);
+		u8* write(const u8 *bytes, u64 size);
 	};
 }

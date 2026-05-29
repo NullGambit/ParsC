@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct AnonInitExpr;
 	struct CastExpr;
 	struct MemberAccessExpr;
 	struct TypeExpr;
@@ -20,27 +21,35 @@ namespace pars
 	struct UnaryExpr;
 	struct BinaryExpr;
 	struct Node;
+	struct Type;
+
+	struct VisitCtx
+	{
+		Type *type;
+		Node *invoker;
+	};
 
 	struct Visitor
 	{
 		virtual ~Visitor() = default;
 
-		virtual void visit(BinaryExpr *expr) {}
-		virtual void visit(UnaryExpr *expr) {}
-		virtual void visit(CallExpr *expr) {}
-		virtual void visit(LiteralExpr *expr) {}
-		virtual void visit(SymbolExpr *expr) {}
-		virtual void visit(GroupExpr *expr) {}
-		virtual void visit(MemberAccessExpr *expr) {}
-		virtual void visit(CastExpr *expr) {}
-		virtual void visit(ImportStmt *stmt) {}
-		virtual void visit(VarDeclStmt *stmt) {}
-		virtual void visit(ReturnStmt *stmt) {}
-		virtual void visit(Symbol *stmt) {}
-		virtual void visit(FnDecl *stmt) {}
-		virtual void visit(AliasType *stmt) {}
-		virtual void visit(SizeofExpr *stmt) {}
-		virtual void visit(TypeExpr *stmt) {}
+		virtual void visit(BinaryExpr *expr, VisitCtx ctx) {}
+		virtual void visit(UnaryExpr *expr, VisitCtx ctx) {}
+		virtual void visit(CallExpr *expr, VisitCtx ctx) {}
+		virtual void visit(LiteralExpr *expr, VisitCtx ctx) {}
+		virtual void visit(SymbolExpr *expr, VisitCtx ctx) {}
+		virtual void visit(GroupExpr *expr, VisitCtx ctx) {}
+		virtual void visit(MemberAccessExpr *expr, VisitCtx ctx) {}
+		virtual void visit(CastExpr *expr, VisitCtx ctx) {}
+		virtual void visit(AnonInitExpr *expr, VisitCtx ctx) {}
+		virtual void visit(ImportStmt *stmt, VisitCtx ctx) {}
+		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
+		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}
+		virtual void visit(Symbol *stmt, VisitCtx ctx) {}
+		virtual void visit(FnDecl *stmt, VisitCtx ctx) {}
+		virtual void visit(AliasType *stmt, VisitCtx ctx) {}
+		virtual void visit(SizeofExpr *stmt, VisitCtx ctx) {}
+		virtual void visit(TypeExpr *stmt, VisitCtx ctx) {}
 
 		void visit_nodes(const std::vector<Node*> &nodes);
 	};

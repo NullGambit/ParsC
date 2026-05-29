@@ -550,6 +550,13 @@ pars::Expr* pars::AST::parse_primary()
 
 		return new_node<KeywordExpr>();
 	}
+	if (m_lexer.match(LeftBrace))
+	{
+		// TODO parse field value pairs
+		m_lexer.expect(RightBrace);
+
+		return new_node<AnonInitExpr>();
+	}
 
 	auto *literal = new_node<LiteralExpr>();
 

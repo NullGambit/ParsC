@@ -20,19 +20,20 @@ namespace pars
 	public:
 		explicit Analyzer(ParseCtx *parse_ctx);
 
-		void visit(CallExpr *expr) override;
-		void visit(FnDecl *fn) override;
-		void visit(VarDeclStmt *stmt) override;
-		void visit(ImportStmt *stmt) override;
-		void visit(ReturnStmt *stmt) override;
-		void visit(AliasType *alias) override;
-		void visit(SymbolExpr *expr) override;
-		void visit(BinaryExpr *expr) override;
-		void visit(UnaryExpr *expr) override;
-		void visit(GroupExpr* expr) override;
-		void visit(SizeofExpr* expr) override;
-		void visit(MemberAccessExpr* expr) override;
-		void visit(CastExpr* expr) override;
+		void visit(CallExpr *expr, VisitCtx ctx) override;
+		void visit(FnDecl *fn, VisitCtx ctx) override;
+		void visit(VarDeclStmt *stmt, VisitCtx ctx) override;
+		void visit(ImportStmt *stmt, VisitCtx ctx) override;
+		void visit(ReturnStmt *stmt, VisitCtx ctx) override;
+		void visit(AliasType *alias, VisitCtx ctx) override;
+		void visit(SymbolExpr *expr, VisitCtx ctx) override;
+		void visit(BinaryExpr *expr, VisitCtx ctx) override;
+		void visit(UnaryExpr *expr, VisitCtx ctx) override;
+		void visit(GroupExpr* expr, VisitCtx ctx) override;
+		void visit(SizeofExpr* expr, VisitCtx ctx) override;
+		void visit(MemberAccessExpr* expr, VisitCtx ctx) override;
+		void visit(CastExpr* expr, VisitCtx ctx) override;
+		void visit(AnonInitExpr* expr, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 

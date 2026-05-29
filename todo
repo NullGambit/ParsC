@@ -2,9 +2,8 @@
     even doing checks for eof seems to not work unless the file ended with a line feed
 - bitwise operators
 - named function arguments
-- default function parameters
-- default value expression. either {} or with the default keyword or with T.init
 - block statement parsing and analysis
+- make types be responsible for how they can be casted to other types
 - floor div with //
 - mutable stack allocated variables
 - stringify operator
@@ -18,9 +17,12 @@
 - integral literals in other bases such as hex or binary
 - builtin value properties such as my_string.length
 - improve api for compiler functions
+- real type that can accept any integral value and automatically does the correct code gen depending on its current value
+- abs operator |n|
 - vardiac arguments
 - function overloading
 - apply operators
+- static module initializer functions
 - runtime type information through a Type type
 - typeid system
 - type is expression

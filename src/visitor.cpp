@@ -6,6 +6,6 @@ void pars::Visitor::visit_nodes(const std::vector<Node *> &nodes)
 {
 	for (auto *node : nodes)
 	{
-		node->accept(this);
+		node->accept(this, {});
 	}
 }

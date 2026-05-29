@@ -16,7 +16,7 @@ void pars::Arena::free()
 	pars::virtual_free(memory);
 }
 
-u8* pars::Arena::write(u8 *bytes, u64 size)
+u8* pars::Arena::write(const u8 *bytes, u64 size)
 {
 	auto *current_mem = memory + occupied;
 

@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "token.hpp"
+#include "visitor.hpp"
 
 namespace llvm
 {
@@ -11,6 +12,7 @@ namespace llvm
 
 namespace pars
 {
+	struct VisitCtx;
 	struct Type;
 	struct EmitCtx;
 	struct Visitor;
@@ -25,10 +27,10 @@ namespace pars
 
 		virtual ~Node() = default;
 
-		virtual void accept(Visitor *visitor) {}
+		virtual void accept(Visitor *visitor, VisitCtx ctx) {}
 	};
 
-#define ACCEPT void accept(Visitor *visitor) override { visitor->visit(this); }
+#define ACCEPT void accept(Visitor *visitor, VisitCtx ctx) override { visitor->visit(this, ctx); }
 
 	u8 *alloc_node(u32 size);
 
