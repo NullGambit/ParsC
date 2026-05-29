@@ -1,0 +1,78 @@
+import std.math
+
+union Vec<T, N: u32> where T is real and N >= 1
+{
+    struct
+    {
+        x: T 
+        $if N >= 2 y: T 
+        $if N >= 3 z: T 
+        $if N >= 4 w: T 
+    }
+    raw: [N]T
+}
+
+impl Vec 
+{
+    fn op_index(i: u64): inout(&T) => self.raw[i]
+    fn op_binary<Op: str>(rhs: &const T) where Op is "+" or "-" => mixin($"{self.raw} {Op} {rhs.raw}")
+    fn op_binary<Op: str>(rhs: real) where Op is "*" => mixin($"{self.raw} {Op} {rhs}")
+    fn op_unary<Op: str>(rhs: real) where Op is "-" => mixin($"{Op}{self.raw}")
+
+    fn sqr_length(): T
+    {
+        var result: T
+
+        $for n in self.raw 
+        {
+            result += n ** 2
+        }
+
+        return result
+    }
+
+    fn length() => sqrt(self.sqr_length())
+
+    fn normalize(): void => self.raw /= self.length()
+}
+
+alias Vec2 = Vec<f32, 2>
+alias Vec3 = Vec<f32, 3>
+alias Vec4 = Vec<f32, 4>
+
+alias IVec2 = Vec<i32, 2>
+alias IVec3 = Vec<i32, 3>
+alias IVec4 = Vec<i32, 4>
+
+fn normalized<T: Vec>(vec: T) => vec.normalize()
+
+fn dot<T: Vec>(a: T, b: T): typeof(a.raw[0])
+{
+    var result: T
+
+    $for i, n in a.raw 
+    {
+        result += n * b.raw[i]
+    }
+
+    return result
+}
+
+$test "vec init"
+{
+    var v = Vec3{10f, 20f}
+
+    assert(v is {x: 10f, y: 20f, z: 0f})
+}
+
+$test "vec op"
+{
+    var v1 = Vec3{10f, 20f, 30f}
+    var v2 = Vec3{20f, 30f, 40f}
+
+    var v3 = v1 + v2 
+
+    var v4 = v3 * 2
+
+    assert(v4 is {x: 60f, y: 100f, z: 140f})
+}

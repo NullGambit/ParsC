@@ -1,0 +1,13 @@
+@[extern, private]
+fn printf(fmt: str, n: i32): i32
+
+import std.random
+
+fn main()
+{
+    var value = rand_range(1, 100)
+
+    printf("random value = %d\n", value)
+}
+
+
