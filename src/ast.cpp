@@ -332,19 +332,22 @@ pars::FnSignature pars::AST::parse_fn_signature()
 
 	m_lexer.expect(LeftParen);
 
+	auto saw_default_param = false;
+
 	while (!m_lexer.peek(RightParen))
 	{
 		auto *param = parse_fn_param();
 
 		if (param->initializer != nullptr)
 		{
-			if (!m_lexer.peek(RightParen))
-			{
-				throw FrontendError{param->token, "Parameters with default values must appear last"};
-			}
+			saw_default_param = true;
 		}
 		else
 		{
+			if (saw_default_param)
+			{
+				throw FrontendError{param->token, "Parameters with default values must appear last"};
+			}
 			signature.callable_arity++;
 		}
 
@@ -492,6 +495,16 @@ pars::Expr* pars::AST::parse_primary()
 	{
 		const auto identifier = m_lexer.peek_last().lexeme;
 
+		if (m_lexer.match(Colon))
+		{
+			auto *expr = new_node<NamedExpr>();
+
+			expr->name = identifier;
+
+			expr->value = expression();
+
+			return expr;
+		}
 		if (m_lexer.match(LeftParen))
 		{
 			auto *expr = new_node<CallExpr>();

@@ -140,10 +140,14 @@ namespace pars
 		ACCEPT
 	};
 
-	struct NamedExpr
+	struct NamedExpr : Expr
 	{
 		std::string_view name;
 		Expr *value;
+
+		ACCEPT
+
+		llvm::Value *emit(EmitCtx &ctx) override;
 	};
 
 	// represents any brace initialized value. also used for default value initializations

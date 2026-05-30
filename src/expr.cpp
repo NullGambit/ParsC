@@ -120,11 +120,6 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 		fn = prototype->signature.emit(ctx, symbol, prototype->flags);
 	}
 
-	if (arguments.size() < prototype->signature.callable_arity || arguments.size() > prototype->signature.parameters.size())
-	{
-		throw CompileError{this, fmt::format("expected {} argument but got {}",
-			prototype->signature.callable_arity, arguments.size())};
-	}
 
 	std::vector<llvm::Value*> argv;
 
@@ -217,6 +212,11 @@ llvm::Value* pars::CastExpr::emit(EmitCtx& ctx)
 	const auto op = llvm::CastInst::getCastOpcode(value, src_signed, target_type, dst_signed);
 
 	return ctx.builder.CreateCast(op, value, target_type);
+}
+
+llvm::Value * pars::NamedExpr::emit(EmitCtx &ctx)
+{
+	return value->emit(ctx);
 }
 
 llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx)

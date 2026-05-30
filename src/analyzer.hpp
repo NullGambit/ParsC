@@ -34,6 +34,7 @@ namespace pars
 		void visit(MemberAccessExpr* expr, VisitCtx ctx) override;
 		void visit(CastExpr* expr, VisitCtx ctx) override;
 		void visit(AnonInitExpr* expr, VisitCtx ctx) override;
+		void visit(NamedExpr* expr, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 

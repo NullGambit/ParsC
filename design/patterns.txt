@@ -41,6 +41,17 @@ fn in_range()
     {
         count++
     }
+
+    if remaining is 10
+    {
+        println("10 left")
+    }
+
+    // will check if both count and remaining if they are 0
+    if 0 is remaining or count 
+    {
+        println("nothing left")
+    }
 }
 
 fn check_element()

@@ -15,11 +15,47 @@ void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	expr->prototype->accept(this, {});
 
+	if (expr->arguments.size() < expr->prototype->signature.callable_arity || expr->arguments.size() > expr->prototype->signature.parameters.size())
+	{
+		throw FrontendError{expr->token, fmt::format("expected {} argument but got {}",
+			expr->prototype->signature.callable_arity, expr->arguments.size())};
+	}
+
 	auto index = 0;
+
+	thread_local std::vector<std::pair<Expr*, u32>> named_replace_list;
+
+	named_replace_list.clear();
 
 	for (auto *arg : expr->arguments)
 	{
 		arg->accept(this, {expr->prototype->signature.parameters[index++]->type});
+
+		if (auto *named_param = dynamic_cast<NamedExpr*>(arg))
+		{
+			// this would not scale well but for the average number of function arguments it should still be fairly fast
+			for (auto i = 0; auto *param : expr->prototype->signature.parameters)
+			{
+				if (param->symbol.name == named_param->name)
+				{
+					named_replace_list.emplace_back(named_param->value, i);
+				}
+
+				i++;
+			}
+		}
+	}
+
+	for (auto [named_expr, position] : named_replace_list)
+	{
+		auto *named = dynamic_cast<NamedExpr*>(expr->arguments[position]);
+
+		if (named == nullptr)
+		{
+			throw FrontendError{named_expr->token, "named parameter position has already been fulfilled"};
+		}
+
+		expr->arguments[position] = named_expr;
 	}
 
 	for (auto i = index; i < expr->prototype->signature.parameters.size(); i++)
@@ -286,6 +322,12 @@ void pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 void pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 {
 	expr->type = ctx.type;
+}
+
+void pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
+{
+	expr->value->accept(this, ctx);
+	expr->type = expr->value->type;
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
