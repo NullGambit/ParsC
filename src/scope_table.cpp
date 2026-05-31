@@ -36,10 +36,7 @@ void pars::ScopeTable::go_up()
 		return;
 	}
 
-	auto &[imports, scope] = m_table[m_level];
-
-	imports.clear();
-	scope.clear();
+	clear_level(m_level);
 
 	m_level--;
 }
@@ -49,6 +46,17 @@ pars::ScopeTable::Scope& pars::ScopeTable::get_scope()
 	return m_table[m_level].scope;
 }
 
+void pars::ScopeTable::clear_level(u16 level)
+{
+	if (level < m_table.size())
+	{
+		auto &[imports, scope] = m_table[m_level];
+
+		imports.clear();
+		scope.clear();
+	}
+}
+
 void pars::ScopeTable::add_import(u32 file_id)
 {
 	auto &data = m_table[m_level];
@@ -56,14 +64,31 @@ void pars::ScopeTable::add_import(u32 file_id)
 	data.imports.emplace_back(file_id);
 }
 
-void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public)
+void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public, u16 level)
 {
 	if (m_level > m_locked_level && m_locked_level != UNLOCKED_LEVEL)
 	{
 		return;
 	}
 
-	auto *scope = &get_scope();
+	Scope *scope;
+
+	if (level != UINT16_MAX)
+	{
+		if (level >= m_table.size())
+		{
+			for (auto i = 0; i < level; i++)
+			{
+				m_table.emplace_back();
+			}
+		}
+
+		scope = &m_table[level].scope;
+	}
+	else
+	{
+		scope = &get_scope();
+	}
 
 	scope->emplace(symbol.name, node);
 
