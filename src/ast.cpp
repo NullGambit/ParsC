@@ -73,8 +73,6 @@ const std::vector<pars::Node*>& pars::AST::parse(ParseCtx *ctx)
 
 	m_lexer.set_source(ctx->source_file);
 
-	m_target = &m_nodes;
-
 	// only need to record global symbols right now
 	m_ctx->scope_table.set_lock(0);
 
@@ -107,17 +105,11 @@ pars::Node* pars::AST::declaration()
 
 	if (m_lexer.match(LeftBrace))
 	{
-		while (!m_lexer.peek(RightBrace))
-		{
-			declare_to(*m_target);
-		}
-
-		m_lexer.expect(RightBrace);
+		return parse_block();
 	}
-
 	if (m_lexer.match(Fn))
 	{
-		return parse_fn({});
+		return parse_fn();
 	}
 	if (m_lexer.match(Var) || m_lexer.match(Const))
 	{
@@ -235,8 +227,6 @@ pars::VarDeclStmt* pars::AST::parse_var()
 		throw FrontendError(m_lexer.peek_last(), "Variable without initializer must be explicitly typed", stmt);
 	}
 
-	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
-
 	return stmt;
 }
 
@@ -259,8 +249,6 @@ pars::VarDeclStmt * pars::AST::parse_fn_param()
 	{
 		stmt->initializer = expression();
 	}
-
-	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 
 	return stmt;
 }
@@ -373,11 +361,10 @@ pars::FnSignature pars::AST::parse_fn_signature()
 	return signature;
 }
 
-pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
+pars::FnDecl* pars::AST::parse_fn()
 {
 	auto *fn = new_node<FnDecl>();
 
-	fn->flags = flags;
 	fn->symbol = get_symbol();
 
 	if (has_keyword_attribute(fn->symbol, Extern))
@@ -395,10 +382,6 @@ pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 
 	m_function_stack.emplace_back(fn);
 
-	auto *old_target = m_target;
-
-	m_target = &fn->body;
-
 	if (m_lexer.match(Arrow))
 	{
 		fn->flags |= FnFlags::Inline | FnFlags::ArrowFn;
@@ -407,27 +390,35 @@ pars::FnDecl* pars::AST::parse_fn(FnFlags flags)
 		//
 		// ret->expr = expression();
 
-		fn->body.emplace_back(expression());
+		fn->body = new_node<BlockStmt>();
+		fn->body->nodes.emplace_back(expression());
 	}
 	else if (m_lexer.match(LeftBrace))
 	{
-		while (!m_lexer.peek(RightBrace))
-		{
-			declare_to(fn->body);
-		}
-
-		m_lexer.expect(RightBrace);
+		fn->body = parse_block();
 	}
 	else if (!has_flag(fn->flags, FnFlags::Extern))
 	{
 		throw FrontendError{m_lexer.peek(), "non extern function must have a body", fn};
 	}
 
-	m_target = old_target;
-
 	m_function_stack.pop_back();
 
 	return fn;
+}
+
+pars::BlockStmt * pars::AST::parse_block()
+{
+	auto *stmt = new_node<BlockStmt>();
+
+	while (!m_lexer.peek(RightBrace))
+	{
+		declare_to(stmt->nodes);
+	}
+
+	m_lexer.expect(RightBrace);
+
+	return stmt;
 }
 
 pars::AliasType * pars::AST::parse_alias()

@@ -63,12 +63,21 @@ namespace pars
 		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags);
 	};
 
+	struct BlockStmt : Stmt
+	{
+		std::vector<Node*> nodes;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
+
 	struct FnDecl : Stmt
 	{
 		Symbol symbol;
 		FnSignature signature;
-		std::vector<Node*> body;
-		FnFlags flags;
+		BlockStmt *body;
+		FnFlags flags {};
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 

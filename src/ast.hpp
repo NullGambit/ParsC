@@ -35,8 +35,6 @@ namespace pars
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
 
-		std::vector<Node*> *m_target;
-
 		std::vector<FnDecl*> m_function_stack;
 
 		std::vector<Expr*> m_pending_attributes;
@@ -53,7 +51,8 @@ namespace pars
 		void parse_attributes();
 		Symbol get_symbol();
 		FnSignature parse_fn_signature();
-		FnDecl* parse_fn(FnFlags flags);
+		FnDecl* parse_fn();
+		BlockStmt* parse_block();
 		AliasType* parse_alias();
 
 		// expr parsing stuff
@@ -81,19 +80,6 @@ namespace pars
 			node->token = m_lexer.peek_last();
 
 			return node;
-		}
-
-		template<class T>
-		T* peek()
-		{
-			if (m_target->empty())
-			{
-				return nullptr;
-			}
-
-			auto *node = m_target->back();
-
-			return dynamic_cast<T*>(node);
 		}
 
 		std::vector<Expr*> collect_call_arguments();

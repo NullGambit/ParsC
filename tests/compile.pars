@@ -1,14 +1,13 @@
 @[extern, private]
 fn printf(fmt: str, n1: i32, n2: i32, n3: i32): i32
 
-fn test(a: i32, b: i32 = {}, c: i32 = {})
-{
-    printf("a = %d b = %d c = %d\n", a, b, c)
-}
-
 fn main()
 {
-    test(10, c: 30, b: 20)
+    var a = 1
+    {
+        var b = a
+    }
+    var c = a
 }
 
 

@@ -74,30 +74,26 @@ void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 {
+	// already been analyzed
 	if (fn->signature.return_type != nullptr)
 	{
 		return;
 	}
 
-	for (auto *param : fn->signature.parameters)
-	{
-		param->type = resolve_type(param->type_name, param);
-	}
-
-	m_ctx->scope_table.add_to_scope(fn->symbol, fn);
+	m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
 
 	auto scope = m_ctx->scope_table.new_scope();
 
 	for (auto *param : fn->signature.parameters)
 	{
-		m_ctx->scope_table.add_to_scope(param->symbol, param, PRIVATE_SYMBOL);
+		param->accept(this, {});
 	}
 
 	m_function_stack.emplace_back(fn);
 
 	if (has_flag(fn->flags, FnFlags::ArrowFn))
 	{
-		auto *expr = dynamic_cast<Expr*>(fn->body.front());
+		auto *expr = dynamic_cast<Expr*>(fn->body->nodes.front());
 
 		// TODO resolve return type if manually typed
 		expr->accept(this, {fn->signature.return_type});
@@ -108,9 +104,12 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 	{
 		fn->signature.return_type = resolve_type(fn->signature.return_type_name, fn);
 
-		for (auto *node : fn->body)
+		if (fn->body != nullptr)
 		{
-			node->accept(this, {fn->signature.return_type});
+			for (auto *node : fn->body->nodes)
+			{
+				node->accept(this, ctx);
+			}
 		}
 	}
 
@@ -196,6 +195,16 @@ void pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 	{
 		throw FrontendError{stmt->token, fmt::format("Expected {} in return statement but got {}",
 			fn->signature.return_type->get_type_name(), stmt->expr->type->get_type_name())};
+	}
+}
+
+void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
+{
+	auto scope = m_ctx->scope_table.new_scope();
+
+	for (auto *node : stmt->nodes)
+	{
+		node->accept(this, ctx);
 	}
 }
 
@@ -345,7 +354,7 @@ pars::FnDecl * pars::Analyzer::get_current_fn()
 	return m_function_stack.back();
 }
 
-pars::Type * pars::Analyzer::resolve_type(std::string_view name, Node *node)
+pars::Type* pars::Analyzer::resolve_type(std::string_view name, Node *node)
 {
 	auto *type = m_ctx->scope_table.find_symbol<Type>(name);
 

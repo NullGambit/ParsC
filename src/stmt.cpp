@@ -64,6 +64,21 @@ llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, Fn
 	return fn;
 }
 
+llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
+{
+	auto *bb = ctx.builder.GetInsertBlock();
+
+	for (auto *node : nodes)
+	{
+		// set insert point back to this functions basic block in case
+		// there is a local function being emitted
+		ctx.builder.SetInsertPoint(bb);
+		node->emit(ctx);
+	}
+
+	return nullptr;
+}
+
 llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 {
 	auto *fn = signature.emit(ctx, symbol.name, flags);
@@ -86,17 +101,11 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 
 		if (has_flag(flags, FnFlags::ArrowFn))
 		{
-			ctx.builder.CreateRet(body.front()->emit(ctx));
+			ctx.builder.CreateRet(body->nodes.front()->emit(ctx));
 		}
 		else
 		{
-			for (auto *entry : body)
-			{
-				// set insert point back to this functions basic block in case
-				// there is a local function being emitted
-				ctx.builder.SetInsertPoint(bb);
-				entry->emit(ctx);
-			}
+			body->emit(ctx);
 
 			if (signature.return_type->is_equal(&VoidType))
 			{

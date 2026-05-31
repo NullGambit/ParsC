@@ -12,7 +12,7 @@ namespace pars
 	struct AutoScope;
 
 	constexpr auto PUBLIC_SYMBOL = true;
-	constexpr auto PRIVATE_SYMBOL = true;
+	constexpr auto PRIVATE_SYMBOL = false;
 
 	class ScopeTable
 	{
@@ -33,7 +33,7 @@ namespace pars
 		void set_file_id(u16 file_id);
 
 		[[nodiscard]]
-		u32 get_level() const
+		u16 get_level() const
 		{
 			return m_level;
 		}
@@ -50,9 +50,11 @@ namespace pars
 		void go_up();
 		Scope& get_scope();
 
+		void clear_level(u16 level);
+
 		void add_import(u32 file_id);
 
-		void add_to_scope(Symbol symbol, Node *node, bool is_public = true);
+		void add_to_scope(Symbol symbol, Node *node, bool is_public = true, u16 level = UINT16_MAX);
 		Node* find_symbol(std::string_view name) const;
 		Node* find_local_symbol(std::string_view name) const;
 		bool has_symbol(std::string_view name);
