@@ -365,6 +365,12 @@ void pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
 	expr->type = expr->value->type;
 }
 
+void pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
+{
+	expr->value->accept(this, ctx);
+	expr->type = expr->value->type;
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);

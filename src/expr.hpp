@@ -159,4 +159,13 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct AbsExpr : Expr
+	{
+		Expr *value;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }

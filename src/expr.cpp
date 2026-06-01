@@ -233,3 +233,17 @@ llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx)
 		return type->get_default_value(ctx.llvm_ctx);
 	}
 }
+
+llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx)
+{
+	auto *llvm_value = value->emit(ctx);
+
+	auto *result = value->type->op_abs(ctx, llvm_value);
+
+	if (result == nullptr)
+	{
+		throw CompileError{this, fmt::format("abs is not defined for type {}", value->type->get_type_name())};
+	}
+
+	return result;
+}

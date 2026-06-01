@@ -181,6 +181,13 @@ llvm::Value * pars::Integer::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *r
 	return nullptr;
 }
 
+llvm::Value * pars::Integer::op_abs(EmitCtx &ctx, llvm::Value *value) const
+{
+	auto *is_poison = ctx.builder.getInt1(true);
+
+	return ctx.builder.CreateIntrinsic(llvm::Intrinsic::abs, get_llvm_type(ctx.llvm_ctx), {value, is_poison});
+}
+
 llvm::Type * pars::Float::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::Type::getFloatTy(*ctx);
@@ -210,6 +217,11 @@ llvm::Value * pars::Float::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs
 	}
 
 	return nullptr;
+}
+
+llvm::Value * pars::Float::op_abs(EmitCtx &ctx, llvm::Value *value) const
+{
+	return ctx.builder.CreateIntrinsic(llvm::Intrinsic::fabs, get_llvm_type(ctx.llvm_ctx), {value});
 }
 
 llvm::Type * pars::Bool::get_llvm_type(llvm::LLVMContext *ctx) const

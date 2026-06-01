@@ -26,6 +26,8 @@ namespace pars
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
+
+		virtual llvm::Value* op_abs(EmitCtx &ctx, llvm::Value *value) const { return nullptr; }
 	};
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
@@ -161,6 +163,8 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
 
+		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
+
 		DEFAULT_INTEGRAL_EQUAL(Integer)
 	};
 
@@ -174,6 +178,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
+
+		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
 
 		DEFAULT_INTEGRAL_EQUAL(Float)
 	};

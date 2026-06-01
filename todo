@@ -15,7 +15,6 @@
 - builtin value properties such as my_string.length
 - improve api for compiler functions
 - real type that can accept any integral value and automatically does the correct code gen depending on its current value
-- abs operator |n|
 - vardiac arguments
 - function overloading
 - apply operators

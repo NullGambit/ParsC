@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct AbsExpr;
 	struct AssignmentStmt;
 	struct BlockStmt;
 	struct NamedExpr;
@@ -46,6 +47,7 @@ namespace pars
 		virtual void visit(CastExpr *expr, VisitCtx ctx) {}
 		virtual void visit(AnonInitExpr *expr, VisitCtx ctx) {}
 		virtual void visit(NamedExpr *expr, VisitCtx ctx) {}
+		virtual void visit(AbsExpr *expr, VisitCtx ctx) {}
 		virtual void visit(ImportStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}

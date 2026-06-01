@@ -592,6 +592,16 @@ pars::Expr* pars::AST::parse_primary()
 
 		return new_node<AnonInitExpr>();
 	}
+	if (m_lexer.match(BitwiseOr))
+	{
+		auto *expr = new_node<AbsExpr>();
+
+		expr->value = expression();
+
+		m_lexer.expect(BitwiseOr);
+
+		return expr;
+	}
 
 	auto *literal = new_node<LiteralExpr>();
 
