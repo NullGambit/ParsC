@@ -108,7 +108,14 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 		throw CompileError{this, fmt::format("unknown symbol '{}'", symbol)};
 	}
 
-	return ctx.named_values[symbol];
+	auto *value = ctx.named_values[symbol];
+
+	if (llvm::isa<llvm::AllocaInst>(value))
+	{
+		return ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
+	}
+
+	return value;
 }
 
 llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)

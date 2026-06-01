@@ -137,6 +137,10 @@ pars::Node * pars::AST::statement()
 	{
 		return parse_return();
 	}
+	if (m_lexer.peek(Identifier) && m_lexer.peek_next().type > _AssignmentStart && m_lexer.peek_next().type < _AssignmentEnd)
+	{
+		return parse_assignment();
+	}
 
 	return expression();
 }
@@ -249,6 +253,17 @@ pars::VarDeclStmt * pars::AST::parse_fn_param()
 	{
 		stmt->initializer = expression();
 	}
+
+	return stmt;
+}
+
+pars::AssignmentStmt * pars::AST::parse_assignment()
+{
+	auto *stmt = new_node<AssignmentStmt>();
+
+	stmt->symbol = m_lexer.expect(Identifier).lexeme;
+	stmt->op = m_lexer.advance().type;
+	stmt->rhs = expression();
 
 	return stmt;
 }

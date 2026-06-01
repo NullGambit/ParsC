@@ -41,9 +41,9 @@ namespace pars
 
 	struct BinaryExpr : Expr
 	{
-		Expr* left;
+		Expr *left;
 		TokenType op;
-		Expr* right;
+		Expr *right;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 
@@ -53,7 +53,7 @@ namespace pars
 	struct UnaryExpr : Expr
 	{
 		char op;
-		Expr* right;
+		Expr *right;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 

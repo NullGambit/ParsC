@@ -68,7 +68,7 @@ pars::Token pars::Lexer::advance_one()
 {
     m_reader.skip_insignificant();
 
-    if (m_reader.peek() == '/' && m_reader.peek_next() == '/')
+    while (m_reader.peek() == '/' && m_reader.peek_next() == '/')
     {
         m_reader.skip_until('\n');
         m_reader.skip_insignificant();

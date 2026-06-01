@@ -47,6 +47,7 @@ namespace pars
 		Node* parse_import();
 		VarDeclStmt* parse_var();
 		VarDeclStmt* parse_fn_param();
+		AssignmentStmt* parse_assignment();
 		Node* parse_return();
 		void parse_attributes();
 		Symbol get_symbol();

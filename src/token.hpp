@@ -27,7 +27,6 @@ namespace pars
 
         _BinaryStart,
 
-        Equal,
         Minus,
         Plus,
         ForwardSlash,
@@ -44,10 +43,16 @@ namespace pars
         Bang,
         _UnaryEnd,
 
+        _AssignmentStart,
+
         PlusEqual,
         MinusEqual,
         StarEqual,
         SlashEqual,
+        Equal,
+
+        _AssignmentEnd,
+
         PlusPlus,
         MinusMinus,
         LeftParen,

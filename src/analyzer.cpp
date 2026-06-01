@@ -208,6 +208,18 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 	}
 }
 
+void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
+{
+	stmt->lhs = find_symbol<VarDeclStmt>(stmt->symbol, stmt->token);
+
+	if (stmt->lhs == nullptr)
+	{
+		throw FrontendError{stmt->token, fmt::format("'{}' is not a valid target for assignment", stmt->symbol)};
+	}
+
+	stmt->rhs->accept(this, {stmt->lhs->type});
+}
+
 void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
 	alias->type = resolve_type(dynamic_cast<PendingType*>(alias->type)->symbol, alias);

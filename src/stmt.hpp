@@ -23,8 +23,11 @@ namespace pars
 	enum class VarFlags : u8
 	{
 		Const = 1 << 0,
+		// TODO actually implement both static and volatile variables
 		Static = 1 << 1,
 		Volatile = 1 << 2,
+		Global = 1 << 3,
+		ShouldAlloca = 1 << 4,
 	};
 
 	PARS_FLAGIFY(VarFlags);
@@ -38,6 +41,21 @@ namespace pars
 		VarFlags flags;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
+
+	// represents not only assignment but op apply operators (+=, -=, etc)
+	// could be an expression but seems like the most natural way to represent assignments is with a statement
+	// because unlike C++ assignment cannot be used as an expression
+	struct AssignmentStmt : Stmt
+	{
+		std::string_view symbol;
+		VarDeclStmt *lhs;
+		Expr *rhs;
+		TokenType op;
+
+		llvm::Value* emit(EmitCtx &ctx) override;
 
 		ACCEPT
 	};

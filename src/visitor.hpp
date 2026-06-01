@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct AssignmentStmt;
 	struct BlockStmt;
 	struct NamedExpr;
 	struct AnonInitExpr;
@@ -54,6 +55,7 @@ namespace pars
 		virtual void visit(SizeofExpr *stmt, VisitCtx ctx) {}
 		virtual void visit(TypeExpr *stmt, VisitCtx ctx) {}
 		virtual void visit(BlockStmt *stmt, VisitCtx ctx) {}
+		virtual void visit(AssignmentStmt *stmt, VisitCtx ctx) {}
 
 		void visit_nodes(const std::vector<Node*> &nodes);
 	};

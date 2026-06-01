@@ -1,13 +1,20 @@
 @[extern, private]
-fn printf(fmt: str, n1: i32, n2: i32, n3: i32): i32
+fn printf(fmt: str, n1: i32): i32
+
+fn add(a: i32, b: i32): i32
+{
+    return a + b
+}
 
 fn main()
 {
-    var a = 1
-    {
-        var b = a
-    }
-    var c = a
+    var x = 10
+
+    x = 5
+
+    // var result = add(x, 20)
+
+    printf("%d\n", x)
 }
 
 
