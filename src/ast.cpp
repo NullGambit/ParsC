@@ -289,17 +289,32 @@ pars::Node* pars::AST::parse_return()
 
 void pars::AST::parse_attributes()
 {
-	// TODO: instead of calling expression have a finer grained way to get attributes
-	// currently this will not report errors if you randomly use a keyword somewhere
+	auto emplace_token = [this]
+	{
+		m_lexer.advance();
+
+		auto token = m_lexer.peek_last();
+
+		if (token.type > _AttributeKeywordStart && token.type < _AttributeKeywordEnd)
+		{
+			m_pending_attributes.emplace_back(token.type);
+		}
+		else
+		{
+			throw FrontendError{m_lexer.peek_last(),
+				fmt::format("'{}' is not a valid keyword attribute", m_lexer.peek_last().lexeme)};
+		}
+	};
+
 	if (!m_lexer.match(LeftBracket))
 	{
-		m_pending_attributes.emplace_back(expression());
+		emplace_token();
 	}
 	else
 	{
 		while (true)
 		{
-			m_pending_attributes.emplace_back(expression());
+			emplace_token();
 
 			if (!m_lexer.match(Comma))
 			{

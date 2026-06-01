@@ -82,6 +82,7 @@ namespace pars
         Extern,
         Private,
         Static,
+        Volatile,
         _AttributeKeywordEnd,
         Const,
         Inout,

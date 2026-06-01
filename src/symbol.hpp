@@ -19,9 +19,9 @@ namespace pars
 		u8 attribute_count;
 	};
 
-	u32 set_attributes(std::vector<Expr*> &attributes);
+	u32 set_attributes(std::vector<TokenType> &attributes);
 
-	std::span<Expr*> get_attributes(Symbol symbol);
+	std::span<TokenType> get_attributes(Symbol symbol);
 
 	bool has_keyword_attribute(Symbol symbol, TokenType type);
 }

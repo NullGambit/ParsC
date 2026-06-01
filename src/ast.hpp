@@ -37,7 +37,7 @@ namespace pars
 
 		std::vector<FnDecl*> m_function_stack;
 
-		std::vector<Expr*> m_pending_attributes;
+		std::vector<TokenType> m_pending_attributes;
 
 		HashMap<std::string_view, std::function<Expr*(const std::vector<Expr*>&)>> m_builtin_functions;
 

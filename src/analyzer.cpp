@@ -218,6 +218,13 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 	}
 
 	stmt->rhs->accept(this, {stmt->lhs->type});
+
+	stmt->lhs->flags |= VarFlags::ShouldAlloca;
+
+	if (has_keyword_attribute(stmt->lhs->symbol, Volatile))
+	{
+		stmt->lhs->flags |= VarFlags::Volatile;
+	}
 }
 
 void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)

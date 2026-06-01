@@ -22,11 +22,11 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 		value = initializer->emit(ctx);
 	}
 
-	if (!has_flag(flags, VarFlags::Const))
+	if (!has_flag(flags, VarFlags::Const) && has_flag(flags, VarFlags::ShouldAlloca))
 	{
 		auto *inst = ctx.builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
 
-		ctx.builder.CreateStore(value, inst);
+		ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
 
 		value = inst;
 
@@ -47,7 +47,7 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 		throw CompileError{this, "Cannot mutate left hand side"};
 	}
 
-	return ctx.builder.CreateStore(rhs->emit(ctx), value);
+	return ctx.builder.CreateStore(rhs->emit(ctx), value, has_flag(lhs->flags, VarFlags::Volatile));
 }
 
 llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags)

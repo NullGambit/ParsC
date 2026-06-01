@@ -29,6 +29,7 @@ namespace pars
         {"else", TokenType::Else},
         {"return", TokenType::Return},
         {"const", TokenType::Const},
+        {"volatile", TokenType::Volatile},
         {"import", TokenType::Import},
         {"private", TokenType::Private},
         {"inout", TokenType::Inout},

@@ -2,19 +2,18 @@
 
 #include "expr.hpp"
 
-static std::vector<pars::Expr*> g_attributes;
+static std::vector<pars::TokenType> g_attributes;
 
-u32 pars::set_attributes(std::vector<Expr*> &attributes)
+u32 pars::set_attributes(std::vector<TokenType> &attributes)
 {
 	const auto n = g_attributes.size();
-	const auto id = n == 0 ? n : n - 1;
 
-	g_attributes.insert(g_attributes.begin(), attributes.begin(), attributes.end());
+	g_attributes.insert(g_attributes.begin() + g_attributes.size(), attributes.begin(), attributes.end());
 
-	return id;
+	return n;
 }
 
-std::span<pars::Expr *> pars::get_attributes(Symbol symbol)
+std::span<pars::TokenType> pars::get_attributes(Symbol symbol)
 {
 	return std::span{g_attributes.begin() + symbol.attribute_id, symbol.attribute_count};
 }
@@ -24,9 +23,9 @@ bool pars::has_keyword_attribute(Symbol symbol, TokenType type)
 	auto attributes = get_attributes(symbol);
 
 	return std::ranges::any_of(attributes.begin(), attributes.end(),
-		[type](Expr const *expr)
+		[type](TokenType this_type)
 		{
-			return expr != nullptr && expr->token.type == type;
+			return this_type == type;
 		});
 }
 

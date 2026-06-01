@@ -8,11 +8,10 @@ fn add(a: i32, b: i32): i32
 
 fn main()
 {
+    @volatile
     var x = 10
 
-    x = 5
-
-    // var result = add(x, 20)
+    x = 20
 
     printf("%d\n", x)
 }
