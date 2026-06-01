@@ -47,7 +47,29 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 		throw CompileError{this, "Cannot mutate left hand side"};
 	}
 
-	return ctx.builder.CreateStore(rhs->emit(ctx), value, has_flag(lhs->flags, VarFlags::Volatile));
+	using enum TokenType;
+
+	if (op == Equal)
+	{
+		return ctx.builder.CreateStore(rhs->emit(ctx), value, has_flag(lhs->flags, VarFlags::Volatile));
+	}
+
+	auto *curr_value = ctx.builder.CreateLoad(lhs->type->get_llvm_type(ctx.llvm_ctx), value);
+
+	TokenType op_op {};
+
+	switch (op)
+	{
+		case PlusEqual: op_op = Plus; break;
+		case MinusEqual: op_op = Minus; break;
+		case StarEqual: op_op = Star; break;
+		case SlashEqual: op_op = ForwardSlash; break;
+		default: return nullptr;
+	}
+
+	auto *new_value = lhs->type->op_binary(ctx, op_op, curr_value, rhs->emit(ctx));
+
+	return ctx.builder.CreateStore(new_value, value);
 }
 
 llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags)

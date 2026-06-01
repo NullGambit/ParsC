@@ -262,7 +262,8 @@ pars::AssignmentStmt * pars::AST::parse_assignment()
 	auto *stmt = new_node<AssignmentStmt>();
 
 	stmt->symbol = m_lexer.expect(Identifier).lexeme;
-	stmt->op = m_lexer.advance().type;
+	m_lexer.advance();
+	stmt->op = m_lexer.peek_last().type;
 	stmt->rhs = expression();
 
 	return stmt;

@@ -1,0 +1,12 @@
+// NOTE this is not implemented yet
+
+fn main()
+{
+    const x = 10
+
+    assert($compiles(x = 20) == false)
+
+    var y = 20
+
+    assert($compiles(y = 0))
+}
