@@ -219,6 +219,13 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 
 	stmt->rhs->accept(this, {stmt->lhs->type});
 
+	if (!stmt->lhs->type->is_equal(stmt->rhs->type))
+	{
+		throw FrontendError{stmt->token,
+			fmt::format("assignment to type of {} cannot be done with type of {}",
+				stmt->lhs->type->get_type_name(), stmt->rhs->type->get_type_name())};
+	}
+
 	stmt->lhs->flags |= VarFlags::ShouldAlloca;
 
 	if (has_keyword_attribute(stmt->lhs->symbol, Volatile))

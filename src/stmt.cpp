@@ -69,6 +69,11 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *new_value = lhs->type->op_binary(ctx, op_op, curr_value, rhs->emit(ctx));
 
+	if (new_value == nullptr)
+	{
+		throw CompileError{rhs, fmt::format("this operation is not defined for type of {}", lhs->type->get_type_name())};
+	}
+
 	return ctx.builder.CreateStore(new_value, value);
 }
 

@@ -12,7 +12,7 @@ fn main()
 
     x += 20
 
-    printf("%d\n", x)
+    // printf("%d\n", x)
 }
 
 

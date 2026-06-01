@@ -3,7 +3,6 @@
 - bitwise operators
 - make types be responsible for how they can be casted to other types
 - floor div with //
-- mutable stack allocated variables
 - stringify operator
 - string interpolation
 - scope based attributes
