@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct WhileStmt;
 	struct IfStmt;
 	struct AbsExpr;
 	struct AssignmentStmt;
@@ -53,6 +54,7 @@ namespace pars
 		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(IfStmt *stmt, VisitCtx ctx) {}
+		virtual void visit(WhileStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(Symbol *stmt, VisitCtx ctx) {}
 		virtual void visit(FnDecl *stmt, VisitCtx ctx) {}
 		virtual void visit(AliasType *stmt, VisitCtx ctx) {}

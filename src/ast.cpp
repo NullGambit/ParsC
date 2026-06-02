@@ -125,9 +125,17 @@ pars::Node* pars::AST::declaration()
 
 pars::Node * pars::AST::statement()
 {
+	if (m_lexer.match(If))
+	{
+		return parse_if();
+	}
 	if (m_lexer.match(Import))
 	{
 		return parse_import();
+	}
+	if (m_lexer.match(While))
+	{
+		return parse_while();
 	}
 	if (m_lexer.match(LeftBrace))
 	{
@@ -136,10 +144,6 @@ pars::Node * pars::AST::statement()
 	if (m_lexer.match(Return))
 	{
 		return parse_return();
-	}
-	if (m_lexer.match(If))
-	{
-		return parse_if();
 	}
 	if (m_lexer.peek(Identifier) && m_lexer.peek_next().type > _AssignmentStart && m_lexer.peek_next().type < _AssignmentEnd)
 	{
@@ -233,6 +237,19 @@ pars::IfStmt * pars::AST::parse_if()
 			stmt->else_br = parse_block();
 		}
 	}
+
+	return stmt;
+}
+
+pars::WhileStmt * pars::AST::parse_while()
+{
+	auto *stmt = new_node<WhileStmt>();
+
+	stmt->condition = expression();
+
+	m_lexer.expect(LeftBrace);
+
+	stmt->body = parse_block();
 
 	return stmt;
 }

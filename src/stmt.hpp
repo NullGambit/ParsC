@@ -137,4 +137,14 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct WhileStmt : Stmt
+	{
+		Expr* condition;
+		BlockStmt *body;
+
+		llvm::Value* emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }

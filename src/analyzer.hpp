@@ -28,6 +28,7 @@ namespace pars
 		void visit(BlockStmt *stmt, VisitCtx ctx) override;
 		void visit(AssignmentStmt *stmt, VisitCtx ctx) override;
 		void visit(IfStmt *stmt, VisitCtx ctx) override;
+		void visit(WhileStmt *stmt, VisitCtx ctx) override;
 		void visit(AliasType *alias, VisitCtx ctx) override;
 		void visit(SymbolExpr *expr, VisitCtx ctx) override;
 		void visit(BinaryExpr *expr, VisitCtx ctx) override;

@@ -251,6 +251,12 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 	}
 }
 
+void pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)
+{
+	stmt->condition->accept(this, {});
+	stmt->body->accept(this, {});
+}
+
 void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
 	alias->type = resolve_type(dynamic_cast<PendingType*>(alias->type)->symbol, alias);

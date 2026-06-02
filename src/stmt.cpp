@@ -240,3 +240,32 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 
 	return merge_bb;
 }
+
+llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx)
+{
+
+	auto *fn = ctx.builder.GetInsertBlock()->getParent();
+
+	auto *before_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "before", fn);
+
+	ctx.builder.CreateBr(before_bb);
+
+	ctx.builder.SetInsertPoint(before_bb);
+
+	auto *condition_value = condition->emit(ctx);
+
+	auto *then_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "then", fn);
+	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
+
+	ctx.builder.CreateCondBr(condition_value, then_bb, merge_bb);
+
+	ctx.builder.SetInsertPoint(then_bb);
+
+	body->emit(ctx);
+
+	ctx.builder.CreateBr(before_bb);
+
+	ctx.builder.SetInsertPoint(merge_bb);
+
+	return merge_bb;
+}

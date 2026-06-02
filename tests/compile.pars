@@ -3,15 +3,11 @@ fn printf(fmt: str, n1: i32): i32
 
 fn main()
 {
-    var x = 10
+    var x = 0
 
-    if x < 5
+    while x < 10
     {
-        printf("%d is greater than 5\n", x)
-    }
-    else if x == 10
-    {
-        printf("%d is less than 5\n", x)
+        x += 1
     }
 
     printf("you've reached the end with value = %d\n", x)
