@@ -122,8 +122,15 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 	{
 		// set insert point back to this functions basic block in case
 		// there is a local function being emitted
+		// ctx.builder.SetInsertPoint(bb);
+		auto *value = node->emit(ctx);
+
+		if (auto *new_bb = llvm::dyn_cast_if_present<llvm::BasicBlock>(value))
+		{
+			bb = new_bb;
+		}
+
 		ctx.builder.SetInsertPoint(bb);
-		node->emit(ctx);
 	}
 
 	return nullptr;
@@ -190,4 +197,46 @@ llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx)
 	}
 
 	return ctx.builder.CreateRet(expr->emit(ctx));
+}
+
+llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
+{
+	auto *condition_value = condition->emit(ctx);
+
+	auto *fn = ctx.builder.GetInsertBlock()->getParent();
+
+	auto *then_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "then", fn);
+
+	llvm::BasicBlock *else_bb;
+
+	if (else_br != nullptr)
+	{
+		else_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "else", fn);
+	}
+
+	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
+
+	if (else_br == nullptr)
+	{
+		else_bb = merge_bb;
+	}
+
+	ctx.builder.CreateCondBr(condition_value, then_bb, else_bb);
+
+	ctx.builder.SetInsertPoint(then_bb);
+
+	body->emit(ctx);
+
+	ctx.builder.CreateBr(merge_bb);
+
+	if (else_br != nullptr)
+	{
+		ctx.builder.SetInsertPoint(else_bb);
+		else_br->emit(ctx);
+		ctx.builder.CreateBr(merge_bb);
+	}
+
+	ctx.builder.SetInsertPoint(merge_bb);
+
+	return merge_bb;
 }

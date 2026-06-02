@@ -103,10 +103,6 @@ pars::Node* pars::AST::declaration()
 		parse_attributes();
 	}
 
-	if (m_lexer.match(LeftBrace))
-	{
-		return parse_block();
-	}
 	if (m_lexer.match(Fn))
 	{
 		return parse_fn();
@@ -133,9 +129,17 @@ pars::Node * pars::AST::statement()
 	{
 		return parse_import();
 	}
+	if (m_lexer.match(LeftBrace))
+	{
+		return parse_block();
+	}
 	if (m_lexer.match(Return))
 	{
 		return parse_return();
+	}
+	if (m_lexer.match(If))
+	{
+		return parse_if();
 	}
 	if (m_lexer.peek(Identifier) && m_lexer.peek_next().type > _AssignmentStart && m_lexer.peek_next().type < _AssignmentEnd)
 	{
@@ -198,6 +202,35 @@ pars::Node* pars::AST::parse_import()
 			{
 				break;
 			}
+		}
+	}
+
+	return stmt;
+}
+
+pars::IfStmt * pars::AST::parse_if()
+{
+	auto *stmt = new_node<IfStmt>();
+
+	stmt->condition = expression();
+
+	m_lexer.expect(LeftBrace);
+
+	stmt->body = parse_block();
+
+	if (m_lexer.match(Else))
+	{
+		// could simply do stmt->else_br = statement();
+		// but i currently dont want to allow any arbitrary statement to be used
+		// will reconsider later
+		if (m_lexer.match(If))
+		{
+			stmt->else_br = parse_if();
+		}
+		else
+		{
+			m_lexer.expect(LeftBrace);
+			stmt->else_br = parse_block();
 		}
 	}
 

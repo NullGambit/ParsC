@@ -1,0 +1,35 @@
+import std.io 
+
+fn take_ref(a: &i32)
+{
+    println(a)
+}
+
+// just like T? makes it an error union for types, % makes it an error union for references
+// this now is a reference that can be nil
+// this becomes an optional ref. the difference between a pointer is that it is still a reference 
+// and is treated as the type itself. this also feeds into the whole parse dont validate thing 
+fn take_nil_ref(a: %i32)
+{
+    if catch a 
+    {
+        println("a cannot be nil")
+        return 
+    }
+
+    // normally cant try to print a % value
+    println(a)
+}
+
+$test 
+{
+    var a = 10
+    var &r1 = a 
+    var %r2 = a 
+
+    assert($compiles(r1 = nil) == false) 
+
+    take_ref(r1)
+
+    take_nil_ref(r2)
+}

@@ -234,6 +234,23 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 	}
 }
 
+void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
+{
+	stmt->condition->accept(this, {});
+
+	if (!stmt->condition->type->is_equal(&BoolType))
+	{
+		throw FrontendError{stmt->condition->token, "if statement condition must be a bool type"};
+	}
+
+	stmt->body->accept(this, {});
+
+	if (stmt->else_br != nullptr)
+	{
+		stmt->else_br->accept(this, {});
+	}
+}
+
 void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
 	alias->type = resolve_type(dynamic_cast<PendingType*>(alias->type)->symbol, alias);

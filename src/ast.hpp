@@ -45,6 +45,7 @@ namespace pars
 		Node* statement();
 		void declare_to(std::vector<Node*> &nodes);
 		Node* parse_import();
+		IfStmt* parse_if();
 		VarDeclStmt* parse_var();
 		VarDeclStmt* parse_fn_param();
 		AssignmentStmt* parse_assignment();

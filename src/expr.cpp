@@ -127,7 +127,6 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 		fn = prototype->signature.emit(ctx, symbol, prototype->flags);
 	}
 
-
 	std::vector<llvm::Value*> argv;
 
 	argv.reserve(fn->arg_size());

@@ -1,0 +1,24 @@
+
+// a must be known at compile time or will throw a compile time error 
+// does not guarantee wil be a CTFE but if all params are comp time and 
+// there is no reference to global state then it is very likely  
+fn comp_param($a: i32)
+{
+    $if a > 32 
+    {
+    }
+}
+
+fn add(a: i32, b: i32) => a + b 
+
+$test 
+{
+    // compile time constant so all values assigned to it must be known at compile time as well
+    var $x = 10
+
+    comp_param(x)
+
+    // because result is comp time and the function can be evaluated at comp time this will be a CTFE
+    // otherwise it will be a compile time error
+    var $result = add(10, 20)
+}
