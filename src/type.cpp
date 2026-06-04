@@ -295,3 +295,8 @@ llvm::Value * pars::Str::get_default_value(llvm::LLVMContext *ctx)
 	return llvm::ConstantPointerNull::get((llvm::PointerType*)ptr_type);
 }
 
+llvm::Value * pars::RangeType::op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	return Type::op_in(ctx, lhs, rhs);
+}
+

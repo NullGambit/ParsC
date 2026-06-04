@@ -1,0 +1,34 @@
+
+struct Data<T, N>
+{
+    array: [N]T
+}
+
+struct DataIterator<T, N> 
+{
+    data: Data<T, N>
+    cursor: u32
+}
+
+impl DataIterator : Iterator 
+{
+    fn has_next() => self.cursor < N 
+    fn get_next() => (self.data.array[self.cursor], self.cursor ** 2)
+}
+
+impl Data : Iterable
+{
+    fn iter() => DataIterator{self, 0}
+}
+
+$test 
+{
+    import std.io 
+
+    var data = Data{[1, 2, 3]}
+
+    for n, sqr, i in data 
+    {
+        println(n, sqr, i)
+    }
+}

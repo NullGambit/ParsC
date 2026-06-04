@@ -69,6 +69,7 @@ namespace pars
 		Expr* parse_term();
 		Expr* parse_unary();
 		Expr* parse_factor();
+		Expr* parse_range();
 		Expr* parse_primary();
 
 		FnDecl* get_current_fn();

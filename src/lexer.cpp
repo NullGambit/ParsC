@@ -22,7 +22,6 @@ namespace pars
         {"async", TokenType::Async},
         {"await", TokenType::Await},
         {"enum", TokenType::Enum},
-        {"do", TokenType::Do},
         {"true", TokenType::True},
         {"false", TokenType::False},
         {"if", TokenType::If},
@@ -43,7 +42,6 @@ namespace pars
         {"match", TokenType::Match},
         {"continue", TokenType::Continue},
         {"break", TokenType::Break},
-        {"signed", TokenType::Signed},
         {"sizeof", TokenType::Sizeof},
         {"error", TokenType::Error},
         {"in", TokenType::In},
@@ -81,58 +79,18 @@ pars::Token pars::Lexer::advance_one()
 
     switch (c)
     {
-        case '+':
-        {
-            if (m_reader.match('+'))
-            {
-                return build_token(PlusEqual);
-            }
-
-            return build_token('=', PlusEqual, Plus);
-        }
-        case '-':
-        {
-            if (m_reader.match('-'))
-            {
-                return build_token(MinusMinus);
-            }
-
-            return build_token('=', MinusEqual, Minus);
-        }
-        case '=':
-        {
-            if (m_reader.match('='))
-            {
-                return build_token(EqualEqual);
-            }
-            if (m_reader.match('>'))
-            {
-                return build_token(Arrow);
-            }
-
-            return build_token(Equal);
-        }
-        case '*':
-        {
-            if (m_reader.match('*'))
-            {
-                return build_token(StarStar);
-            }
-            if (m_reader.match('='))
-            {
-                return build_token(StarEqual);
-            }
-
-            return build_token(Star);
-        }
+        case '+': return build_token('+', PlusPlus, '=', PlusEqual, Plus);
+        case '-': return build_token('-', MinusMinus, '=', MinusEqual, Minus);
+        case '=': return build_token('=', EqualEqual, '>', Arrow, Equal);
+        case '*': return build_token('*', StarStar, '=', StarEqual, Star);
         case '/': return build_token('=', SlashEqual, ForwardSlash);
         case '<': return build_token('=', LessEqual, Less);
         case '>': return build_token('=', GreaterEqual, Greater);
         case '!': return build_token('=', BangEqual, Bang);
         case '%': return build_token(Percent);
         case '$': return build_token(Dollar);
-        case '&': return build_token(BitwiseAnd);
-        case '|': return build_token(BitwiseOr);
+        case '&': return build_token(Ampersand);
+        case '|': return build_token(Pipe);
         case '(': return build_token(LeftParen);
         case ')': return build_token(RightParen);
         case '{': return build_token(LeftBrace);
@@ -141,7 +99,6 @@ pars::Token pars::Lexer::advance_one()
         case '@': return build_token(At);
         case '~': return build_token(Tilde);
         case ',': return build_token(Comma);
-        case '.': return build_token(Dot);
         case ';': return build_token(SemiColon);
         case ':': return build_token(Colon);
         case '?': return build_token(Question);
@@ -150,6 +107,20 @@ pars::Token pars::Lexer::advance_one()
         case '"': return build_string();
         case '\'': return build_char();
         case '\0': return build_token(Eof);
+        case '.':
+        {
+            if (m_reader.match('.'))
+            {
+                if (m_reader.match('='))
+                {
+                    return build_token(DotDotEqual);
+                }
+
+                return build_token(DotDot);
+            }
+
+            return build_token(Dot);
+        }
         default:
         {
             if (std::isdigit(c))
@@ -295,6 +266,20 @@ pars::Token pars::Lexer::build_token(char match, TokenType tk1, TokenType tk2)
     auto type = m_reader.match(match) ? tk1 : tk2;
 
     return build_token(type);
+}
+
+pars::Token pars::Lexer::build_token(char match1, TokenType tk1, char match2, TokenType tk2, TokenType tk3)
+{
+    if (m_reader.match(match1))
+    {
+        return build_token(tk1);
+    }
+    if (m_reader.match(match2))
+    {
+        return build_token(tk2);
+    }
+
+    return build_token(tk3);
 }
 
 pars::Token pars::Lexer::build_error(std::string_view message)

@@ -23,7 +23,7 @@ namespace pars
 	enum class VarFlags : u8
 	{
 		Const = 1 << 0,
-		// TODO actually implement both static and volatile variables
+		// TODO actually implement static
 		Static = 1 << 1,
 		Volatile = 1 << 2,
 		Global = 1 << 3,

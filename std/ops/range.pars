@@ -1,0 +1,35 @@
+
+
+// will be used by the compiler for range expressions eg: n..k
+struct Range<T: Integer>
+{
+    min: T
+    max: T
+}
+
+struct RangeIter<T: Integer>: Iterator
+{
+    end: T
+    cursor: T
+}
+
+impl RangeIter 
+{
+    fn has_next() => self.cursor < self.max
+
+    fn next(): T
+    {
+        var value = self.cursor 
+
+        self.cursor += 1 
+
+        return self.cursor
+    }
+}
+
+impl Range: Iterable
+{
+    fn op_in(value: T) => value > self.min and value < self.max 
+
+    fn iter() => RangeIter{end: self.max}
+}

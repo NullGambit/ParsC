@@ -202,6 +202,7 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 {
 	auto scope = m_ctx->scope_table.new_scope();
 
+
 	for (auto *node : stmt->nodes)
 	{
 		node->accept(this, ctx);
@@ -236,6 +237,11 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 {
+	if (m_ctx->scope_table.get_level() == 0)
+	{
+		throw FrontendError{stmt->token, "none compile time if statements are not allowed in the global scope"};
+	}
+
 	stmt->condition->accept(this, {});
 
 	if (!stmt->condition->type->is_equal(&BoolType))
@@ -253,6 +259,11 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)
 {
+	if (m_ctx->scope_table.get_level() == 0)
+	{
+		throw FrontendError{stmt->token, "none compile time while loops are not allowed in the global scope"};
+	}
+
 	stmt->condition->accept(this, {});
 	stmt->body->accept(this, {});
 }
@@ -294,6 +305,11 @@ void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 	if (expr->op > _ComparisonStart && expr->op < _ComparisonEnd)
 	{
 		expr->type = const_cast<Bool*>(&BoolType);
+	}
+	// range
+	else if (expr->op == DotDot || expr->op == DotDotEqual)
+	{
+		expr->type = const_cast<RangeType*>(&Range);
 	}
 	else
 	{

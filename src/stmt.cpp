@@ -5,6 +5,7 @@
 
 #include "compile_error.hpp"
 #include "expr.hpp"
+#include "frontend_error.hpp"
 #include "type.hpp"
 #include "debug/ast_printer.hpp"
 #include "util/fmt.hpp"
@@ -118,7 +119,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 {
 	auto *bb = ctx.builder.GetInsertBlock();
 
-	for (auto *node : nodes)
+	for (auto i = 0; auto *node : nodes)
 	{
 		// set insert point back to this functions basic block in case
 		// there is a local function being emitted
@@ -131,6 +132,16 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 		}
 
 		ctx.builder.SetInsertPoint(bb);
+
+		auto *ret = dynamic_cast<ReturnStmt*>(node);
+
+		// eliminate dead code so llvm doesnt complain about terminator in the middle of basic block
+		if (ret != nullptr && i < nodes.size() - 1)
+		{
+			break;
+		}
+
+		i++;
 	}
 
 	return nullptr;
@@ -156,6 +167,7 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 			ctx.named_values[arg.getName()] = &arg;
 		}
 
+
 		if (has_flag(flags, FnFlags::ArrowFn))
 		{
 			ctx.builder.CreateRet(body->nodes.front()->emit(ctx));
@@ -169,34 +181,39 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 				ctx.builder.CreateRetVoid();
 			}
 		}
-
 	}
 
 	std::string error_str;
 	llvm::raw_string_ostream error_stream(error_str);
 
+	// TODO when im confident my code gen isnt dogshit anymore remove verification from release builds
 	auto has_error = llvm::verifyFunction(*fn, &error_stream);
 
 	if (has_error)
 	{
-		ctx.module->print(error_stream, nullptr);
+		// print error to the bottom of the module ir
+		// otherwise easy to miss verification errors
+		std::string module_str;
+		llvm::raw_string_ostream module_stream(module_str);
+
+		ctx.module->print(module_stream, nullptr);
+
+		module_str += error_str;
+
 		error_stream.flush();
 		fn->eraseFromParent();
-		throw CompileError{this, std::move(error_str)};
+
+		throw CompileError{this, std::move(module_str)};
 	}
 
 	return fn;
 }
 
-// TODO handle mismatched return types
 llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx)
 {
-	if (expr == nullptr)
-	{
-		return ctx.builder.CreateRetVoid();
-	}
+	auto *value = expr->emit(ctx);
 
-	return ctx.builder.CreateRet(expr->emit(ctx));
+	return ctx.builder.CreateRet(value);
 }
 
 llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
@@ -227,13 +244,23 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 
 	body->emit(ctx);
 
-	ctx.builder.CreateBr(merge_bb);
+	auto do_maybe_br = [&ctx, this](llvm::BasicBlock *this_bb, llvm::BasicBlock *next_bb)
+	{
+		auto *terminator = this_bb->getTerminator();
+
+		if (terminator == nullptr || !llvm::isa<llvm::ReturnInst>(terminator))
+		{
+			ctx.builder.CreateBr(next_bb);
+		}
+	};
+
+	do_maybe_br(then_bb, merge_bb);
 
 	if (else_br != nullptr)
 	{
 		ctx.builder.SetInsertPoint(else_bb);
 		else_br->emit(ctx);
-		ctx.builder.CreateBr(merge_bb);
+		do_maybe_br(else_bb, merge_bb);
 	}
 
 	ctx.builder.SetInsertPoint(merge_bb);
@@ -243,7 +270,6 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 
 llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx)
 {
-
 	auto *fn = ctx.builder.GetInsertBlock()->getParent();
 
 	auto *before_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "before", fn);

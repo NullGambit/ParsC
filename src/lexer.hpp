@@ -44,6 +44,7 @@ namespace pars
 
         Token build_token(TokenType type, std::string_view lexeme_override = {});
         Token build_token(char match, TokenType tk1, TokenType tk2);
+        Token build_token(char match1, TokenType tk1, char match2, TokenType tk2, TokenType tk3);
         Token build_error(std::string_view message);
 
         Token build_digit();

@@ -63,7 +63,7 @@ impl CustomList
     {
         var self = Self{}
 
-        self.ensure_size(argself.length)
+        self.ensure_size(args.length)
 
         $for item in args 
         {

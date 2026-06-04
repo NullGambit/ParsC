@@ -33,6 +33,8 @@ namespace pars
         Star,
         StarStar,
         Percent,
+        DotDot,
+        DotDotEqual,
 
         _BinaryEnd,
 
@@ -67,11 +69,9 @@ namespace pars
         Dot,
         SemiColon,
         Ampersand,
-        Arrow,
-        BitwiseOr,
-        BitwiseAnd,
+        Pipe,
+        Arrow, // =>
         Fn,
-        Do,
         True,
         Else,
         False,
@@ -112,7 +112,6 @@ namespace pars
         ULIntegerLiteral,
         DecimalLiteral,
         LDecimalLiteral,
-        Signed,
         Sizeof,
         Struct,
         Trait,

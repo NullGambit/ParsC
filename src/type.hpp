@@ -26,8 +26,14 @@ namespace pars
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
+		virtual llvm::Value* op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 
 		virtual llvm::Value* op_abs(EmitCtx &ctx, llvm::Value *value) const { return nullptr; }
+
+		virtual bool is_iterable() const { return false; }
+		virtual std::span<Type*> get_iter_bindings() const { return {}; }
+		virtual llvm::Value* iter_emit_init(EmitCtx &ctx, std::span<VarDeclStmt*> vars) const { return nullptr; }
+		virtual llvm::Value* iter_emit_update(EmitCtx &ctx, std::span<VarDeclStmt*> vars) const { return nullptr; }
 	};
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
@@ -239,4 +245,19 @@ virtual bool is_equal(Type const *other) const override							\
 	};
 
 	static const Str StrType {};
+
+	struct RangeType : Type
+	{
+		DEFAULT_TYPE_EQUAL(RangeType)
+
+		llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const override { return nullptr; }
+
+		std::string_view get_type_name() const override { return "range"; }
+
+		llvm::Value * get_default_value(llvm::LLVMContext *ctx) override { return nullptr; }
+
+		llvm::Value *op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const override;
+	};
+
+	static const RangeType Range {};
 }

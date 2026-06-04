@@ -1,16 +1,44 @@
 @[extern, private]
-fn printf(fmt: str, n1: i32): i32
+fn printf(fmt: str, n: i32): i32
+
+fn test2(condition: bool): i32
+{
+    var value = 0
+
+    if condition
+    {
+        value = 1
+    }
+
+    return value
+}
+
+fn test(condition: bool): i32
+{
+    if condition 
+    {
+        return 1
+    }
+    else
+    {
+        return 2
+    }
+
+    return {}
+}
 
 fn main()
 {
-    var x = 0
+    var value = test(condition: true) 
 
-    while x < 10
-    {
-        x += 1
-    }
+    printf("%d\n", value)
 
-    printf("you've reached the end with value = %d\n", x)
+    //const print_yes = true 
+
+    //$if print_yes
+    //{
+    //    printf("yes\n")
+    //}
 }
 
 

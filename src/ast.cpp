@@ -642,13 +642,13 @@ pars::Expr* pars::AST::parse_primary()
 
 		return new_node<AnonInitExpr>();
 	}
-	if (m_lexer.match(BitwiseOr))
+	if (m_lexer.match(Pipe))
 	{
 		auto *expr = new_node<AbsExpr>();
 
 		expr->value = expression();
 
-		m_lexer.expect(BitwiseOr);
+		m_lexer.expect(Pipe);
 
 		return expr;
 	}
@@ -746,9 +746,14 @@ pars::Expr* pars::AST::parse_unary()
 	return parse_primary();
 }
 
+pars::Expr * pars::AST::parse_range()
+{
+	return parse_binary_rule<DotDot, DotDotEqual>(&AST::parse_unary);
+}
+
 pars::Expr * pars::AST::parse_exp()
 {
-	return parse_binary_rule<StarStar>(&AST::parse_unary);
+	return parse_binary_rule<StarStar>(&AST::parse_range);
 }
 
 pars::Expr* pars::AST::parse_factor()
