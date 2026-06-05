@@ -4,6 +4,11 @@ fn printf(fmt: str, n: i32): i32
 
 fn test(condition: bool): i32
 {
+    if condition
+    {
+        return 1
+    }
+    else
     {
     }
 

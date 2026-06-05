@@ -221,6 +221,14 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 	{
 		node->accept(this, ctx);
 	}
+
+	auto &current_flags = m_ctx->scope_table.get_current_flags();
+
+	if (has_flag(current_flags, ScopeFlags::HasReturn) && m_ctx->scope_table.get_level() > 1)
+	{
+		auto &data = m_ctx->scope_table.get_scope_data(m_ctx->scope_table.get_level() - 1);
+		data.flags|= ScopeFlags::HasReturn;
+	}
 }
 
 void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
@@ -264,6 +272,9 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 	}
 
 	stmt->body->accept(this, {});
+
+	// flag will be set by lower scope. disable and only set again if else also has a return
+	m_ctx->scope_table.get_current_flags() &= ~ScopeFlags::HasReturn;
 
 	auto sibling_returns = has_flag(m_ctx->scope_table.get_lower_flags(), ScopeFlags::HasReturn);
 
