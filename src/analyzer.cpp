@@ -111,6 +111,18 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 				node->accept(this, ctx);
 			}
 		}
+
+		auto flags = m_ctx->scope_table.get_scope_data(m_ctx->scope_table.get_level()).flags;
+
+		if (
+			!fn->signature.return_type->is_equal(&VoidType)
+			&&
+			!has_flag(flags, ScopeFlags::HasReturn)
+			&&
+			!has_flag(fn->flags, FnFlags::Extern))
+		{
+			throw FrontendError{fn->token, "Not all paths return a value"};
+		}
 	}
 
 	m_function_stack.pop_back();
@@ -196,12 +208,14 @@ void pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 		throw FrontendError{stmt->token, fmt::format("Expected {} in return statement but got {}",
 			fn->signature.return_type->get_type_name(), stmt->expr->type->get_type_name())};
 	}
+
+	m_ctx->scope_table.get_current_flags() |= ScopeFlags::HasReturn;
+
 }
 
 void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 {
 	auto scope = m_ctx->scope_table.new_scope();
-
 
 	for (auto *node : stmt->nodes)
 	{
@@ -251,9 +265,18 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 
 	stmt->body->accept(this, {});
 
+	auto sibling_returns = has_flag(m_ctx->scope_table.get_lower_flags(), ScopeFlags::HasReturn);
+
 	if (stmt->else_br != nullptr)
 	{
 		stmt->else_br->accept(this, {});
+
+		auto else_returns = has_flag(m_ctx->scope_table.get_lower_flags(), ScopeFlags::HasReturn);
+
+		if (sibling_returns && else_returns)
+		{
+			m_ctx->scope_table.get_scope_data(m_ctx->scope_table.get_level()).flags |= ScopeFlags::HasReturn;
+		}
 	}
 }
 

@@ -1,0 +1,41 @@
+@[extern, private]
+fn printf(fmt: str, n: i32): i32
+
+fn test2(condition: bool): i32
+{
+    var value = 0
+
+    if condition
+    {
+        value = 1
+    }
+
+    return value
+}
+
+fn test(condition: bool): i32
+{
+    if condition
+    {
+        return 1
+    }
+    else
+    {
+        return 2
+    }
+
+    return {}
+}
+
+fn main()
+{
+    var value = test(condition: true)
+
+    printf("%d\n", value)
+
+    value = test2(condition: false)
+
+    printf("%d\n", value)
+}
+
+

@@ -126,6 +126,11 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 		// ctx.builder.SetInsertPoint(bb);
 		auto *value = node->emit(ctx);
 
+		if (value == nullptr)
+		{
+			break;
+		}
+
 		if (auto *new_bb = llvm::dyn_cast_if_present<llvm::BasicBlock>(value))
 		{
 			bb = new_bb;
@@ -144,6 +149,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 		i++;
 	}
 
+	// TODO return something else so nested blocks dont confuse the compiler
 	return nullptr;
 }
 
@@ -166,7 +172,6 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 		{
 			ctx.named_values[arg.getName()] = &arg;
 		}
-
 
 		if (has_flag(flags, FnFlags::ArrowFn))
 		{
@@ -220,15 +225,51 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 {
 	auto *condition_value = condition->emit(ctx);
 
-	auto *fn = ctx.builder.GetInsertBlock()->getParent();
+	auto *start_bb = ctx.builder.GetInsertBlock();
+	auto *fn = start_bb->getParent();
+
+	auto has_return = [](llvm::BasicBlock *bb)
+	{
+		if (bb == nullptr)
+		{
+			return false;
+		}
+
+		auto *terminator = bb->getTerminator();
+
+		return terminator != nullptr && llvm::isa<llvm::ReturnInst>(terminator);
+	};
+
+	auto do_maybe_br = [&ctx, &has_return](llvm::BasicBlock *this_bb, llvm::BasicBlock *next_bb)
+	{
+		if (!has_return(this_bb))
+		{
+			ctx.builder.SetInsertPoint(this_bb);
+			ctx.builder.CreateBr(next_bb);
+		}
+	};
 
 	auto *then_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "then", fn);
 
-	llvm::BasicBlock *else_bb;
+	ctx.builder.SetInsertPoint(then_bb);
+
+	body->emit(ctx);
+
+	llvm::BasicBlock *else_bb {};
 
 	if (else_br != nullptr)
 	{
 		else_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "else", fn);
+		ctx.builder.SetInsertPoint(else_bb);
+		else_br->emit(ctx);
+	}
+
+	if (has_return(else_bb) && has_return(then_bb))
+	{
+		ctx.builder.SetInsertPoint(start_bb);
+		ctx.builder.CreateCondBr(condition_value, then_bb, else_bb);
+
+		return nullptr;
 	}
 
 	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
@@ -238,30 +279,11 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 		else_bb = merge_bb;
 	}
 
+	ctx.builder.SetInsertPoint(start_bb);
 	ctx.builder.CreateCondBr(condition_value, then_bb, else_bb);
 
-	ctx.builder.SetInsertPoint(then_bb);
-
-	body->emit(ctx);
-
-	auto do_maybe_br = [&ctx, this](llvm::BasicBlock *this_bb, llvm::BasicBlock *next_bb)
-	{
-		auto *terminator = this_bb->getTerminator();
-
-		if (terminator == nullptr || !llvm::isa<llvm::ReturnInst>(terminator))
-		{
-			ctx.builder.CreateBr(next_bb);
-		}
-	};
-
 	do_maybe_br(then_bb, merge_bb);
-
-	if (else_br != nullptr)
-	{
-		ctx.builder.SetInsertPoint(else_bb);
-		else_br->emit(ctx);
-		do_maybe_br(else_bb, merge_bb);
-	}
+	do_maybe_br(else_bb, merge_bb);
 
 	ctx.builder.SetInsertPoint(merge_bb);
 

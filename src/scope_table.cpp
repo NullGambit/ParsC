@@ -27,6 +27,8 @@ void pars::ScopeTable::go_down()
 	{
 		m_table.emplace_back();
 	}
+
+	get_scope_data(m_level).flags = {};
 }
 
 void pars::ScopeTable::go_up()
@@ -46,14 +48,30 @@ pars::ScopeTable::Scope& pars::ScopeTable::get_scope()
 	return m_table[m_level].scope;
 }
 
+pars::ScopeFlags & pars::ScopeTable::get_lower_flags()
+{
+	return get_scope_data(m_level + 1).flags;
+}
+
+pars::ScopeFlags & pars::ScopeTable::get_current_flags()
+{
+	return get_scope_data(m_level).flags;
+}
+
+pars::ScopeTable::ScopeData & pars::ScopeTable::get_scope_data(u16 level)
+{
+	return m_table[level];
+}
+
 void pars::ScopeTable::clear_level(u16 level)
 {
 	if (level < m_table.size())
 	{
-		auto &[imports, scope] = m_table[m_level];
+		auto &[imports, scope, flags] = m_table[m_level];
 
 		imports.clear();
 		scope.clear();
+		// flags = {};
 	}
 }
 

@@ -4,6 +4,7 @@
 
 #include "symbol.hpp"
 #include "containers/hash_map.hpp"
+#include "util/macros.hpp"
 
 namespace pars
 {
@@ -13,6 +14,16 @@ namespace pars
 
 	constexpr auto PUBLIC_SYMBOL = true;
 	constexpr auto PRIVATE_SYMBOL = false;
+
+	// set per scope. will only be wiped when this scope is started again
+	// so it can be read by the upper scope.
+	enum class ScopeFlags
+	{
+		// will be set if this scope will 100% return
+		HasReturn = 1 << 0
+	};
+
+	PARS_FLAGIFY(ScopeFlags);
 
 	class ScopeTable
 	{
@@ -26,6 +37,7 @@ namespace pars
 		{
 			std::vector<u32> imports {};
 			Scope scope;
+			ScopeFlags flags;
 		};
 
 		ScopeTable();
@@ -49,6 +61,11 @@ namespace pars
 		void go_down();
 		void go_up();
 		Scope& get_scope();
+
+		ScopeFlags& get_lower_flags();
+		ScopeFlags& get_current_flags();
+
+		ScopeData& get_scope_data(u16 level);
 
 		void clear_level(u16 level);
 
