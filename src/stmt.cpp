@@ -149,8 +149,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 		i++;
 	}
 
-	// TODO return something else so nested blocks dont confuse the compiler
-	return nullptr;
+	return bb;
 }
 
 llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)

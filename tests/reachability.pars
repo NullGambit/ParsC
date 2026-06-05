@@ -4,19 +4,23 @@ fn printf(fmt: str, n: i32): i32
 
 fn test(condition: bool): i32
 {
+    if condition
     {
+        return 1
     }
-
-    return 1
+    else
+    {
+        return 2
+    }
 }
 
 fn main()
 {
-    var value = test(condition: true) 
+    var value = test(condition: true)
 
     printf("%d\n", value)
 
-    //const print_yes = true 
+    //const print_yes = true
 
     //$if print_yes
     //{
