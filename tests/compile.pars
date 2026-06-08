@@ -1,8 +1,6 @@
 @[extern, private]
 fn printf(fmt: str): i32
 
-fn is_greater(a: i32, b: i32) => a > b
-
 fn main()
 {
     const print_yes = true
@@ -14,11 +12,6 @@ fn main()
     else
     {
         printf("no\n")
-    }
-
-    $if is_greater(10, 2)
-    {
-        printf("10 is greater than 2\n")
     }
 
     printf("the end\n")

@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <llvm/IR/Verifier.h>
+#include "llvm/IR/ConstantFold.h"
 
 #include "compile_error.hpp"
 #include "expr.hpp"
@@ -291,7 +292,9 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 
 llvm::Value * pars::CompIfStmt::emit(EmitCtx &ctx)
 {
-	if (passed)
+	auto *value = stmt->condition->emit(ctx);
+
+	if (auto *constant = llvm::dyn_cast<llvm::ConstantInt>(value); constant->getValue() == true)
 	{
 		return stmt->body->emit(ctx);
 	}

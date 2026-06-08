@@ -295,24 +295,6 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 void pars::Analyzer::visit(CompIfStmt *stmt, VisitCtx ctx)
 {
 	stmt->stmt->accept(this, ctx);
-
-	auto comp_eval = ComptimeEval{m_ctx};
-
-	Node *node;
-
-	stmt->stmt->condition->accept(&comp_eval, {.result = &node});
-
-	if (auto *result = dynamic_cast<LiteralExpr*>(node))
-	{
-		if (result->value.index() == 3)
-		{
-			stmt->passed = std::get<bool>(result->value);
-		}
-	}
-	else
-	{
-		throw FrontendError{stmt->token, "compile time if statement condition cannot be evaluated at compile time"};
-	}
 }
 
 void pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)

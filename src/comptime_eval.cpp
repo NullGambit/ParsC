@@ -22,9 +22,16 @@ void pars::ComptimeEval::visit(LiteralExpr *expr, VisitCtx ctx)
 	*ctx.result = expr;
 }
 
-void pars::ComptimeEval::visit(FnDecl *fn, VisitCtx ctx)
+void pars::ComptimeEval::visit(CallExpr *expr, VisitCtx ctx)
 {
-	for (auto *node : fn->body->nodes)
+	auto scope = m_ctx->scope_table.new_scope();
+
+	for (auto i = 0; auto *param : expr->prototype->signature.parameters)
+	{
+		m_ctx->scope_table.add_to_scope(param->symbol, expr->arguments[i]);
+	}
+
+	for (auto *node : expr->prototype->body->nodes)
 	{
 		node->accept(this, ctx);
 	}
@@ -32,8 +39,8 @@ void pars::ComptimeEval::visit(FnDecl *fn, VisitCtx ctx)
 
 void pars::ComptimeEval::visit(BinaryExpr *expr, VisitCtx ctx)
 {
-	Node *left_node;
-	Node *right_node;
+	Node *left_node {};
+	Node *right_node {};
 
 	expr->left->accept(this, {.result = &left_node});
 	expr->left->accept(this, {.result = &right_node});
@@ -44,6 +51,7 @@ void pars::ComptimeEval::visit(BinaryExpr *expr, VisitCtx ctx)
 	if (left == nullptr || right == nullptr)
 	{
 		*ctx.result = nullptr;
+		return;
 	}
 
 	using enum TokenType;

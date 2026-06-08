@@ -14,7 +14,7 @@ namespace pars
 		void visit(VarDeclStmt *stmt, VisitCtx ctx) override;
 		void visit(SymbolExpr *expr, VisitCtx ctx) override;
 		void visit(LiteralExpr *expr, VisitCtx ctx) override;
-		void visit(FnDecl *fn, VisitCtx ctx) override;
+		void visit(CallExpr *expr, VisitCtx ctx) override;
 		void visit(BinaryExpr *expr, VisitCtx ctx) override;
 
 		ComptimeEval() = default;
