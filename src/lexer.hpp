@@ -23,6 +23,7 @@ namespace pars
         Token advance();
 
         bool match(TokenType type);
+        bool match_both(TokenType a, TokenType b);
         bool match_next(TokenType type);
         Token expect(TokenType type);
         Token peek();

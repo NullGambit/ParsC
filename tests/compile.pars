@@ -1,32 +1,27 @@
 @[extern, private]
-fn printf(fmt: str, n: i32): i32
+fn printf(fmt: str): i32
 
-
-fn test(condition: bool): i32
-{
-    if condition
-    {
-        return 1
-    }
-    else
-    {
-    }
-
-    return 1
-}
+fn is_greater(a: i32, b: i32) => a > b
 
 fn main()
 {
-    var value = test(condition: true) 
+    const print_yes = true
 
-    printf("%d\n", value)
+    $if print_yes
+    {
+        printf("yes\n")
+    }
+    else
+    {
+        printf("no\n")
+    }
 
-    //const print_yes = true 
+    $if is_greater(10, 2)
+    {
+        printf("10 is greater than 2\n")
+    }
 
-    //$if print_yes
-    //{
-    //    printf("yes\n")
-    //}
+    printf("the end\n")
 }
 
 

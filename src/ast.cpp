@@ -129,6 +129,12 @@ pars::Node * pars::AST::statement()
 	{
 		return parse_if();
 	}
+	if (m_lexer.match_both(Dollar, If))
+	{
+		auto *comp_stmt = new_node<CompIfStmt>();
+		comp_stmt->stmt = parse_if();
+		return comp_stmt;
+	}
 	if (m_lexer.match(Import))
 	{
 		return parse_import();

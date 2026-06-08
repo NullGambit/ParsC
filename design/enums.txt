@@ -5,10 +5,14 @@ enum Payload
     A
     B
     Data(int x)
+    
+}
 
+impl Payload 
+{
     fn print_self()
     {
-        if self == .A
+        if self == A
         {
             println(self)
         }
@@ -19,15 +23,15 @@ fn enum_test()
 {
     var payload = Payload::A
 
-    payload = .B
+    payload = B
 
-    payload = .Data(10)
+    payload = Data(10)
 
     var message = match payload
     {
-        .A => "is a",
-        .B => "is b",
-        .Data(x) => $"data is {x}"
+        A => "is a",
+        B => "is b",
+        Data(x) => $"data is {x}"
     }
 
     payload.print_self()
@@ -45,9 +49,15 @@ fn index_test()
     // only works if the enum does not contain any payload
     var animal_names: str[Animals]
 
-    animal_names[.Cat] = "Jeff"
-    animal_names[.Dog] = "Woofert"
-    animal_names[.Sheep] = "baasel"
+    animal_names[Cat] = "Jeff"
+    animal_names[Dog] = "Woofert"
+    animal_names[Sheep] = "baasel"
+
+    // literal form
+    var animal_names2: str[Animals] = 
+    [
+        Cat: "boots"
+    ]
 }
 
 // must have no payload members
@@ -55,14 +65,14 @@ fn index_test()
 enum Flags
 {
     // iota will essentially repeat the same pattern for the rest of the members
-    A = 1 << 0 iota
+    A = 1 << iota(0)
     B
     C
     D
 }
 
-// the flag attribute essentially is a shorthand for the iota 
-@flag
+// the flag attribute essentially is a shorthand for the previous iota example 
+@Flag
 enum Flags2
 {
     A
@@ -72,7 +82,8 @@ enum Flags2
 }
 
 // changes the backing type of this enum to a byte
-enum BackingType (u8)
+// does not conflict with traits because traits are set in impl not the enum itself
+enum BackingType : u8
 {
     A
 }
@@ -81,7 +92,7 @@ fn flag_test()
 {
     var f: Flags 
 
-    f |= .B | .C
+    f |= B | C
 
     println(f) // should format into Flags(B | C)
 }

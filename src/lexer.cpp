@@ -171,6 +171,19 @@ bool pars::Lexer::match(TokenType type)
     return false;
 }
 
+bool pars::Lexer::match_both(TokenType a, TokenType b)
+{
+    if (peek(a) && peek_next(b))
+    {
+        advance();
+        advance();
+
+        return true;
+    }
+
+    return false;
+}
+
 bool pars::Lexer::match_next(TokenType type)
 {
     if (peek_next(type))

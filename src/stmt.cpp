@@ -289,6 +289,20 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 	return merge_bb;
 }
 
+llvm::Value * pars::CompIfStmt::emit(EmitCtx &ctx)
+{
+	if (passed)
+	{
+		return stmt->body->emit(ctx);
+	}
+	if (stmt->else_br != nullptr)
+	{
+		return stmt->else_br->emit(ctx);
+	}
+
+	return nullptr;
+}
+
 llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx)
 {
 	auto *fn = ctx.builder.GetInsertBlock()->getParent();

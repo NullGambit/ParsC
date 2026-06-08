@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct CompIfStmt;
 	struct WhileStmt;
 	struct IfStmt;
 	struct AbsExpr;
@@ -33,6 +34,7 @@ namespace pars
 	{
 		Type *type;
 		Node *invoker;
+		Node **result;
 	};
 
 	struct Visitor
@@ -54,6 +56,7 @@ namespace pars
 		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(IfStmt *stmt, VisitCtx ctx) {}
+		virtual void visit(CompIfStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(WhileStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(Symbol *stmt, VisitCtx ctx) {}
 		virtual void visit(FnDecl *stmt, VisitCtx ctx) {}

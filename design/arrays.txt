@@ -42,6 +42,23 @@ fn test_arrays()
     var numbers = Map<string, int, StackAllocator<256>>{}
 }
 
+// give a name to each position
+@distinct
+alias Vec3 = f32[3]{"x", "y", "z"}
+
+// can also implement for aliases
+impl Vec3 
+{
+    fn op_binary<Op: str>(rhs: Self) if Op == "+" or Op == "-" => mixin ($"self {op} rhs")
+}
+
+$test "named array elements"
+{
+    var v1 = Vec3{x: 10, y: 20, z: 30}
+
+    v1.x += 1
+}
+
 // any object can be iterable if it has a length field and implements op_index 
 // the compiler will then turn it into for var i in 0..list.length { var item = list[i] }
 // allocator will default to whatever is the scopes allocator at the time of creation unless specified otherwise

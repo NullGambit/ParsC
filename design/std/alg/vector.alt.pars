@@ -1,0 +1,27 @@
+@distinct
+alias Vec<T, N> = T[N]{"x", "y", "z", "w"} // field names will be truncated if the array is not big enough
+
+// main benefit of using this approach is most operators simply do not need to be overloaded because an array supports
+// all array programming features
+impl Vec 
+{
+    fn sqr_length(): T
+    {
+        var result: T
+
+        $for n in self
+        {
+            result += n ** 2
+        }
+
+        return result
+    }
+
+    fn length() => sqrt(self.sqr_length())
+
+    fn normalize(): void => self /= self.length()
+}
+
+alias Vec2 = Vec<f32, 2>
+alias Vec3 = Vec<f32, 3>
+alias Vec4 = Vec<f32, 4>

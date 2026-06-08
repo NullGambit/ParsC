@@ -2,6 +2,7 @@
 
 #include "parse_ctx.hpp"
 #include "ast.hpp"
+#include "comptime_eval.hpp"
 #include "frontend_error.hpp"
 #include "module.hpp"
 #include "module_manager.hpp"
@@ -288,6 +289,29 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 		{
 			m_ctx->scope_table.get_scope_data(m_ctx->scope_table.get_level()).flags |= ScopeFlags::HasReturn;
 		}
+	}
+}
+
+void pars::Analyzer::visit(CompIfStmt *stmt, VisitCtx ctx)
+{
+	stmt->stmt->accept(this, ctx);
+
+	auto comp_eval = ComptimeEval{m_ctx};
+
+	Node *node;
+
+	stmt->stmt->condition->accept(&comp_eval, {.result = &node});
+
+	if (auto *result = dynamic_cast<LiteralExpr*>(node))
+	{
+		if (result->value.index() == 3)
+		{
+			stmt->passed = std::get<bool>(result->value);
+		}
+	}
+	else
+	{
+		throw FrontendError{stmt->token, "compile time if statement condition cannot be evaluated at compile time"};
 	}
 }
 

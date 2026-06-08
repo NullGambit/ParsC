@@ -80,6 +80,8 @@ add_executable(ParsC src/main.cpp
         src/visitor.cpp
         src/parse_ctx.hpp
         src/containers/ptr_list.hpp
+        src/comptime_eval.cpp
+        src/comptime_eval.hpp
 )
 
 set(LLVM_STATIC ON)

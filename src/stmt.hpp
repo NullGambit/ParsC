@@ -138,6 +138,16 @@ namespace pars
 		ACCEPT
 	};
 
+	struct CompIfStmt : Stmt
+	{
+		IfStmt *stmt;
+		bool passed {};
+
+		llvm::Value* emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
+
 	struct WhileStmt : Stmt
 	{
 		Expr* condition;
