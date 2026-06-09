@@ -143,6 +143,10 @@ pars::Node * pars::AST::statement()
 	{
 		return parse_while();
 	}
+	if (m_lexer.match(For))
+	{
+		return parse_for();
+	}
 	if (m_lexer.match(LeftBrace))
 	{
 		return parse_block();
@@ -252,6 +256,30 @@ pars::WhileStmt * pars::AST::parse_while()
 	auto *stmt = new_node<WhileStmt>();
 
 	stmt->condition = expression();
+
+	m_lexer.expect(LeftBrace);
+
+	stmt->body = parse_block();
+
+	return stmt;
+}
+
+pars::ForStmt * pars::AST::parse_for()
+{
+	auto *stmt = new_node<ForStmt>();
+
+	while (m_lexer.match(Identifier))
+	{
+		auto *var = new_node<VarDeclStmt>();
+
+		var->symbol.name = m_lexer.peek_last().lexeme;
+
+		stmt->bindings.emplace_back(var);
+	}
+
+	m_lexer.expect(In);
+
+	stmt->iterable = expression();
 
 	m_lexer.expect(LeftBrace);
 

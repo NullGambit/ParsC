@@ -1,0 +1,21 @@
+@[extern, private]
+fn printf(fmt: str): i32
+
+fn main()
+{
+    var x = 32
+    const print_yes = x > 2
+
+    $if print_yes
+    {
+        printf("yes\n")
+    }
+    else
+    {
+        printf("no\n")
+    }
+
+    printf("the end\n")
+}
+
+

@@ -308,6 +308,31 @@ void pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)
 	stmt->body->accept(this, {});
 }
 
+void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
+{
+	stmt->iterable->accept(this, {});
+
+	if (!stmt->iterable->type->is_iterable())
+	{
+		throw FrontendError{stmt->iterable->token,
+			fmt::format("type '{}' is not iterable", stmt->iterable->type->get_type_name())};
+	}
+
+	for (auto i = 0; auto *binding : stmt->iterable->type->get_iter_bindings())
+	{
+		auto *var = stmt->bindings[i];
+
+		var->type = binding;
+		var->flags |= VarFlags::ShouldAlloca;
+
+		m_ctx->scope_table.add_to_scope(var->symbol, var, PRIVATE_SYMBOL, m_ctx->scope_table.get_level() + 1);
+
+		i++;
+	}
+
+	stmt->body->accept(this, {});
+}
+
 void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
 	alias->type = resolve_type(dynamic_cast<PendingType*>(alias->type)->symbol, alias);

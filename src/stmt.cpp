@@ -294,7 +294,8 @@ llvm::Value * pars::CompIfStmt::emit(EmitCtx &ctx)
 {
 	auto *value = stmt->condition->emit(ctx);
 
-	if (auto *constant = llvm::dyn_cast<llvm::ConstantInt>(value); constant->getValue() == true)
+	// TODO could throw an error here but for now ill allow a silent fail to else
+	if (auto *constant = llvm::dyn_cast<llvm::ConstantInt>(value); constant && constant->getValue() == true)
 	{
 		return stmt->body->emit(ctx);
 	}
@@ -330,6 +331,54 @@ llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx)
 	ctx.builder.CreateBr(before_bb);
 
 	ctx.builder.SetInsertPoint(merge_bb);
+
+	return merge_bb;
+}
+
+llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
+{
+	std::vector<llvm::Value*> binding_values;
+
+	binding_values.reserve(bindings.size());
+
+	for (auto *binding : bindings)
+	{
+		binding_values.emplace_back(binding->emit(ctx));
+	}
+
+	auto *fn = ctx.builder.GetInsertBlock()->getParent();
+
+	auto *preloop_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "preloop", fn);
+	auto *body_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "body", fn);
+	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
+
+	auto *bin = dynamic_cast<BinaryExpr*>(iterable);
+
+	auto *min = bin->left->emit(ctx);
+	auto *max = bin->right->emit(ctx);
+
+	ctx.builder.CreateStore(min, binding_values[0]);
+	ctx.builder.CreateBr(preloop_bb);
+	ctx.builder.SetInsertPoint(preloop_bb);
+
+	using enum TokenType;
+
+	auto op = bin->op == DotDotEqual ? LessEqual : Less;
+
+	auto *cond = BoolType.op_binary(ctx, op, ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), binding_values[0]), max);
+
+	ctx.builder.CreateCondBr(cond, body_bb, merge_bb);
+
+	ctx.builder.SetInsertPoint(body_bb);
+
+	body->emit(ctx);
+
+	auto *v = ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), binding_values[0]);
+	auto *inc = I32Type.op_binary(ctx, Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
+
+	ctx.builder.CreateStore(inc, binding_values[0]);
+
+	ctx.builder.CreateBr(preloop_bb);
 
 	return merge_bb;
 }

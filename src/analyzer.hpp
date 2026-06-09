@@ -30,6 +30,7 @@ namespace pars
 		void visit(IfStmt *stmt, VisitCtx ctx) override;
 		void visit(CompIfStmt *stmt, VisitCtx ctx) override;
 		void visit(WhileStmt *stmt, VisitCtx ctx) override;
+		void visit(ForStmt *stmt, VisitCtx ctx) override;
 		void visit(AliasType *alias, VisitCtx ctx) override;
 		void visit(SymbolExpr *expr, VisitCtx ctx) override;
 		void visit(BinaryExpr *expr, VisitCtx ctx) override;

@@ -47,6 +47,7 @@ namespace pars
 		Node* parse_import();
 		IfStmt* parse_if();
 		WhileStmt* parse_while();
+		ForStmt* parse_for();
 		VarDeclStmt* parse_var();
 		VarDeclStmt* parse_fn_param();
 		AssignmentStmt* parse_assignment();

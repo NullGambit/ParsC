@@ -322,8 +322,10 @@ pars::Token pars::Lexer::build_digit()
 
     auto type = TokenType::IntegerLiteral;
 
-    if (m_reader.match('.'))
+    if (m_reader.peek() == '.' && m_reader.peek_next() != '.')
     {
+        m_reader.advance();
+
         if (!std::isdigit(m_reader.peek()))
         {
             return build_error("expected digit after '.'");

@@ -32,8 +32,9 @@ namespace pars
 
 		virtual bool is_iterable() const { return false; }
 		virtual std::span<Type*> get_iter_bindings() const { return {}; }
-		virtual llvm::Value* iter_emit_init(EmitCtx &ctx, std::span<VarDeclStmt*> vars) const { return nullptr; }
-		virtual llvm::Value* iter_emit_update(EmitCtx &ctx, std::span<VarDeclStmt*> vars) const { return nullptr; }
+		virtual llvm::Value* iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const { return nullptr; }
+		virtual llvm::Value* iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const { return nullptr; }
+		virtual llvm::Value* iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const { return nullptr; }
 	};
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
@@ -257,6 +258,13 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value * get_default_value(llvm::LLVMContext *ctx) override { return nullptr; }
 
 		llvm::Value *op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const override;
+
+		bool is_iterable() const override
+		{
+			return true;
+		}
+
+		std::span<Type*> get_iter_bindings() const override;
 	};
 
 	static const RangeType Range {};

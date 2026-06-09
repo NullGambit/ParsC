@@ -141,7 +141,6 @@ namespace pars
 	struct CompIfStmt : Stmt
 	{
 		IfStmt *stmt;
-		bool passed {};
 
 		llvm::Value* emit(EmitCtx &ctx) override;
 
@@ -151,6 +150,17 @@ namespace pars
 	struct WhileStmt : Stmt
 	{
 		Expr* condition;
+		BlockStmt *body;
+
+		llvm::Value* emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
+
+	struct ForStmt : Stmt
+	{
+		std::vector<VarDeclStmt*> bindings;
+		Expr *iterable;
 		BlockStmt *body;
 
 		llvm::Value* emit(EmitCtx &ctx) override;

@@ -239,6 +239,7 @@ llvm::Value * pars::Bool::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs
 	{
 		switch (op)
 		{
+			// TODO add unsigned versions of some operations
 			case EqualEqual: return ctx.builder.CreateICmpEQ(lhs, rhs);
 			case BangEqual: return ctx.builder.CreateICmpNE(lhs, rhs);
 			case GreaterEqual: return ctx.builder.CreateICmpSGT(lhs, rhs);
@@ -298,5 +299,11 @@ llvm::Value * pars::Str::get_default_value(llvm::LLVMContext *ctx)
 llvm::Value * pars::RangeType::op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const
 {
 	return Type::op_in(ctx, lhs, rhs);
+}
+
+std::span<pars::Type *> pars::RangeType::get_iter_bindings() const
+{
+	static Type* binding[1] = {const_cast<Integer*>(&I32Type)};
+	return binding;
 }
 
