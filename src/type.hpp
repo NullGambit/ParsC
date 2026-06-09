@@ -263,8 +263,10 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return true;
 		}
-
 		std::span<Type*> get_iter_bindings() const override;
+		llvm::Value *iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
+		llvm::Value *iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
+		llvm::Value *iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
 	};
 
 	static const RangeType Range {};

@@ -3,14 +3,7 @@ fn printf(fmt: str, n: i32): i32
 
 fn main()
 {
-    // exclusive
     for x in 0..10
-    {
-        printf("#%d\n", x)
-    }
-
-    // inclusive
-    for x in 10..=20
     {
         printf("#%d\n", x)
     }

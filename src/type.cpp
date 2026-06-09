@@ -8,6 +8,7 @@
 #include <cmath>
 
 #include "emit_context.hpp"
+#include "expr.hpp"
 
 llvm::Value * pars::Type::get_property(llvm::LLVMContext *ctx, std::string_view name)
 {
@@ -305,5 +306,38 @@ std::span<pars::Type *> pars::RangeType::get_iter_bindings() const
 {
 	static Type* binding[1] = {const_cast<Integer*>(&I32Type)};
 	return binding;
+}
+
+llvm::Value * pars::RangeType::iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+{
+	auto *bin = dynamic_cast<BinaryExpr*>(iterable);
+
+	auto *min = bin->left->emit(ctx);
+
+	return ctx.builder.CreateStore(min, vars[0]);
+}
+
+llvm::Value * pars::RangeType::iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+{
+	auto *bin = dynamic_cast<BinaryExpr*>(iterable);
+
+	auto *max = bin->right->emit(ctx);
+
+	using enum TokenType;
+
+	auto op = bin->op == DotDotEqual ? LessEqual : Less;
+
+	auto *v = ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), vars[0]);
+
+	return BoolType.op_binary(ctx, op, v, max);
+}
+
+llvm::Value * pars::RangeType::iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+{
+	auto *v = ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), vars[0]);
+
+	auto *inc = I32Type.op_binary(ctx, TokenType::Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
+
+	return ctx.builder.CreateStore(inc, vars[0]);
 }
 

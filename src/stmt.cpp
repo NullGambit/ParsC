@@ -352,20 +352,12 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 	auto *body_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "body", fn);
 	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
 
-	auto *bin = dynamic_cast<BinaryExpr*>(iterable);
+	iterable->type->iter_emit_init(ctx, iterable, binding_values);
 
-	auto *min = bin->left->emit(ctx);
-	auto *max = bin->right->emit(ctx);
-
-	ctx.builder.CreateStore(min, binding_values[0]);
 	ctx.builder.CreateBr(preloop_bb);
 	ctx.builder.SetInsertPoint(preloop_bb);
 
-	using enum TokenType;
-
-	auto op = bin->op == DotDotEqual ? LessEqual : Less;
-
-	auto *cond = BoolType.op_binary(ctx, op, ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), binding_values[0]), max);
+	auto *cond = iterable->type->iter_emit_condition(ctx, iterable, binding_values);
 
 	ctx.builder.CreateCondBr(cond, body_bb, merge_bb);
 
@@ -373,10 +365,7 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 
 	body->emit(ctx);
 
-	auto *v = ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), binding_values[0]);
-	auto *inc = I32Type.op_binary(ctx, Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
-
-	ctx.builder.CreateStore(inc, binding_values[0]);
+	iterable->type->iter_emit_update(ctx, iterable, binding_values);
 
 	ctx.builder.CreateBr(preloop_bb);
 
