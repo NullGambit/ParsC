@@ -141,7 +141,11 @@ pars::Node * pars::AST::statement()
 	}
 	if (m_lexer.match(While))
 	{
-		return parse_while();
+		return parse_while(expression());
+	}
+	if (m_lexer.match(Loop))
+	{
+		return parse_loop();
 	}
 	if (m_lexer.match(For))
 	{
@@ -251,17 +255,26 @@ pars::IfStmt * pars::AST::parse_if()
 	return stmt;
 }
 
-pars::WhileStmt * pars::AST::parse_while()
+pars::WhileStmt * pars::AST::parse_while(Expr *condition)
 {
 	auto *stmt = new_node<WhileStmt>();
 
-	stmt->condition = expression();
+	stmt->condition = condition;
 
 	m_lexer.expect(LeftBrace);
 
 	stmt->body = parse_block();
 
 	return stmt;
+}
+
+pars::WhileStmt * pars::AST::parse_loop()
+{
+	auto *literal = new_node<LiteralExpr>();
+
+	literal->value = true;
+
+	return parse_while(literal);
 }
 
 pars::ForStmt * pars::AST::parse_for()

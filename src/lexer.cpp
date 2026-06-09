@@ -39,6 +39,7 @@ namespace pars
         {"distinct", TokenType::Distinct},
         {"for", TokenType::For},
         {"while", TokenType::While},
+        {"loop", TokenType::Loop},
         {"match", TokenType::Match},
         {"continue", TokenType::Continue},
         {"break", TokenType::Break},

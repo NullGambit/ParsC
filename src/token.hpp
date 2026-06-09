@@ -98,6 +98,7 @@ namespace pars
         For,
         In,
         If,
+        Loop,
         While,
         Match,
         Continue,
