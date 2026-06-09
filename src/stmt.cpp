@@ -346,6 +346,14 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 		binding_values.emplace_back(binding->emit(ctx));
 	}
 
+	llvm::Value *index_ptr = nullptr;
+
+	if (has_index())
+	{
+		index_ptr = binding_values.back();
+		binding_values.pop_back();
+	}
+
 	auto *fn = ctx.builder.GetInsertBlock()->getParent();
 
 	auto *preloop_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "preloop", fn);
@@ -367,7 +375,20 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 
 	iterable->type->iter_emit_update(ctx, iterable, binding_values);
 
+	if (index_ptr != nullptr)
+	{
+		auto *index_type = bindings.back()->type->get_llvm_type(ctx.llvm_ctx);
+		auto *v = ctx.builder.CreateLoad(index_type, index_ptr);
+		auto *inc = I32Type.op_binary(ctx, TokenType::Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
+		ctx.builder.CreateStore(inc, index_ptr);
+	}
+
 	ctx.builder.CreateBr(preloop_bb);
 
 	return merge_bb;
+}
+
+bool pars::ForStmt::has_index() const
+{
+	return bindings.size() == iterable->type->get_iter_bindings().size() + 1;
 }

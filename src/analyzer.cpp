@@ -318,16 +318,33 @@ void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 			fmt::format("type '{}' is not iterable", stmt->iterable->type->get_type_name())};
 	}
 
-	for (auto i = 0; auto *binding : stmt->iterable->type->get_iter_bindings())
-	{
-		auto *var = stmt->bindings[i];
+	auto max_bindings = stmt->iterable->type->get_iter_bindings().size() + 1;
 
-		var->type = binding;
+	if (stmt->bindings.size() > max_bindings)
+	{
+		throw FrontendError{stmt->iterable->token,
+			fmt::format("Too many symbols to bind to, expected at most {} symbols", max_bindings)};
+	}
+
+	auto bind = [this](VarDeclStmt *var, Type *type)
+	{
+		var->type = type;
 		var->flags |= VarFlags::ShouldAlloca;
 
 		m_ctx->scope_table.add_to_scope(var->symbol, var, PRIVATE_SYMBOL, m_ctx->scope_table.get_level() + 1);
+	};
 
+	for (auto i = 0; auto *type : stmt->iterable->type->get_iter_bindings())
+	{
+		bind(stmt->bindings[i], type);
 		i++;
+	}
+
+	if (stmt->has_index())
+	{
+		auto *last = stmt->bindings.back();
+
+		bind(last, const_cast<Integer*>(&I32Type));
 	}
 
 	stmt->body->accept(this, {});

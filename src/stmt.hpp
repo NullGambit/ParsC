@@ -165,6 +165,8 @@ namespace pars
 
 		llvm::Value* emit(EmitCtx &ctx) override;
 
+		bool has_index() const;
+
 		ACCEPT
 	};
 }

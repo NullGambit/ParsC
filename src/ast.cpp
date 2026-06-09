@@ -275,6 +275,11 @@ pars::ForStmt * pars::AST::parse_for()
 		var->symbol.name = m_lexer.peek_last().lexeme;
 
 		stmt->bindings.emplace_back(var);
+
+		if (!m_lexer.match(Comma))
+		{
+			break;
+		}
 	}
 
 	m_lexer.expect(In);

@@ -1,11 +1,11 @@
 @[extern, private]
-fn printf(fmt: str, n: i32): i32
+fn printf(fmt: str, n: i32, n2: i32): i32
 
 fn main()
 {
-    for x in 0..10
+    for x, i in 5..10
     {
-        printf("#%d\n", x)
+        printf("#%d (index = %d)\n", x, i)
     }
 }
 
