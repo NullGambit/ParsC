@@ -365,9 +365,10 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 
 	auto *preloop_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "preloop", fn);
 	auto *body_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "body", fn);
+	auto *update_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "update", fn);
 	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
 
-	ctx.loop_bbs.emplace_back(merge_bb, preloop_bb);
+	ctx.loop_bbs.emplace_back(merge_bb, update_bb);
 
 	iterable->type->iter_emit_init(ctx, iterable, binding_values);
 
@@ -381,6 +382,10 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 	ctx.builder.SetInsertPoint(body_bb);
 
 	body->emit(ctx);
+
+	ctx.builder.CreateBr(update_bb);
+
+	ctx.builder.SetInsertPoint(update_bb);
 
 	iterable->type->iter_emit_update(ctx, iterable, binding_values);
 
