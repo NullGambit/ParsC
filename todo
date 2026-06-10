@@ -1,6 +1,8 @@
 - BUG if expecting expression but got eof will make the compiler get stuck
     even doing checks for eof seems to not work unless the file ended with a line feed
 - bitwise operators
+- break and continue to label. possibly goto? probably a bad idea anyway
+- compile time for loops
 - make types be responsible for how they can be casted to other types
 - floor div with //
 - stringify operator

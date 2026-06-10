@@ -139,10 +139,10 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 
 		ctx.builder.SetInsertPoint(bb);
 
-		auto *ret = dynamic_cast<ReturnStmt*>(node);
+		auto *ret = dynamic_cast<TerminatorStmt*>(node);
 
 		// eliminate dead code so llvm doesnt complain about terminator in the middle of basic block
-		if (ret != nullptr && i < nodes.size() - 1)
+		if (ret != nullptr)
 		{
 			break;
 		}
@@ -237,16 +237,7 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 
 		auto *terminator = bb->getTerminator();
 
-		return terminator != nullptr && llvm::isa<llvm::ReturnInst>(terminator);
-	};
-
-	auto do_maybe_br = [&ctx, &has_return](llvm::BasicBlock *this_bb, llvm::BasicBlock *next_bb)
-	{
-		if (!has_return(this_bb))
-		{
-			ctx.builder.SetInsertPoint(this_bb);
-			ctx.builder.CreateBr(next_bb);
-		}
+		return terminator != nullptr;
 	};
 
 	auto *then_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "then", fn);
@@ -282,8 +273,20 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 	ctx.builder.SetInsertPoint(start_bb);
 	ctx.builder.CreateCondBr(condition_value, then_bb, else_bb);
 
+	auto do_maybe_br = [&ctx, &has_return](llvm::BasicBlock *this_bb, llvm::BasicBlock *next_bb)
+	{
+		if (!has_return(this_bb))
+		{
+			ctx.builder.SetInsertPoint(this_bb);
+			ctx.builder.CreateBr(next_bb);
+		}
+	};
+
 	do_maybe_br(then_bb, merge_bb);
-	do_maybe_br(else_bb, merge_bb);
+	if (else_br != nullptr)
+	{
+		do_maybe_br(else_bb, merge_bb);
+	}
 
 	ctx.builder.SetInsertPoint(merge_bb);
 
@@ -326,11 +329,15 @@ llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx)
 
 	ctx.builder.SetInsertPoint(then_bb);
 
+	ctx.loop_bbs.emplace_back(merge_bb, before_bb);
+
 	body->emit(ctx);
 
 	ctx.builder.CreateBr(before_bb);
 
 	ctx.builder.SetInsertPoint(merge_bb);
+
+	ctx.loop_bbs.pop_back();
 
 	return merge_bb;
 }
@@ -360,6 +367,8 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 	auto *body_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "body", fn);
 	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
 
+	ctx.loop_bbs.emplace_back(merge_bb, preloop_bb);
+
 	iterable->type->iter_emit_init(ctx, iterable, binding_values);
 
 	ctx.builder.CreateBr(preloop_bb);
@@ -385,10 +394,32 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
 
 	ctx.builder.CreateBr(preloop_bb);
 
+	ctx.loop_bbs.pop_back();
+
 	return merge_bb;
 }
 
 bool pars::ForStmt::has_index() const
 {
 	return bindings.size() == iterable->type->get_iter_bindings().size() + 1;
+}
+
+llvm::Value* do_break_continue(pars::Node *node, pars::EmitCtx &ctx, llvm::BasicBlock *bb, std::string_view type)
+{
+	if (ctx.loop_bbs.empty())
+	{
+		throw pars::CompileError{node, fmt::format("cannot {} outside of a loop", type)};
+	}
+
+	return ctx.builder.CreateBr(bb);
+}
+
+llvm::Value * pars::BreakStmt::emit(EmitCtx &ctx)
+{
+	return do_break_continue(this, ctx, ctx.loop_bbs.back().merge, "break");
+}
+
+llvm::Value * pars::ContinueStmt::emit(EmitCtx &ctx)
+{
+	return do_break_continue(this, ctx, ctx.loop_bbs.back().start, "break");
 }

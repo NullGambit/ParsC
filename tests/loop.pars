@@ -7,8 +7,19 @@ fn main()
 
     loop
     {
-        printf("hello #%d\n", i)
+        if i >= 10
+        {
+            break
+        }
+
         i += 1
+
+        if i % 2 == 0
+        {
+            continue
+        }
+
+        printf("hello #%d\n", i)
     }
 }
 

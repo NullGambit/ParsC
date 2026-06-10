@@ -118,10 +118,29 @@ namespace pars
 		ACCEPT
 	};
 
-	struct ReturnStmt : Stmt
+	struct TerminatorStmt
+	{
+
+	};
+
+	struct ReturnStmt : Stmt, TerminatorStmt
 	{
 		Expr* expr {};
 
+		llvm::Value* emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
+
+	struct BreakStmt : Stmt, TerminatorStmt
+	{
+		llvm::Value* emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
+
+	struct ContinueStmt : Stmt, TerminatorStmt
+	{
 		llvm::Value* emit(EmitCtx &ctx) override;
 
 		ACCEPT
@@ -169,4 +188,5 @@ namespace pars
 
 		ACCEPT
 	};
+
 }

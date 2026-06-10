@@ -147,6 +147,14 @@ pars::Node * pars::AST::statement()
 	{
 		return parse_loop();
 	}
+	if (m_lexer.match(Break))
+	{
+		return new_node<BreakStmt>();
+	}
+	if (m_lexer.match(Continue))
+	{
+		return new_node<ContinueStmt>();
+	}
 	if (m_lexer.match(For))
 	{
 		return parse_for();

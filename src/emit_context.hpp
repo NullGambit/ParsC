@@ -9,11 +9,18 @@
 
 namespace pars
 {
+	struct LoopBasicBlocks
+	{
+		llvm::BasicBlock *merge;
+		llvm::BasicBlock *start;
+	};
+
 	struct EmitCtx
 	{
 		llvm::LLVMContext *llvm_ctx;
 		llvm::IRBuilder<> builder;
 		llvm::Module *module;
 		HashMap<std::string_view, llvm::Value*> named_values;
+		std::vector<LoopBasicBlocks> loop_bbs;
 	};
 }
