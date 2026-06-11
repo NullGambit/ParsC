@@ -46,7 +46,7 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	if (value == nullptr || !llvm::isa<llvm::AllocaInst>(value))
 	{
-		throw CompileError{this, "Cannot mutate left hand side"};
+		throw CompileError{this, fmt::format("{} is not mutable", symbol)};
 	}
 
 	using enum TokenType;

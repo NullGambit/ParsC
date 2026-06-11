@@ -286,6 +286,23 @@ llvm::Type * pars::Char::get_llvm_type(llvm::LLVMContext *ctx) const
 	return Integral::get_llvm_type(ctx);
 }
 
+llvm::Type * pars::Pointer::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	return llvm::PointerType::get(inner->get_llvm_type(ctx), 0);
+}
+
+bool pars::Pointer::is_equal(Type const *other) const
+{
+	auto *other_ptr = dynamic_cast<const Pointer*>(other);
+
+	if (other_ptr == nullptr)
+	{
+		return false;
+	}
+
+	return inner->is_equal(other_ptr->inner) || other_ptr->inner->is_equal(&VoidType);
+}
+
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);

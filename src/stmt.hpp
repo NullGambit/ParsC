@@ -28,6 +28,7 @@ namespace pars
 		Volatile = 1 << 2,
 		Global = 1 << 3,
 		ShouldAlloca = 1 << 4,
+		IsPointer = 1 << 5,
 	};
 
 	PARS_FLAGIFY(VarFlags);

@@ -323,17 +323,24 @@ pars::VarDeclStmt* pars::AST::parse_var()
 		stmt->flags |= VarFlags::Const;
 	}
 
+	if (m_lexer.match(Star))
+	{
+		stmt->flags |= VarFlags::IsPointer;
+	}
+
 	stmt->symbol = get_symbol();
 
 	if (m_lexer.match(Colon))
 	{
-		stmt->type_name = m_lexer.expect(Identifier).lexeme;
+		auto type = parse_type();
+
+		stmt->type_name = type.name;
+		stmt->flags |= type.var_flags;
 	}
 
 	if (m_lexer.match(Equal))
 	{
 		stmt->initializer = expression();
-
 	}
 
 	if (stmt->type_name.empty() && stmt->initializer == nullptr)
@@ -352,12 +359,10 @@ pars::VarDeclStmt * pars::AST::parse_fn_param()
 
 	m_lexer.expect(Colon);
 
-	if (m_lexer.match(Const))
-	{
-		stmt->flags |= VarFlags::Const;
-	}
+	auto type = parse_type();
 
-	stmt->type_name = m_lexer.expect(Identifier).lexeme;
+	stmt->type_name = type.name;
+	stmt->flags |= type.var_flags;
 
 	if (m_lexer.match(Equal))
 	{
@@ -712,6 +717,19 @@ pars::Expr* pars::AST::parse_primary()
 
 		return expr;
 	}
+	if (m_lexer.match(Ampersand))
+	{
+		auto *expr = new_node<TakeAddressExpr>();
+
+		expr->symbol = dynamic_cast<SymbolExpr*>(parse_primary());
+
+		if (expr->symbol == nullptr)
+		{
+			throw FrontendError{expr->token, "Cannot take address of temporary"};
+		}
+
+		return expr;
+	}
 
 	auto *literal = new_node<LiteralExpr>();
 
@@ -844,6 +862,25 @@ pars::Expr * pars::AST::parse_or()
 pars::Expr * pars::AST::parse_and()
 {
 	return parse_binary_rule<And>(&AST::parse_or);
+}
+
+pars::AST::ParsedType pars::AST::parse_type()
+{
+	ParsedType type {};
+
+	if (m_lexer.match(Star))
+	{
+		type.var_flags |= VarFlags::IsPointer;
+	}
+
+	if (m_lexer.match(Const))
+	{
+		type.var_flags |= VarFlags::Const;
+	}
+
+	type.name = m_lexer.expect(Identifier).lexeme;
+
+	return type;
 }
 
 pars::Expr* pars::AST::expression()

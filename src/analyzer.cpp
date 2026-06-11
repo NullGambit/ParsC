@@ -168,6 +168,20 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		};
 	}
 
+	// var x = ptr
+	if (auto *ptr = dynamic_cast<Pointer*>(stmt->type);
+		stmt->type_name.empty() && ptr && !has_flag(stmt->flags, VarFlags::IsPointer))
+	{
+		throw FrontendError{stmt->token, "inferred variable with pointer type must be annotated with a '*'"};
+	}
+
+	// var *x = not_ptr
+	if (auto *ptr = dynamic_cast<Pointer*>(stmt->type);
+		ptr == nullptr && has_flag(stmt->flags, VarFlags::IsPointer))
+	{
+		throw FrontendError{stmt->token, "variable is annotated as a pointer but its type is not a pointer"};
+	}
+
 	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 }
 
@@ -492,6 +506,22 @@ void pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 	expr->type = expr->value->type;
 }
 
+void pars::Analyzer::visit(TakeAddressExpr *expr, VisitCtx ctx)
+{
+	expr->symbol->accept(this, ctx);
+
+	auto *ptr = new_node<Pointer>();
+
+	ptr->inner = expr->symbol->type;
+
+	expr->type = ptr;
+
+	if (auto *var = dynamic_cast<VarDeclStmt*>(expr->symbol->symbol_node))
+	{
+		var->flags |= VarFlags::ShouldAlloca;
+	}
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);
@@ -514,6 +544,15 @@ pars::Type* pars::Analyzer::resolve_type(std::string_view name, Node *node)
 	if (type == nullptr)
 	{
 		throw FrontendError{node->token, fmt::format("unknown type name '{}'", name), nullptr};
+	}
+
+	if (auto *var = dynamic_cast<VarDeclStmt*>(node); var && has_flag(var->flags, VarFlags::IsPointer))
+	{
+		auto *ptr = new_node<Pointer>();
+
+		ptr->inner = type;
+
+		type = ptr;
 	}
 
 	return type;

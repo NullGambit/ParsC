@@ -246,3 +246,15 @@ llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx)
 
 	return result;
 }
+
+llvm::Value* pars::TakeAddressExpr::emit(EmitCtx &ctx)
+{
+	auto *ptr = ctx.named_values[symbol->symbol];
+
+	if (!ptr->getType()->isPointerTy())
+	{
+		throw CompileError{this, fmt::format("{} is not a pointer", symbol->symbol)};
+	}
+
+	return ptr;
+}

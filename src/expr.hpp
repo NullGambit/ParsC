@@ -168,4 +168,13 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct TakeAddressExpr : Expr
+	{
+		SymbolExpr *symbol;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }

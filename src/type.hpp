@@ -17,8 +17,9 @@ namespace pars
 	struct Type : Node
 	{
 		virtual bool is_equal(Type const *other) const = 0;
-		virtual llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const = 0;
 		virtual bool is_primitive() const { return false; }
+
+		virtual llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const = 0;
 		virtual std::string_view get_type_name() const = 0;
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) = 0;
@@ -27,7 +28,6 @@ namespace pars
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
-
 		virtual llvm::Value* op_abs(EmitCtx &ctx, llvm::Value *value) const { return nullptr; }
 
 		virtual bool is_iterable() const { return false; }
@@ -214,6 +214,21 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		DEFAULT_INTEGRAL_EQUAL(Char)
+	};
+
+	struct Pointer : Integer
+	{
+		Type *inner {};
+
+		Pointer() :
+			Integer{64, !IS_SIGNED, "pointer"}
+		{}
+
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override { return nullptr; }
+
+		bool is_equal(Type const *other) const override;
 	};
 
 	static const Void VoidType {};

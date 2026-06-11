@@ -1,16 +1,13 @@
 @[extern, private]
-fn printf(fmt: str, n: i32): i32
+fn printf(fmt: str, ptr: *i32): i32
 
 fn main()
 {
-    for i in 0..10
-    {
-        if i % 2 == 0
-        {
-            continue
-        }
-        printf("#%d\n", i)
-    }
+    var value = 10
+
+    var *ptr = &value
+
+    printf("address = %p\n", ptr)
 }
 
 
