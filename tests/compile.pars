@@ -43,6 +43,10 @@ fn test2()
 {
     var value = 10
 
+    var vptr: *void
+
+    vptr = &value
+
     print_ptr(&value)
 }
 
