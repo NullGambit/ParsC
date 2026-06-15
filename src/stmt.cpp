@@ -38,11 +38,6 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
 
 		value = inst;
-
-		if (dynamic_cast<Pointer*>(type))
-		{
-			value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value);
-		}
 	}
 
 	ctx.named_values[symbol.name] = value;

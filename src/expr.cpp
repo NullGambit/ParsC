@@ -112,7 +112,12 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 
 	if (value->getType()->isPointerTy())
 	{
-		return ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
+		value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
+	}
+
+	if (dynamic_cast<Pointer*>(type))
+	{
+		ctx.named_values[symbol] = value;
 	}
 
 	return value;

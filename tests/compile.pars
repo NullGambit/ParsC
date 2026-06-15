@@ -44,9 +44,6 @@ fn test2()
     var value = 10
 
     print_ptr(&value)
-
-    printf("%p, %d\n", &value, value)
-    printf("%p, %d\n", &value, value)
 }
 
 fn main()
