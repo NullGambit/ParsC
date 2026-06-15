@@ -3,7 +3,8 @@
 
 namespace pars
 {
-	struct TakeAddressExpr;
+	struct DereferenceExpr;
+	struct PtrOpExpr;
 	struct ContinueStmt;
 	struct BreakStmt;
 	struct ForStmt;
@@ -56,7 +57,7 @@ namespace pars
 		virtual void visit(AnonInitExpr *expr, VisitCtx ctx) {}
 		virtual void visit(NamedExpr *expr, VisitCtx ctx) {}
 		virtual void visit(AbsExpr *expr, VisitCtx ctx) {}
-		virtual void visit(TakeAddressExpr *expr, VisitCtx ctx) {}
+		virtual void visit(PtrOpExpr *expr, VisitCtx ctx) {}
 		virtual void visit(ImportStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}

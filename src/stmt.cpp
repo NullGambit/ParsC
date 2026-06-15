@@ -9,22 +9,29 @@
 #include "frontend_error.hpp"
 #include "type.hpp"
 #include "debug/ast_printer.hpp"
+#include "magic_enum/magic_enum.hpp"
 #include "util/fmt.hpp"
 
 llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 {
-	llvm::Value *value;
+	return init(ctx);
+}
 
-	if (initializer == nullptr)
+llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
+{
+	if (value == nullptr)
 	{
-		value = type->get_default_value(ctx.llvm_ctx);
-	}
-	else
-	{
-		value = initializer->emit(ctx);
+		if (initializer == nullptr)
+		{
+			value = type->get_default_value(ctx.llvm_ctx);
+		}
+		else
+		{
+			value = initializer->emit(ctx);
+		}
 	}
 
-	if (!has_flag(flags, VarFlags::Const) && has_flag(flags, VarFlags::ShouldAlloca))
+	if (!has_flag(flags, VarFlags::Const))
 	{
 		auto *inst = ctx.builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
 
@@ -32,7 +39,10 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 
 		value = inst;
 
-		// value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), inst);
+		if (dynamic_cast<Pointer*>(type))
+		{
+			value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value);
+		}
 	}
 
 	ctx.named_values[symbol.name] = value;
@@ -44,16 +54,23 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 {
 	auto *value = ctx.named_values[symbol];
 
-	if (value == nullptr || !llvm::isa<llvm::AllocaInst>(value))
+	if (value == nullptr || !value->getType()->isPointerTy())
 	{
 		throw CompileError{this, fmt::format("{} is not mutable", symbol)};
 	}
 
 	using enum TokenType;
 
+	auto *rhs_value = rhs->emit(ctx);
+
+	if (rhs->type->get_llvm_type(ctx.llvm_ctx)->isPointerTy())
+	{
+		ctx.named_values[symbol] = rhs_value;
+	}
+
 	if (op == Equal)
 	{
-		return ctx.builder.CreateStore(rhs->emit(ctx), value, has_flag(lhs->flags, VarFlags::Volatile));
+		return ctx.builder.CreateStore(rhs_value, value);
 	}
 
 	auto *curr_value = ctx.builder.CreateLoad(lhs->type->get_llvm_type(ctx.llvm_ctx), value);
@@ -66,10 +83,10 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 		case MinusEqual: op_op = Minus; break;
 		case StarEqual: op_op = Star; break;
 		case SlashEqual: op_op = ForwardSlash; break;
-		default: return nullptr;
+		default: throw CompileError{this, fmt::format("operator {} is not allowed for op apply", magic_enum::enum_name(op))};
 	}
 
-	auto *new_value = lhs->type->op_binary(ctx, op_op, curr_value, rhs->emit(ctx));
+	auto *new_value = lhs->type->op_binary(ctx, op_op, curr_value, rhs_value);
 
 	if (new_value == nullptr)
 	{
@@ -168,9 +185,13 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 
 		ctx.builder.SetInsertPoint(bb);
 
-		for (auto &arg : fn->args())
+		for (auto i = 0; auto &arg : fn->args())
 		{
-			ctx.named_values[arg.getName()] = &arg;
+			auto *param = signature.parameters[i];
+
+			param->init(ctx, &arg);
+
+			i++;
 		}
 
 		if (has_flag(flags, FnFlags::ArrowFn))

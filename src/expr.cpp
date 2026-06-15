@@ -110,7 +110,7 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 
 	auto *value = ctx.named_values[symbol];
 
-	if (llvm::isa<llvm::AllocaInst>(value))
+	if (value->getType()->isPointerTy())
 	{
 		return ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
 	}
@@ -247,14 +247,28 @@ llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx)
 	return result;
 }
 
-llvm::Value* pars::TakeAddressExpr::emit(EmitCtx &ctx)
+llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 {
-	auto *ptr = ctx.named_values[symbol->symbol];
+	using enum TokenType;
 
-	if (!ptr->getType()->isPointerTy())
+	auto *value = ctx.named_values[symbol->symbol];
+
+	if (!value->getType()->isPointerTy())
 	{
-		throw CompileError{this, fmt::format("{} is not a pointer", symbol->symbol)};
+		throw CompileError{this, "target is not a pointer"};
 	}
 
-	return ptr;
+	switch (op)
+	{
+		case Ampersand:
+		{
+			return value;
+		}
+		case Star:
+		{
+			auto *inner = dynamic_cast<Pointer*>(symbol->type)->inner;
+			return ctx.builder.CreateLoad(inner->get_llvm_type(ctx.llvm_ctx), value);
+		}
+		default: return nullptr;
+ 	}
 }

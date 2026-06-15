@@ -182,6 +182,11 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		throw FrontendError{stmt->token, "variable is annotated as a pointer but its type is not a pointer"};
 	}
 
+	if (has_keyword_attribute(stmt->symbol, Volatile))
+	{
+		stmt->flags |= VarFlags::Volatile;
+	}
+
 	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 }
 
@@ -248,13 +253,14 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 {
-	stmt->lhs = find_symbol<VarDeclStmt>(stmt->symbol, stmt->token);
+	// stmt->lhs = find_symbol<VarDeclStmt>(stmt->symbol, stmt->token);
+	//
+	// if (stmt->lhs == nullptr)
+	// {
+	// 	throw FrontendError{stmt->token, fmt::format("'{}' is not a valid target for assignment", stmt->symbol)};
+	// }
 
-	if (stmt->lhs == nullptr)
-	{
-		throw FrontendError{stmt->token, fmt::format("'{}' is not a valid target for assignment", stmt->symbol)};
-	}
-
+	stmt->lhs->accept(this, {});
 	stmt->rhs->accept(this, {stmt->lhs->type});
 
 	if (!stmt->lhs->type->is_equal(stmt->rhs->type))
@@ -264,11 +270,12 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 				stmt->lhs->type->get_type_name(), stmt->rhs->type->get_type_name())};
 	}
 
-	stmt->lhs->flags |= VarFlags::ShouldAlloca;
-
-	if (has_keyword_attribute(stmt->lhs->symbol, Volatile))
+	if (auto *symbol = dynamic_cast<SymbolExpr*>(stmt->lhs))
 	{
-		stmt->lhs->flags |= VarFlags::Volatile;
+		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol->symbol_node))
+		{
+			var->flags |= VarFlags::ShouldAlloca;
+		}
 	}
 }
 
@@ -506,19 +513,28 @@ void pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 	expr->type = expr->value->type;
 }
 
-void pars::Analyzer::visit(TakeAddressExpr *expr, VisitCtx ctx)
+void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
 	expr->symbol->accept(this, ctx);
 
-	auto *ptr = new_node<Pointer>();
-
-	ptr->inner = expr->symbol->type;
-
-	expr->type = ptr;
-
-	if (auto *var = dynamic_cast<VarDeclStmt*>(expr->symbol->symbol_node))
+	if (expr->op == Ampersand)
 	{
-		var->flags |= VarFlags::ShouldAlloca;
+		auto *ptr = new_node<Pointer>();
+
+		ptr->inner = expr->symbol->type;
+
+		expr->type = ptr;
+	}
+	else
+	{
+		if (auto *ptr = dynamic_cast<Pointer*>(expr->symbol->type))
+		{
+			expr->type = ptr->inner;
+		}
+		else
+		{
+			expr->type = expr->symbol->type;
+		}
 	}
 }
 

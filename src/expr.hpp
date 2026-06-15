@@ -169,8 +169,9 @@ namespace pars
 		ACCEPT
 	};
 
-	struct TakeAddressExpr : Expr
+	struct PtrOpExpr : Expr
 	{
+		TokenType op;
 		SymbolExpr *symbol;
 
 		llvm::Value *emit(EmitCtx &ctx) override;

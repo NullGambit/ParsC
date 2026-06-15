@@ -43,6 +43,8 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 
+		llvm::Value *init(EmitCtx &ctx, llvm::Value *value = nullptr);
+
 		ACCEPT
 	};
 
@@ -52,7 +54,7 @@ namespace pars
 	struct AssignmentStmt : Stmt
 	{
 		std::string_view symbol;
-		VarDeclStmt *lhs;
+		Expr *lhs;
 		Expr *rhs;
 		TokenType op;
 

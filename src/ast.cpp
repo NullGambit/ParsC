@@ -167,12 +167,15 @@ pars::Node * pars::AST::statement()
 	{
 		return parse_return();
 	}
-	if (m_lexer.peek(Identifier) && m_lexer.peek_next().type > _AssignmentStart && m_lexer.peek_next().type < _AssignmentEnd)
+
+	auto *expr = expression();
+
+	if (m_lexer.peek().type > _AssignmentStart && m_lexer.peek().type < _AssignmentEnd)
 	{
-		return parse_assignment();
+		return parse_assignment(expr);
 	}
 
-	return expression();
+	return expr;
 }
 
 void pars::AST::declare_to(std::vector<Node *> &nodes)
@@ -372,13 +375,17 @@ pars::VarDeclStmt * pars::AST::parse_fn_param()
 	return stmt;
 }
 
-pars::AssignmentStmt * pars::AST::parse_assignment()
+pars::AssignmentStmt * pars::AST::parse_assignment(Expr *lhs)
 {
 	auto *stmt = new_node<AssignmentStmt>();
 
-	stmt->symbol = m_lexer.expect(Identifier).lexeme;
+	stmt->lhs = lhs;
+	stmt->symbol = m_lexer.peek_last().lexeme;
+
 	m_lexer.advance();
+
 	stmt->op = m_lexer.peek_last().type;
+
 	stmt->rhs = expression();
 
 	return stmt;
@@ -717,9 +724,11 @@ pars::Expr* pars::AST::parse_primary()
 
 		return expr;
 	}
-	if (m_lexer.match(Ampersand))
+	if (m_lexer.match(Ampersand) || m_lexer.match(Star))
 	{
-		auto *expr = new_node<TakeAddressExpr>();
+		auto *expr = new_node<PtrOpExpr>();
+
+		expr->op = m_lexer.peek_last().type;
 
 		expr->symbol = dynamic_cast<SymbolExpr*>(parse_primary());
 
@@ -864,6 +873,11 @@ pars::Expr * pars::AST::parse_and()
 	return parse_binary_rule<And>(&AST::parse_or);
 }
 
+pars::Expr* pars::AST::expression()
+{
+	return parse_and();
+}
+
 pars::AST::ParsedType pars::AST::parse_type()
 {
 	ParsedType type {};
@@ -881,10 +895,5 @@ pars::AST::ParsedType pars::AST::parse_type()
 	type.name = m_lexer.expect(Identifier).lexeme;
 
 	return type;
-}
-
-pars::Expr* pars::AST::expression()
-{
-	return parse_and();
 }
 
