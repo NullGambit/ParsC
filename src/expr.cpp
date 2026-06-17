@@ -58,8 +58,7 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 		},
 		[&ctx](std::nullptr_t)
 		{
-			auto value = llvm::APInt(64, 0);
-			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
+			return VoidPointerType.get_default_value(ctx.llvm_ctx);
 		}
 	}, value);
 }

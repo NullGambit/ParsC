@@ -73,13 +73,19 @@ fn test3()
 
 fn test4()
 {
+    var value = 10
     var ptr: *i32
 
+    ptr = &value
     ptr = nil
 
     if ptr == nil
     {
         puts("pointer is nil")
+    }
+    else
+    {
+        print_ptr(ptr)
     }
 }
 

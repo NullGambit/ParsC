@@ -30,7 +30,7 @@ llvm::Type * pars::Void::get_llvm_type(llvm::LLVMContext *ctx) const
 	return llvm::Type::getVoidTy(*ctx);
 }
 
-llvm::Value * pars::Void::get_default_value(llvm::LLVMContext *ctx)
+llvm::Value * pars::Void::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::UndefValue::get(get_llvm_type(ctx));
 }
@@ -40,7 +40,7 @@ llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
 	return llvm::IntegerType::get(*ctx, bits);
 }
 
-llvm::Value * pars::Integral::get_default_value(llvm::LLVMContext *ctx)
+llvm::Value * pars::Integral::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, 0, is_signed));
 }
@@ -120,7 +120,7 @@ u32 pars::AliasType::get_size()
 	return type->get_size();
 }
 
-llvm::Value * pars::AliasType::get_default_value(llvm::LLVMContext *ctx)
+llvm::Value * pars::AliasType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return type->get_default_value(ctx);
 }
@@ -297,9 +297,10 @@ std::string_view pars::Pointer::get_type_name() const
 	return "pointer";
 }
 
-llvm::Value * pars::Pointer::get_default_value(llvm::LLVMContext *ctx)
+llvm::Value * pars::Pointer::get_default_value(llvm::LLVMContext *ctx) const
 {
-	return llvm::ConstantInt::get(*ctx, llvm::APInt(64, 0));
+	auto *type = static_cast<llvm::PointerType*>(get_llvm_type(ctx));
+	return llvm::ConstantPointerNull::get(type);
 }
 
 llvm::Value * pars::Pointer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
@@ -324,7 +325,7 @@ llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);
 }
 
-llvm::Value * pars::Str::get_default_value(llvm::LLVMContext *ctx)
+llvm::Value * pars::Str::get_default_value(llvm::LLVMContext *ctx) const
 {
 	auto *ptr_type = get_llvm_type(ctx);
 	return llvm::ConstantPointerNull::get((llvm::PointerType*)ptr_type);

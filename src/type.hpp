@@ -22,7 +22,7 @@ namespace pars
 		virtual llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const = 0;
 		virtual std::string_view get_type_name() const = 0;
 		virtual u32 get_size() { return 1; }
-		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) = 0;
+		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) const = 0;
 		virtual llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name);
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
@@ -84,7 +84,7 @@ virtual bool is_equal(Type const *other) const override							\
 			return nullptr;
 		}
 
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override
 		{
 			return nullptr;
 		}
@@ -106,7 +106,7 @@ virtual bool is_equal(Type const *other) const override							\
 			return "void";
 		}
 
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 	};
 
 	struct Integral : Type
@@ -133,7 +133,7 @@ virtual bool is_equal(Type const *other) const override							\
 			return type_name;
 		}
 
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value* get_property(llvm::LLVMContext* ctx, std::string_view name) override;
 
@@ -154,7 +154,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		u32 get_size() override;
 
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		ACCEPT
 	};
@@ -230,7 +230,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		std::string_view get_type_name() const override;
 
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
@@ -266,7 +266,7 @@ virtual bool is_equal(Type const *other) const override							\
 			return "str";
 		}
 
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 	};
 
 	static const Str StrType {};
@@ -279,7 +279,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		std::string_view get_type_name() const override { return "range"; }
 
-		llvm::Value * get_default_value(llvm::LLVMContext *ctx) override { return nullptr; }
+		llvm::Value * get_default_value(llvm::LLVMContext *ctx) const override { return nullptr; }
 
 		llvm::Value *op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const override;
 

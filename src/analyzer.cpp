@@ -275,6 +275,11 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol->symbol_node))
 		{
 			var->flags |= VarFlags::ShouldAlloca;
+
+			if (has_flag(var->flags, VarFlags::Const))
+			{
+				throw FrontendError(var->token, fmt::format("Cannot mutate const variable '{}'", var->symbol.name));
+			}
 		}
 	}
 }
