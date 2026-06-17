@@ -75,9 +75,10 @@ fn test4()
 {
     var value = 10
     var ptr: *i32
+    //var *ptr = &value
 
-    ptr = &value
     ptr = nil
+    //ptr = &value
 
     if ptr == nil
     {

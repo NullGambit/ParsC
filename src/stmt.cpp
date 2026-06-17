@@ -58,10 +58,10 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *rhs_value = rhs->emit(ctx);
 
-	if (rhs->type->get_llvm_type(ctx.llvm_ctx)->isPointerTy())
-	{
-		ctx.named_values[symbol] = rhs_value;
-	}
+	// if (rhs->type->get_llvm_type(ctx.llvm_ctx)->isPointerTy())
+	// {
+	// 	ctx.named_values[symbol] = rhs_value;
+	// }
 
 	if (op == Equal)
 	{
