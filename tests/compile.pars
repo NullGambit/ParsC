@@ -1,6 +1,9 @@
 @[extern, private]
 fn printf(fmt: str, ptr: *i32, n: i32): i32
 
+@[extern, private]
+fn puts(s: str): i32
+
 fn print_ptr(p: *i32) => printf("address = %p\nvalue = %d\n", p, *p)
 
 //fn remaining()
@@ -39,6 +42,8 @@ fn print_ptr(p: *i32) => printf("address = %p\nvalue = %d\n", p, *p)
 //    print_ptr(ptr)
 //}
 
+// pointer arithmetic
+
 fn test2()
 {
     var value = 10
@@ -50,9 +55,37 @@ fn test2()
     print_ptr(&value)
 }
 
+fn test3()
+{
+    var value = 10
+
+    var *ptr1 = &value
+    var *ptr2 = &value
+
+    if ptr1 == ptr2
+    {
+        puts("pointers are equal")
+    }
+
+    puts("==== Information ====")
+    print_ptr(ptr1)
+}
+
+fn test4()
+{
+    var ptr: *i32
+
+    ptr = nil
+
+    if ptr == nil
+    {
+        puts("pointer is nil")
+    }
+}
+
 fn main()
 {
-    test2()
+    test4()
 }
 
 

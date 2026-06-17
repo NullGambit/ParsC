@@ -216,15 +216,23 @@ virtual bool is_equal(Type const *other) const override							\
 		DEFAULT_INTEGRAL_EQUAL(Char)
 	};
 
-	struct Pointer : Integer
+	struct Pointer : Type
 	{
-		Type *inner {};
+		const Type *inner {};
 
-		Pointer() :
-			Integer{64, !IS_SIGNED, "pointer"}
+		Pointer() = default;
+
+		explicit Pointer(const Type *inner) :
+			inner{inner}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		std::string_view get_type_name() const override;
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) override;
+
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override { return nullptr; }
 
@@ -245,6 +253,7 @@ virtual bool is_equal(Type const *other) const override							\
 	static const Bool BoolType {1, !IS_SIGNED, "bool"};
 	static const Char CharType {8, IS_SIGNED, "char"};
 	static const Char UCharType {8, !IS_SIGNED, "uchar"};
+	static const Pointer VoidPointerType {&VoidType};
 
 	struct Str : Type
 	{

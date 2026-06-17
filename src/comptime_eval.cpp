@@ -62,7 +62,7 @@ void pars::ComptimeEval::visit(BinaryExpr *expr, VisitCtx ctx)
 		{
 			auto *result = new_node<LiteralExpr>();
 
-			result->value = left->value > right->value;
+			//result->value = left->value > right->value;
 
 			*ctx.result = result;
 

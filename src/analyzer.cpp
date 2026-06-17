@@ -529,7 +529,7 @@ void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 	{
 		if (auto *ptr = dynamic_cast<Pointer*>(expr->symbol->type))
 		{
-			expr->type = ptr->inner;
+			expr->type = const_cast<Type*>(ptr->inner);
 		}
 		else
 		{

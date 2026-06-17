@@ -236,7 +236,8 @@ llvm::Value * pars::Bool::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs
 
 	auto *type = lhs->getType();
 
-	if (type->isIntegerTy())
+	// move these into their own types. idk what i was thinking
+	if (type->isIntegerTy() || type->isPointerTy())
 	{
 		switch (op)
 		{
@@ -291,11 +292,31 @@ llvm::Type * pars::Pointer::get_llvm_type(llvm::LLVMContext *ctx) const
 	return llvm::PointerType::get(inner->get_llvm_type(ctx), 0);
 }
 
+std::string_view pars::Pointer::get_type_name() const
+{
+	return "pointer";
+}
+
+llvm::Value * pars::Pointer::get_default_value(llvm::LLVMContext *ctx)
+{
+	return llvm::ConstantInt::get(*ctx, llvm::APInt(64, 0));
+}
+
+llvm::Value * pars::Pointer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	return Type::op_binary(ctx, op, lhs, rhs);
+}
+
 bool pars::Pointer::is_equal(Type const *other) const
 {
 	auto *other_ptr = dynamic_cast<const Pointer*>(other);
 
-	return other_ptr != nullptr && inner->is_equal(other_ptr->inner) || check_type_equality(inner, &VoidType);
+	return
+	other_ptr != nullptr
+	&&
+	inner->is_equal(other_ptr->inner)
+	||
+	other_ptr->inner->is_equal(&VoidType) || inner->is_equal(&VoidType);
 }
 
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const

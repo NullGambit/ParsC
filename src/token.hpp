@@ -104,6 +104,7 @@ namespace pars
         Continue,
         Break,
         Cast,
+        Nil,
         Identifier,
         StringLiteral,
         CharLiteral,

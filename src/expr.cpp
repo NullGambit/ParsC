@@ -55,6 +55,11 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 		{
 			auto value = llvm::APInt(8, _char);
 			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
+		},
+		[&ctx](std::nullptr_t)
+		{
+			auto value = llvm::APInt(64, 0);
+			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 		}
 	}, value);
 }
@@ -110,7 +115,7 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 
 	auto *value = ctx.named_values[symbol];
 
-	if (value->getType()->isPointerTy())
+	if (llvm::isa<llvm::AllocaInst>(value))
 	{
 		value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
 	}
@@ -272,6 +277,12 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 		case Star:
 		{
 			auto *inner = dynamic_cast<Pointer*>(symbol->type)->inner;
+
+			if (inner->is_equal(&VoidType))
+			{
+				throw CompileError{this, "Cannot dereference void pointer. size is not known"};
+			}
+
 			return ctx.builder.CreateLoad(inner->get_llvm_type(ctx.llvm_ctx), value);
 		}
 		default: return nullptr;

@@ -50,6 +50,7 @@ namespace pars
         {"or", TokenType::Or},
         {"fn", TokenType::Fn},
         {"cast", TokenType::Cast},
+        {"nil", TokenType::Nil},
     };
 }
 

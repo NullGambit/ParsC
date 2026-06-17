@@ -103,20 +103,20 @@ namespace pars
 		{
 			auto *expr = std::invoke(rule, this);
 
-			// while ((m_lexer.match(T) || ...))
-			// {
-			// 	const auto op = m_lexer.peek_last();
-			//
-			// 	auto *right = std::invoke(rule, this);
-			//
-			// 	auto *bin = new_node<BinaryExpr>();
-			//
-			// 	bin->left = expr;
-			// 	bin->right = right;
-			// 	bin->op = op.type;
-			//
-			// 	expr = bin;
-			// }
+			while ((m_lexer.match(T) || ...))
+			{
+				const auto op = m_lexer.peek_last();
+
+				auto *right = std::invoke(rule, this);
+
+				auto *bin = new_node<BinaryExpr>();
+
+				bin->left = expr;
+				bin->right = right;
+				bin->op = op.type;
+
+				expr = bin;
+			}
 
 			return expr;
 		}

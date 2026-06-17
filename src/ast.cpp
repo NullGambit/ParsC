@@ -773,6 +773,11 @@ pars::Expr* pars::AST::parse_primary()
 		literal->value = m_lexer.peek_last().lexeme[0];
 		literal->type = const_cast<Char*>(&CharType);
 	}
+	else if (m_lexer.match(Nil))
+	{
+		literal->value = nullptr;
+		literal->type = const_cast<Pointer*>(&VoidPointerType);
+	}
 	else
 	{
 		throw FrontendError{m_lexer.peek_last(),
