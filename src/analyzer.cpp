@@ -168,18 +168,9 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		};
 	}
 
-	// var x = ptr
-	if (auto *ptr = dynamic_cast<Pointer*>(stmt->type);
-		stmt->type_name.empty() && ptr && !has_flag(stmt->flags, VarFlags::IsPointer))
+	if (dynamic_cast<Pointer*>(stmt->type))
 	{
-		throw FrontendError{stmt->token, "inferred variable with pointer type must be annotated with a '*'"};
-	}
-
-	// var *x = not_ptr
-	if (auto *ptr = dynamic_cast<Pointer*>(stmt->type);
-		ptr == nullptr && has_flag(stmt->flags, VarFlags::IsPointer))
-	{
-		throw FrontendError{stmt->token, "variable is annotated as a pointer but its type is not a pointer"};
+		stmt->flags |= VarFlags::IsPointer;
 	}
 
 	if (has_keyword_attribute(stmt->symbol, Volatile))

@@ -273,7 +273,7 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 		{
 			return value;
 		}
-		case Star:
+		case Caret:
 		{
 			auto *inner = dynamic_cast<Pointer*>(symbol->type)->inner;
 

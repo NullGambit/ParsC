@@ -168,7 +168,7 @@ pars::Node * pars::AST::statement()
 		return parse_return();
 	}
 
-	auto *expr = expression();
+	auto *expr = parse_primary();
 
 	if (m_lexer.peek().type > _AssignmentStart && m_lexer.peek().type < _AssignmentEnd)
 	{
@@ -324,11 +324,6 @@ pars::VarDeclStmt* pars::AST::parse_var()
 	if (m_lexer.peek_last(Const))
 	{
 		stmt->flags |= VarFlags::Const;
-	}
-
-	if (m_lexer.match(Star))
-	{
-		stmt->flags |= VarFlags::IsPointer;
 	}
 
 	stmt->symbol = get_symbol();
@@ -724,7 +719,7 @@ pars::Expr* pars::AST::parse_primary()
 
 		return expr;
 	}
-	if (m_lexer.match(Ampersand) || m_lexer.match(Star))
+	if (m_lexer.match(Ampersand) || m_lexer.match(Caret))
 	{
 		auto *expr = new_node<PtrOpExpr>();
 
@@ -734,7 +729,7 @@ pars::Expr* pars::AST::parse_primary()
 
 		if (expr->symbol == nullptr)
 		{
-			throw FrontendError{expr->token, "Cannot take address of temporary"};
+			throw FrontendError{expr->token, "Cannot perform pointer operation on a temporary"};
 		}
 
 		return expr;
@@ -887,7 +882,7 @@ pars::AST::ParsedType pars::AST::parse_type()
 {
 	ParsedType type {};
 
-	if (m_lexer.match(Star))
+	if (m_lexer.match(Caret))
 	{
 		type.var_flags |= VarFlags::IsPointer;
 	}

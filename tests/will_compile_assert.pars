@@ -1,6 +1,6 @@
 // NOTE this is not implemented yet
 
-fn main()
+$test
 {
     const x = 10
 
