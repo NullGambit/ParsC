@@ -58,17 +58,14 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *rhs_value = rhs->emit(ctx);
 
-	// if (rhs->type->get_llvm_type(ctx.llvm_ctx)->isPointerTy())
-	// {
-	// 	ctx.named_values[symbol] = rhs_value;
-	// }
-
 	if (op == Equal)
 	{
 		return ctx.builder.CreateStore(rhs_value, value);
 	}
 
-	auto *curr_value = ctx.builder.CreateLoad(lhs->type->get_llvm_type(ctx.llvm_ctx), value);
+	auto *curr_value = lhs->emit(ctx);
+
+	auto *ptr_value = ctx.pointer_cache[symbol];
 
 	TokenType op_op {};
 
@@ -88,7 +85,7 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 		throw CompileError{rhs, fmt::format("this operation is not defined for type of {}", lhs->type->get_type_name())};
 	}
 
-	return ctx.builder.CreateStore(new_value, value);
+	return ctx.builder.CreateStore(new_value, ptr_value);
 }
 
 llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags)

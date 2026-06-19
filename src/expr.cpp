@@ -119,11 +119,6 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 		value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
 	}
 
-	if (dynamic_cast<Pointer*>(type))
-	{
-		ctx.named_values[symbol] = value;
-	}
-
 	return value;
 }
 
@@ -275,6 +270,8 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 		}
 		case Caret:
 		{
+			auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
+
 			auto *inner = dynamic_cast<Pointer*>(symbol->type)->inner;
 
 			if (inner->is_equal(&VoidType))
@@ -282,7 +279,9 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 				throw CompileError{this, "Cannot dereference void pointer. size is not known"};
 			}
 
-			return ctx.builder.CreateLoad(inner->get_llvm_type(ctx.llvm_ctx), value);
+			ctx.pointer_cache[symbol->symbol] = ptr_value;
+
+			return ctx.builder.CreateLoad(inner->get_llvm_type(ctx.llvm_ctx), ptr_value);
 		}
 		default: return nullptr;
  	}

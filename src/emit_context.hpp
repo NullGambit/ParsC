@@ -21,6 +21,7 @@ namespace pars
 		llvm::IRBuilder<> builder;
 		llvm::Module *module;
 		HashMap<std::string_view, llvm::Value*> named_values;
+		HashMap<std::string_view, llvm::Value*> pointer_cache;
 		std::vector<LoopBasicBlocks> loop_bbs;
 	};
 }
