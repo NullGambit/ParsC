@@ -90,7 +90,7 @@ fn print_ptr(p: ^i32) => printf("address = %p\nvalue = %d\n", p, ^p)
 //    }
 //}
 
-fn main()
+fn test5()
 {
     var x = 10
 
@@ -111,6 +111,18 @@ fn main()
     {
         puts("pointers match")
     }
+}
+
+@extern
+fn malloc(size: i32): ^i32
+
+fn main()
+{
+    var ptr = malloc(sizeof(i32))
+
+    ^ptr = 10
+
+    print_ptr(ptr)
 }
 
 

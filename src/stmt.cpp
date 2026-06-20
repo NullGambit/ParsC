@@ -60,7 +60,8 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	if (op == Equal)
 	{
-		return ctx.builder.CreateStore(rhs_value, value);
+		auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
+		return ctx.builder.CreateStore(rhs_value, ptr_value);
 	}
 
 	auto *curr_value = lhs->emit(ctx);

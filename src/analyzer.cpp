@@ -105,6 +105,15 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 	{
 		fn->signature.return_type = resolve_type(fn->signature.return_type_name, fn);
 
+		if (has_flag(fn->signature.return_flags, VarFlags::IsPointer))
+		{
+			auto *ptr = new_node<Pointer>();
+
+			ptr->inner = fn->signature.return_type;
+
+			fn->signature.return_type = ptr;
+		}
+
 		if (fn->body != nullptr)
 		{
 			for (auto *node : fn->body->nodes)

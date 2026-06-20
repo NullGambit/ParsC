@@ -499,7 +499,11 @@ pars::FnSignature pars::AST::parse_fn_signature()
 
 	if (m_lexer.match(Colon))
 	{
-		signature.return_type_name = m_lexer.expect(Identifier).lexeme;
+		auto [name, var_flags] = parse_type();
+
+		signature.return_type_name = name;
+
+		signature.return_flags |= var_flags;
 	}
 	else
 	{

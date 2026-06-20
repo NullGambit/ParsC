@@ -315,9 +315,9 @@ bool pars::Pointer::is_equal(Type const *other) const
 	return
 	other_ptr != nullptr
 	&&
-	inner->is_equal(other_ptr->inner)
+	(inner->is_equal(other_ptr->inner)
 	||
-	other_ptr->inner->is_equal(&VoidType) || inner->is_equal(&VoidType);
+	other_ptr->inner->is_equal(&VoidType) || inner->is_equal(&VoidType));
 }
 
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const

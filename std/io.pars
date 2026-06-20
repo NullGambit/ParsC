@@ -1,6 +1,11 @@
-@[extern, private]
-fn printf(fmt: str, s: str): i32
+import core.cstd.cstdio
 
-fn println(s: str) => printf("%s\n", s)
-fn print(s: str) => printf("%s", s)
+fn print(values: ...any)
+{
+    for value in values
+    {
+        printf("%s", ~value)
+    }
+}
 
+fn println(values: ...any) => print(...values, "\n")

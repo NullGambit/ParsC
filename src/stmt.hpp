@@ -80,6 +80,7 @@ namespace pars
 		u32 callable_arity {};
 		Type *return_type {};
 		std::string_view return_type_name;
+		VarFlags return_flags {};
 
 		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags);
 	};

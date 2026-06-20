@@ -63,7 +63,7 @@ namespace pars
 		struct ParsedType
 		{
 			std::string_view name;
-			VarFlags var_flags;
+			VarFlags var_flags {};
 		};
 
 		ParsedType parse_type();
