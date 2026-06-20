@@ -294,6 +294,7 @@ llvm::Type * pars::Pointer::get_llvm_type(llvm::LLVMContext *ctx) const
 
 std::string_view pars::Pointer::get_type_name() const
 {
+	// TODO improve name to include inner type name as well
 	return "pointer";
 }
 

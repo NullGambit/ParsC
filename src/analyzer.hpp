@@ -3,6 +3,7 @@
 
 #include "node.hpp"
 #include "parse_ctx.hpp"
+#include "type_meta.hpp"
 #include "visitor.hpp"
 #include "containers/hash_map.hpp"
 
@@ -60,7 +61,7 @@ namespace pars
 
 		FnDecl* get_current_fn();
 
-		Type* resolve_type(std::string_view name, Node *node);
+		Type* resolve_type(TypeMeta meta, Node *node);
 
 		void add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task);
 

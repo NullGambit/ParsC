@@ -31,7 +31,7 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		}
 	}
 
-	if (!has_flag(flags, VarFlags::Const))
+	if (!has_flag(type_meta.flags, TypeFlags::Const))
 	{
 		auto *inst = ctx.builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
 
@@ -43,6 +43,16 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 	ctx.named_values[symbol.name] = value;
 
 	return value;
+}
+
+bool pars::VarDeclStmt::is_explicitly_typed() const
+{
+	return !type_meta.name.empty();
+}
+
+bool pars::VarDeclStmt::is_type_inferred() const
+{
+	return !is_explicitly_typed();
 }
 
 llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)

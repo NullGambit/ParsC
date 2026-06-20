@@ -34,6 +34,7 @@
 - functions as parameters
 - generics
 - structs
+- offsetof operator for struct fields
 - readonly attribute
 - methods
 - move and copy system

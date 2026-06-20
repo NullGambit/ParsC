@@ -323,17 +323,17 @@ pars::VarDeclStmt* pars::AST::parse_var()
 
 	if (m_lexer.peek_last(Const))
 	{
-		stmt->flags |= VarFlags::Const;
+		stmt->type_meta.flags |= TypeFlags::Const;
 	}
 
 	stmt->symbol = get_symbol();
 
 	if (m_lexer.match(Colon))
 	{
-		auto type = parse_type();
+		auto [name, flags] = parse_type();
 
-		stmt->type_name = type.name;
-		stmt->flags |= type.var_flags;
+		stmt->type_meta.name = name;
+		stmt->type_meta.flags |= flags;
 	}
 
 	if (m_lexer.match(Equal))
@@ -341,7 +341,7 @@ pars::VarDeclStmt* pars::AST::parse_var()
 		stmt->initializer = expression();
 	}
 
-	if (stmt->type_name.empty() && stmt->initializer == nullptr)
+	if (stmt->is_type_inferred() && stmt->initializer == nullptr)
 	{
 		throw FrontendError(m_lexer.peek_last(), "Variable without initializer must be explicitly typed", stmt);
 	}
@@ -357,10 +357,7 @@ pars::VarDeclStmt * pars::AST::parse_fn_param()
 
 	m_lexer.expect(Colon);
 
-	auto type = parse_type();
-
-	stmt->type_name = type.name;
-	stmt->flags |= type.var_flags;
+	stmt->type_meta = parse_type();
 
 	if (m_lexer.match(Equal))
 	{
@@ -397,7 +394,7 @@ pars::Node* pars::AST::parse_return()
 
 	auto *stmt = new_node<ReturnStmt>();
 
-	if (fn->signature.return_type_name != "void")
+	if (fn->signature.return_type_meta.name != "void")
 	{
 		stmt->expr = expression();
 	}
@@ -499,15 +496,11 @@ pars::FnSignature pars::AST::parse_fn_signature()
 
 	if (m_lexer.match(Colon))
 	{
-		auto [name, var_flags] = parse_type();
-
-		signature.return_type_name = name;
-
-		signature.return_flags |= var_flags;
+		signature.return_type_meta = parse_type();
 	}
 	else
 	{
-		signature.return_type_name = "void";
+		signature.return_type_meta.name = "void";
 	}
 
 	return signature;
@@ -882,22 +875,22 @@ pars::Expr* pars::AST::expression()
 	return parse_and();
 }
 
-pars::AST::ParsedType pars::AST::parse_type()
+pars::TypeMeta pars::AST::parse_type()
 {
-	ParsedType type {};
-
-	if (m_lexer.match(Caret))
-	{
-		type.var_flags |= VarFlags::IsPointer;
-	}
+	TypeMeta meta {};
 
 	if (m_lexer.match(Const))
 	{
-		type.var_flags |= VarFlags::Const;
+		meta.flags |= TypeFlags::Const;
 	}
 
-	type.name = m_lexer.expect(Identifier).lexeme;
+	if (m_lexer.match(Caret))
+	{
+		meta.flags |= TypeFlags::Pointer;
+	}
 
-	return type;
+	meta.name = m_lexer.expect(Identifier).lexeme;
+
+	return meta;
 }
 

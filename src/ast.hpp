@@ -60,13 +60,7 @@ namespace pars
 		BlockStmt* parse_block();
 		AliasType* parse_alias();
 
-		struct ParsedType
-		{
-			std::string_view name;
-			VarFlags var_flags {};
-		};
-
-		ParsedType parse_type();
+		TypeMeta parse_type();
 
 		// expr parsing stuff
 		// TODO replace with a pratt parser

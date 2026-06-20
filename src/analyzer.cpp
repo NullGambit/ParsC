@@ -2,7 +2,6 @@
 
 #include "parse_ctx.hpp"
 #include "ast.hpp"
-#include "comptime_eval.hpp"
 #include "frontend_error.hpp"
 #include "module.hpp"
 #include "module_manager.hpp"
@@ -103,16 +102,7 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 	}
 	else
 	{
-		fn->signature.return_type = resolve_type(fn->signature.return_type_name, fn);
-
-		if (has_flag(fn->signature.return_flags, VarFlags::IsPointer))
-		{
-			auto *ptr = new_node<Pointer>();
-
-			ptr->inner = fn->signature.return_type;
-
-			fn->signature.return_type = ptr;
-		}
+		fn->signature.return_type = resolve_type(fn->signature.return_type_meta, fn);
 
 		if (fn->body != nullptr)
 		{
@@ -141,9 +131,9 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 {
 	// var x: T
-	if (!stmt->type_name.empty())
+	if (stmt->is_explicitly_typed())
 	{
-		stmt->type = resolve_type(stmt->type_name, stmt);
+		stmt->type = resolve_type(stmt->type_meta, stmt);
 	}
 
 	// var x = E
@@ -157,14 +147,14 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 			throw FrontendError{stmt->token, "Cannot infer type from initializer"};
 		}
 
-		if (stmt->type_name.empty())
+		if (!stmt->is_explicitly_typed())
 		{
 			stmt->type = stmt->initializer->type;
 		}
 	}
 
 	// var x: T = E
-	if (stmt->initializer != nullptr && !stmt->type_name.empty() && !stmt->initializer->type->is_equal(stmt->type))
+	if (stmt->initializer != nullptr && stmt->is_explicitly_typed() && !stmt->initializer->type->is_equal(stmt->type))
 	{
 		throw FrontendError
 		{
@@ -179,7 +169,7 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 
 	if (dynamic_cast<Pointer*>(stmt->type))
 	{
-		stmt->flags |= VarFlags::IsPointer;
+		stmt->type_meta.flags |= TypeFlags::Pointer;
 	}
 
 	if (has_keyword_attribute(stmt->symbol, Volatile))
@@ -253,13 +243,6 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 {
-	// stmt->lhs = find_symbol<VarDeclStmt>(stmt->symbol, stmt->token);
-	//
-	// if (stmt->lhs == nullptr)
-	// {
-	// 	throw FrontendError{stmt->token, fmt::format("'{}' is not a valid target for assignment", stmt->symbol)};
-	// }
-
 	stmt->lhs->accept(this, {});
 	stmt->rhs->accept(this, {stmt->lhs->type});
 
@@ -276,7 +259,7 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 		{
 			var->flags |= VarFlags::ShouldAlloca;
 
-			if (has_flag(var->flags, VarFlags::Const))
+			if (has_flag(var->type_meta.flags, TypeFlags::Const))
 			{
 				throw FrontendError(var->token, fmt::format("Cannot mutate const variable '{}'", var->symbol.name));
 			}
@@ -378,7 +361,9 @@ void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
-	alias->type = resolve_type(dynamic_cast<PendingType*>(alias->type)->symbol, alias);
+	// TODO i dont think this would support pointers right now
+	// pls fix future me
+	alias->type = resolve_type({dynamic_cast<PendingType*>(alias->type)->symbol}, alias);
 
 	// TODO handle private aliasing
 	m_ctx->scope_table.add_to_scope(alias->symbol, alias);
@@ -522,24 +507,17 @@ void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
 	expr->symbol->accept(this, ctx);
 
-	if (expr->op == Ampersand)
+	if (auto *ptr = dynamic_cast<Pointer*>(expr->symbol->type))
 	{
-		auto *ptr = new_node<Pointer>();
-
-		ptr->inner = expr->symbol->type;
-
-		expr->type = ptr;
+		expr->type = const_cast<Type*>(ptr->inner);
 	}
 	else
 	{
-		if (auto *ptr = dynamic_cast<Pointer*>(expr->symbol->type))
-		{
-			expr->type = const_cast<Type*>(ptr->inner);
-		}
-		else
-		{
-			expr->type = expr->symbol->type;
-		}
+		auto *p = new_node<Pointer>();
+
+		p->inner = expr->symbol->type;
+
+		expr->type = p;
 	}
 }
 
@@ -558,16 +536,16 @@ pars::FnDecl * pars::Analyzer::get_current_fn()
 	return m_function_stack.back();
 }
 
-pars::Type* pars::Analyzer::resolve_type(std::string_view name, Node *node)
+pars::Type* pars::Analyzer::resolve_type(TypeMeta meta, Node *node)
 {
-	auto *type = m_ctx->scope_table.find_symbol<Type>(name);
+	auto *type = m_ctx->scope_table.find_symbol<Type>(meta.name);
 
 	if (type == nullptr)
 	{
-		throw FrontendError{node->token, fmt::format("unknown type name '{}'", name), nullptr};
+		throw FrontendError{node->token, fmt::format("unknown type name '{}'", meta.name), nullptr};
 	}
 
-	if (auto *var = dynamic_cast<VarDeclStmt*>(node); var && has_flag(var->flags, VarFlags::IsPointer))
+	if (has_flag(meta.flags, TypeFlags::Pointer))
 	{
 		auto *ptr = new_node<Pointer>();
 

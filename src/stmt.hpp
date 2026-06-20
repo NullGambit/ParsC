@@ -7,6 +7,7 @@
 #include "node.hpp"
 #include "symbol.hpp"
 #include "type.hpp"
+#include "type_meta.hpp"
 #include "util/macros.hpp"
 
 namespace pars
@@ -22,13 +23,11 @@ namespace pars
 
 	enum class VarFlags : u8
 	{
-		Const = 1 << 0,
 		// TODO actually implement static
 		Static = 1 << 1,
 		Volatile = 1 << 2,
 		Global = 1 << 3,
 		ShouldAlloca = 1 << 4,
-		IsPointer = 1 << 5,
 	};
 
 	PARS_FLAGIFY(VarFlags);
@@ -36,7 +35,7 @@ namespace pars
 	struct VarDeclStmt : Stmt
 	{
 		Symbol symbol;
-		std::string_view type_name;
+		TypeMeta type_meta;
 		Type *type;
 		Expr* initializer;
 		VarFlags flags;
@@ -44,6 +43,9 @@ namespace pars
 		llvm::Value *emit(EmitCtx &ctx) override;
 
 		llvm::Value *init(EmitCtx &ctx, llvm::Value *value = nullptr);
+
+		bool is_explicitly_typed() const;
+		bool is_type_inferred() const;
 
 		ACCEPT
 	};
@@ -79,8 +81,7 @@ namespace pars
 		// the amount of non default parameters
 		u32 callable_arity {};
 		Type *return_type {};
-		std::string_view return_type_name;
-		VarFlags return_flags {};
+		TypeMeta return_type_meta;
 
 		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags);
 	};
