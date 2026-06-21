@@ -246,12 +246,12 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 	stmt->lhs->accept(this, {});
 	stmt->rhs->accept(this, {stmt->lhs->type});
 
-	if (!stmt->lhs->type->is_equal(stmt->rhs->type))
-	{
-		throw FrontendError{stmt->token,
-			fmt::format("assignment to type of {} cannot be done with type of {}",
-				stmt->lhs->type->get_type_name(), stmt->rhs->type->get_type_name())};
-	}
+	// if (!stmt->lhs->type->is_equal(stmt->rhs->type))
+	// {
+	// 	throw FrontendError{stmt->token,
+	// 		fmt::format("assignment to type of {} cannot be done with type of {}",
+	// 			stmt->lhs->type->get_type_name(), stmt->rhs->type->get_type_name())};
+	// }
 
 	if (auto *symbol = dynamic_cast<SymbolExpr*>(stmt->lhs))
 	{
@@ -394,6 +394,8 @@ void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 	{
 		throw FrontendError{expr->token, "binary expression operands types do not match"};
 	}
+
+	// TODO ask the type what the result of operators should be
 
 	if (expr->op > _ComparisonStart && expr->op < _ComparisonEnd)
 	{

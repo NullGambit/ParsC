@@ -68,15 +68,15 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *rhs_value = rhs->emit(ctx);
 
+	auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
 	if (op == Equal)
 	{
-		auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
 		return ctx.builder.CreateStore(rhs_value, ptr_value);
 	}
 
 	auto *curr_value = lhs->emit(ctx);
 
-	auto *ptr_value = ctx.pointer_cache[symbol];
+	//auto *ptr_value = ctx.pointer_cache[symbol];
 
 	TokenType op_op {};
 

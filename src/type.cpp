@@ -168,6 +168,12 @@ llvm::Value * pars::Integer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *
 		}
 		case ForwardSlash: return is_signed ? ctx.builder.CreateSDiv(lhs, rhs) : ctx.builder.CreateUDiv(lhs, rhs);
 		case Percent: return is_signed ? ctx.builder.CreateSRem(lhs, rhs) : ctx.builder.CreateURem(lhs, rhs);
+		case EqualEqual: return ctx.builder.CreateICmpEQ(lhs, rhs);
+		case BangEqual: return ctx.builder.CreateICmpNE(lhs, rhs);
+		case GreaterEqual: return ctx.builder.CreateICmpSGT(lhs, rhs);
+		case LessEqual: return ctx.builder.CreateICmpSLE(lhs, rhs);
+		case Less: return ctx.builder.CreateICmpSLT(lhs, rhs);
+		case Greater: return ctx.builder.CreateICmpSGT(lhs, rhs);
 		default: return nullptr;
 	}
 }
@@ -206,6 +212,12 @@ llvm::Value * pars::Float::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
 		case Star: return ctx.builder.CreateFMul(lhs, rhs);
 		case Percent: return ctx.builder.CreateFRem(lhs, rhs);
 		case StarStar: return ctx.builder.CreateBinaryIntrinsic(llvm::Intrinsic::pow, lhs, rhs);
+		case EqualEqual: return ctx.builder.CreateFCmpOEQ(lhs, rhs);
+		case BangEqual: return ctx.builder.CreateFCmpONE(lhs, rhs);
+		case GreaterEqual: return ctx.builder.CreateFCmpOGE(lhs, rhs);
+		case LessEqual: return ctx.builder.CreateFCmpOLE(lhs, rhs);
+		case Less: return ctx.builder.CreateFCmpOLT(lhs, rhs);
+		case Greater: return ctx.builder.CreateFCmpOGT(lhs, rhs);
 		default: return nullptr;
 	}
 }
@@ -233,36 +245,6 @@ llvm::Type * pars::Bool::get_llvm_type(llvm::LLVMContext *ctx) const
 llvm::Value * pars::Bool::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
 	using enum TokenType;
-
-	auto *type = lhs->getType();
-
-	// move these into their own types. idk what i was thinking
-	if (type->isIntegerTy() || type->isPointerTy())
-	{
-		switch (op)
-		{
-			// TODO add unsigned versions of some operations
-			case EqualEqual: return ctx.builder.CreateICmpEQ(lhs, rhs);
-			case BangEqual: return ctx.builder.CreateICmpNE(lhs, rhs);
-			case GreaterEqual: return ctx.builder.CreateICmpSGT(lhs, rhs);
-			case LessEqual: return ctx.builder.CreateICmpSLE(lhs, rhs);
-			case Less: return ctx.builder.CreateICmpSLT(lhs, rhs);
-			case Greater: return ctx.builder.CreateICmpSGT(lhs, rhs);
-		}
-	}
-
-	if (type->isFloatTy())
-	{
-		switch (op)
-		{
-			case EqualEqual: return ctx.builder.CreateFCmpOEQ(lhs, rhs);
-			case BangEqual: return ctx.builder.CreateFCmpONE(lhs, rhs);
-			case GreaterEqual: return ctx.builder.CreateFCmpOGE(lhs, rhs);
-			case LessEqual: return ctx.builder.CreateFCmpOLE(lhs, rhs);
-			case Less: return ctx.builder.CreateFCmpOLT(lhs, rhs);
-			case Greater: return ctx.builder.CreateFCmpOGT(lhs, rhs);
-		}
-	}
 
 	switch (op)
 	{
@@ -306,7 +288,14 @@ llvm::Value * pars::Pointer::get_default_value(llvm::LLVMContext *ctx) const
 
 llvm::Value * pars::Pointer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
-	return Type::op_binary(ctx, op, lhs, rhs);
+	using enum TokenType;
+
+	switch (op)
+	{
+		case Plus: return ctx.builder.CreateGEP(inner->get_llvm_type(ctx.llvm_ctx), lhs, rhs);
+		case Minus: return ctx.builder.CreateGEP(inner->get_llvm_type(ctx.llvm_ctx), lhs, ctx.builder.CreateNeg(rhs));
+	}
+	return Integer::op_binary(ctx, op, lhs, rhs);
 }
 
 bool pars::Pointer::is_equal(Type const *other) const

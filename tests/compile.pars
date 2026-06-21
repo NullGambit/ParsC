@@ -121,9 +121,19 @@ fn free(ptr: ^void)
 
 fn main()
 {
-    var ptr = cast(^i32)malloc(sizeof(i32))
+    var ptr = cast(^i32)malloc(sizeof(i32) * 2)
 
     ^ptr = 10
+
+    print_ptr(ptr)
+
+    ptr += 1
+
+    ^ptr = 20
+
+    print_ptr(ptr)
+
+    ptr -= 1
 
     print_ptr(ptr)
 

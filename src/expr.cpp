@@ -68,7 +68,7 @@ llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 	auto lhs = left->emit(ctx);
 	auto rhs = right->emit(ctx);
 
-	auto *result = type->op_binary(ctx, op, lhs, rhs);
+	auto *result = left->type->op_binary(ctx, op, lhs, rhs);
 
 	if (result == nullptr)
 	{

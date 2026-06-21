@@ -216,13 +216,16 @@ virtual bool is_equal(Type const *other) const override							\
 		DEFAULT_INTEGRAL_EQUAL(Char)
 	};
 
-	struct Pointer : Type
+	struct Pointer : Integer
 	{
 		const Type *inner {};
 
-		Pointer() = default;
+		Pointer() :
+			Integer{64, IS_SIGNED, "pointer"}
+		{}
 
 		explicit Pointer(const Type *inner) :
+			Integer{64, IS_SIGNED, "pointer"},
 			inner{inner}
 		{}
 
