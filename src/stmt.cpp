@@ -69,6 +69,9 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 	auto *rhs_value = rhs->emit(ctx);
 
 	auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
+
+
+
 	if (op == Equal)
 	{
 		return ctx.builder.CreateStore(rhs_value, ptr_value);
@@ -94,6 +97,11 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 	if (new_value == nullptr)
 	{
 		throw CompileError{rhs, fmt::format("this operation is not defined for type of {}", lhs->type->get_type_name())};
+	}
+
+	if (dynamic_cast<Pointer*>(lhs->type))
+	{
+		return ctx.builder.CreateStore(new_value, value);
 	}
 
 	return ctx.builder.CreateStore(new_value, ptr_value);
