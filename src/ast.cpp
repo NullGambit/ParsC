@@ -582,11 +582,7 @@ pars::AliasType * pars::AST::parse_alias()
 
 	stmt->is_distinct = m_lexer.match(Distinct);
 
-	auto *pending = new_node<PendingType>();
-
-	pending->symbol = m_lexer.expect(Identifier).lexeme;
-
-	stmt->type = pending;
+	stmt->meta = parse_type();
 
 	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 

@@ -146,12 +146,6 @@ pars::Token pars::Lexer::advance_one()
 
 pars::Token pars::Lexer::advance()
 {
-    if (!has_next())
-    {
-        m_current_token = build_token(TokenType::Eof);
-        return m_current_token.value();
-    }
-
     m_last_token = m_current_token;
 
     if (m_next_token.has_value())

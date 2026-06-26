@@ -370,9 +370,7 @@ void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
-	// TODO i dont think this would support pointers right now
-	// pls fix future me
-	alias->type = resolve_type({dynamic_cast<PendingType*>(alias->type)->symbol}, alias);
+	alias->type = resolve_type(alias->meta, alias);
 
 	// TODO handle private aliasing
 	m_ctx->scope_table.add_to_scope(alias->symbol, alias);

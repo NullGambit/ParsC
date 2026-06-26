@@ -1,0 +1,19 @@
+import core.stdc.stdio
+import core.stdc.stdlib
+
+fn main()
+{
+    printf("hello %s your number is %d\n", "john", 42)
+
+    var file = fopen("test.txt", "a+")
+
+    fwrite("hello", 1, 5, file)
+
+    var buffer = cast(str)malloc(6)
+
+    fread(buffer, 1, 5, file)
+
+    printf("file contents %s\n", buffer)
+
+    fclose(file)
+}

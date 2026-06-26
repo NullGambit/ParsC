@@ -3,6 +3,7 @@
 
 #include "node.hpp"
 #include "symbol.hpp"
+#include "type_meta.hpp"
 
 namespace llvm
 {
@@ -68,28 +69,6 @@ virtual bool is_equal(Type const *other) const override							\
 	return false;																\
 }																				\
 
-	struct PendingType : Type
-	{
-		std::string_view symbol;
-
-		DEFAULT_TYPE_EQUAL(PendingType)
-
-		std::string_view get_type_name() const override
-		{
-			return symbol;
-		}
-
-		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override
-		{
-			return nullptr;
-		}
-
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override
-		{
-			return nullptr;
-		}
-	};
-
 	struct Void : Type
 	{
 		DEFAULT_TYPE_EQUAL(Void)
@@ -145,6 +124,7 @@ virtual bool is_equal(Type const *other) const override							\
 	struct AliasType : Type
 	{
 		Symbol symbol;
+		TypeMeta meta;
 		Type *type = nullptr;
 		bool is_distinct = false;
 
