@@ -179,4 +179,11 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct PackedExpr : Expr
+	{
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }

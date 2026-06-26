@@ -68,9 +68,8 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *rhs_value = rhs->emit(ctx);
 
+	// TODO this can create a duplicate instruction pls fix
 	auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
-
-
 
 	if (op == Equal)
 	{
@@ -79,6 +78,8 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *curr_value = lhs->emit(ctx);
 
+	// TODO i commented this out cause it can sometimes carryover instructions from other functions
+	// i didnt really think this through that well. whoops
 	//auto *ptr_value = ctx.pointer_cache[symbol];
 
 	TokenType op_op {};
@@ -125,7 +126,7 @@ llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, Fn
 		param_types.emplace_back(param->type->get_llvm_type(llvm_ctx));
 	}
 
-	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, false);
+	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, is_variadic);
 
 	auto linkage = llvm::Function::InternalLinkage;
 

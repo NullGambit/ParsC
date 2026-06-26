@@ -67,6 +67,7 @@ namespace pars
         Dollar,
         Hash,
         Dot,
+        Ellipse, // ...
         SemiColon,
         Ampersand,
         Pipe,

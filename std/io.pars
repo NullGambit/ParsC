@@ -1,11 +1,7 @@
 import core.cstd.cstdio
 
-fn print(values: ...any)
+fn println(fmt: str, args: ...)
 {
-    for value in values
-    {
-        printf("%s", ~value)
-    }
+    printf(fmt, ...args)
+    puts("")
 }
-
-fn println(values: ...any) => print(...values, "\n")

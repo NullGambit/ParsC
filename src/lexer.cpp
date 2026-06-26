@@ -118,6 +118,10 @@ pars::Token pars::Lexer::advance_one()
                 {
                     return build_token(DotDotEqual);
                 }
+                if (m_reader.match('.'))
+                {
+                    return build_token(Ellipse);
+                }
 
                 return build_token(DotDot);
             }

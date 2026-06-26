@@ -469,6 +469,12 @@ pars::FnSignature pars::AST::parse_fn_signature()
 
 	while (!m_lexer.peek(RightParen))
 	{
+		if (m_lexer.match(Ellipse))
+		{
+			signature.is_variadic = true;
+			break;
+		}
+
 		auto *param = parse_fn_param();
 
 		if (param->initializer != nullptr)
@@ -730,6 +736,10 @@ pars::Expr* pars::AST::parse_primary()
 		}
 
 		return expr;
+	}
+	if (m_lexer.match(Ellipse))
+	{
+		return new_node<PackedExpr>();
 	}
 
 	auto *literal = new_node<LiteralExpr>();

@@ -310,6 +310,16 @@ bool pars::Pointer::is_equal(Type const *other) const
 	other_ptr->inner->is_equal(&VoidType) || inner->is_equal(&VoidType));
 }
 
+std::string_view pars::Packed::get_type_name() const
+{
+	return "packed";
+}
+
+llvm::Value * pars::Packed::get_default_value(llvm::LLVMContext *ctx) const
+{
+	return VoidType.get_default_value(ctx);
+}
+
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);

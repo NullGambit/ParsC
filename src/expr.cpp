@@ -139,21 +139,24 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 	for (auto *arg : arguments)
 	{
-		auto *desired_type = prototype->signature.parameters[index]->type;
-
-		if (!check_type_equality(arg->type, desired_type))
+		if (index < prototype->signature.parameters.size())
 		{
-			throw CompileError
+			auto *desired_type = prototype->signature.parameters[index]->type;
+
+			if (!check_type_equality(arg->type, desired_type))
 			{
-				this,
-				fmt::format
-				(
-					"expected type {} instead of {} at position {}",
-					desired_type->get_type_name(),
-					arg->type->get_type_name(),
-					index
-				)
-			};
+				throw CompileError
+				{
+					this,
+					fmt::format
+					(
+						"expected type {} instead of {} at position {}",
+						desired_type->get_type_name(),
+						arg->type->get_type_name(),
+						index
+					)
+				};
+			}
 		}
 
 		argv.emplace_back(arg->emit(ctx));
@@ -285,4 +288,9 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 		}
 		default: return nullptr;
  	}
+}
+
+llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx)
+{
+	return Expr::emit(ctx);
 }

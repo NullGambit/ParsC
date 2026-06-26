@@ -15,7 +15,9 @@ void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	expr->prototype->accept(this, {});
 
-	if (expr->arguments.size() < expr->prototype->signature.callable_arity || expr->arguments.size() > expr->prototype->signature.parameters.size())
+	if (!expr->prototype->signature.is_variadic &&
+		(expr->arguments.size() < expr->prototype->signature.callable_arity ||
+		expr->arguments.size() > expr->prototype->signature.parameters.size()))
 	{
 		throw FrontendError{expr->token, fmt::format("expected {} argument but got {}",
 			expr->prototype->signature.callable_arity, expr->arguments.size())};
@@ -29,7 +31,10 @@ void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto *arg : expr->arguments)
 	{
-		arg->accept(this, {expr->prototype->signature.parameters[index++]->type});
+		if (index < expr->prototype->signature.parameters.size())
+		{
+			arg->accept(this, {expr->prototype->signature.parameters[index++]->type});
+		}
 
 		if (auto *named_param = dynamic_cast<NamedExpr*>(arg))
 		{
@@ -521,6 +526,11 @@ void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 
 		expr->type = p;
 	}
+}
+
+void pars::Analyzer::visit(PackedExpr *expr, VisitCtx ctx)
+{
+
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)

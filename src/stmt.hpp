@@ -80,6 +80,7 @@ namespace pars
 		std::vector<VarDeclStmt*> parameters;
 		// the amount of non default parameters
 		u32 callable_arity {};
+		bool is_variadic {};
 		Type *return_type {};
 		TypeMeta return_type_meta;
 
