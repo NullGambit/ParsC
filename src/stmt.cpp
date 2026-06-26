@@ -33,7 +33,13 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 
 	if (!has_flag(type_meta.flags, TypeFlags::Const))
 	{
-		auto *inst = ctx.builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
+		auto *fn = ctx.builder.GetInsertBlock()->getParent();
+		auto &entry = fn->getEntryBlock();
+		auto insert_point = entry.getFirstNonPHIOrDbgOrAlloca();
+
+		llvm::IRBuilder<> temp_builder(&entry, insert_point);
+
+		auto *inst = temp_builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
 
 		ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
 
@@ -68,12 +74,14 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *rhs_value = rhs->emit(ctx);
 
-	// TODO this can create a duplicate instruction pls fix
-	auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
+	if (!lhs->type->is_ptr())
+	{
+		value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
+	}
 
 	if (op == Equal)
 	{
-		return ctx.builder.CreateStore(rhs_value, ptr_value);
+		return ctx.builder.CreateStore(rhs_value, value);
 	}
 
 	auto *curr_value = lhs->emit(ctx);
@@ -100,12 +108,7 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 		throw CompileError{rhs, fmt::format("this operation is not defined for type of {}", lhs->type->get_type_name())};
 	}
 
-	if (dynamic_cast<Pointer*>(lhs->type))
-	{
-		return ctx.builder.CreateStore(new_value, value);
-	}
-
-	return ctx.builder.CreateStore(new_value, ptr_value);
+	return ctx.builder.CreateStore(new_value, value);
 }
 
 llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags)

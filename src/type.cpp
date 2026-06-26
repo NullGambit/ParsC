@@ -125,6 +125,11 @@ llvm::Value * pars::AliasType::get_default_value(llvm::LLVMContext *ctx) const
 	return type->get_default_value(ctx);
 }
 
+bool pars::AliasType::is_ptr() const
+{
+	return type->is_ptr();
+}
+
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);

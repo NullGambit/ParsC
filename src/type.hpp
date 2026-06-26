@@ -25,6 +25,7 @@ namespace pars
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) const = 0;
 		virtual llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name);
+		virtual bool is_ptr() const { return false; }
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
@@ -135,6 +136,7 @@ virtual bool is_equal(Type const *other) const override							\
 		u32 get_size() override;
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
+		bool is_ptr() const override;
 
 		ACCEPT
 	};
@@ -220,6 +222,11 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override { return nullptr; }
 
 		bool is_equal(Type const *other) const override;
+
+		bool is_ptr() const override
+		{
+			return true;
+		}
 	};
 
 	struct Packed : Type
