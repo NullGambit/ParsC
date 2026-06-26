@@ -31,10 +31,14 @@ void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto *arg : expr->arguments)
 	{
+		Type *ctx_type = nullptr;
+
 		if (index < expr->prototype->signature.parameters.size())
 		{
-			arg->accept(this, {expr->prototype->signature.parameters[index++]->type});
+			ctx_type = expr->prototype->signature.parameters[index++]->type;
 		}
+
+		arg->accept(this, {ctx_type});
 
 		if (auto *named_param = dynamic_cast<NamedExpr*>(arg))
 		{

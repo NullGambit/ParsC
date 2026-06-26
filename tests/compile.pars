@@ -1,14 +1,28 @@
-@extern
-fn printf(fmt: str, ...): i32
+import core.stdc.stdio
+import core.stdc.stdlib
 
-//fn println(fmt: str, args: ...)
-//{
-//    printf(fmt, ...args)
-//    puts("")
-//}
+// TODOS
+// compiler gets stuck on eof
+// scope based attributes
+// automatic coercing for types 32 to u64 good. 64 to 32 not good
+// automatic va_list creation when passing ... to another function
+// manual va_list support
+// possibly transform functions to know the size of va_list
+// add additional module path lookups
 
 fn main()
 {
-    //println("hello %s your number is %d", "john", 42)
     printf("hello %s your number is %d\n", "john", 42)
+
+    var file = fopen("test.txt", "a+")
+
+    var buffer = cast(str)malloc(6)
+
+    fread(buffer, 1, 5, file)
+
+    printf("file contents %s\n", buffer)
+
+    // fwrite("hello", 1, 5, file)
+
+    fclose(file)
 }
