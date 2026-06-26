@@ -584,7 +584,9 @@ pars::AliasType * pars::AST::parse_alias()
 
 	stmt->meta = parse_type();
 
-	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
+	auto is_private = has_keyword_attribute(stmt->symbol, Private);
+
+	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt, !is_private);
 
 	return stmt;
 }

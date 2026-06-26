@@ -8,11 +8,15 @@ import core.stdc.stdlib
 // manual va_list support
 // possibly transform functions to know the size of va_list
 // add additional module path lookups
+// correct constness
+// constness comes within types. even aliases
 
 alias Ptr = ^i32
 
 fn main()
 {
+    import tests.foo
+
     var my_ptr: Ptr
 
     var x = 10

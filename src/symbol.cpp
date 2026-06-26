@@ -15,6 +15,11 @@ u32 pars::set_attributes(std::vector<TokenType> &attributes)
 
 std::span<pars::TokenType> pars::get_attributes(Symbol symbol)
 {
+	if (symbol.attribute_id == NO_ATTRIBUTES)
+	{
+		return {};
+	}
+
 	return std::span{g_attributes.begin() + symbol.attribute_id, symbol.attribute_count};
 }
 

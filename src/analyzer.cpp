@@ -372,8 +372,7 @@ void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
 	alias->type = resolve_type(alias->meta, alias);
 
-	// TODO handle private aliasing
-	m_ctx->scope_table.add_to_scope(alias->symbol, alias);
+	m_ctx->scope_table.add_to_scope(alias->symbol, alias, false);
 }
 
 void pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)

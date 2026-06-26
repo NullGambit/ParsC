@@ -1,7 +1,7 @@
 
 fn say_yes()
 {
-    import std.io
+    import core.stdc.stdio
 
-    println("yes")
+    puts("yes")
 }

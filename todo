@@ -4,6 +4,7 @@
 - replace recursive descent with operator precedent parsing (pratt parsing)
 - break and continue to label. possibly goto? probably a bad idea anyway
 - function pointers
+- theres too much repeated work between the ast parser and the analyzer. and sometimes even the code gen.
 - compile time for loops
 - make types be responsible for how they can be casted to other types
 - floor div with //

@@ -11,6 +11,7 @@
 #include "debug/ast_printer.hpp"
 #include "magic_enum/magic_enum.hpp"
 #include "util/fmt.hpp"
+#include "util/llvm_utils.hpp"
 
 llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
 {
@@ -154,12 +155,9 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 
 	for (auto i = 0; auto *node : nodes)
 	{
-		// set insert point back to this functions basic block in case
-		// there is a local function being emitted
-		// ctx.builder.SetInsertPoint(bb);
 		auto *value = node->emit(ctx);
 
-		if (value == nullptr)
+		if (is_block_poison(ctx, value))
 		{
 			break;
 		}
@@ -296,7 +294,7 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 		ctx.builder.SetInsertPoint(start_bb);
 		ctx.builder.CreateCondBr(condition_value, then_bb, else_bb);
 
-		return nullptr;
+		return get_block_poison(ctx);
 	}
 
 	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
@@ -319,6 +317,7 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 	};
 
 	do_maybe_br(then_bb, merge_bb);
+
 	if (else_br != nullptr)
 	{
 		do_maybe_br(else_bb, merge_bb);
