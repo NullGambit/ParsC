@@ -1,11 +1,7 @@
-@extern
+
+@extern:
+
 fn malloc(size: i32): ^void
-
-@extern
 fn free(ptr: ^void)
-
-@extern
 fn rand(): i32
-
-@extern
 fn srand(seed: u32)

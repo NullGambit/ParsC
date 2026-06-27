@@ -1,2 +1,4 @@
 
+@extern:
+
 fn memcpy(s1: const ^void, s2: const ^void, n: u64): ^void

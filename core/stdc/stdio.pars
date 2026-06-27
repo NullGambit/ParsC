@@ -1,20 +1,11 @@
 
-alias FILE = i32
+alias FILE = distinct i32
 
-@extern
+@extern:
+
 fn printf(fmt: str, ...): i32
-
-@extern
 fn puts(fmt: str): i32
-
-@extern
 fn fopen(filename: str, mode: str): ^FILE
-
-@extern
 fn fwrite(ptr: str, size: i32, nmemb: i32, stream: ^FILE): u64
-
-@extern
 fn fread(ptr: str, size: i32, nmemb: i32, stream: ^FILE): u64
-
-@extern
 fn fclose(stream: ^FILE): i32

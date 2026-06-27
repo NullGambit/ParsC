@@ -404,6 +404,10 @@ pars::Node* pars::AST::parse_return()
 
 void pars::AST::parse_attributes()
 {
+	thread_local std::vector<TokenType> attr_buffer;
+
+	attr_buffer.clear();
+
 	auto emplace_token = [this]
 	{
 		m_lexer.advance();
@@ -412,12 +416,12 @@ void pars::AST::parse_attributes()
 
 		if (token.type > _AttributeKeywordStart && token.type < _AttributeKeywordEnd)
 		{
-			m_pending_attributes.emplace_back(token.type);
+			attr_buffer.emplace_back(token.type);
 		}
 		else
 		{
-			throw FrontendError{m_lexer.peek_last(),
-				fmt::format("'{}' is not a valid keyword attribute", m_lexer.peek_last().lexeme)};
+			throw FrontendError{token,
+				fmt::format("'{}' is not a valid keyword attribute", token.lexeme)};
 		}
 	};
 
@@ -439,6 +443,10 @@ void pars::AST::parse_attributes()
 
 		m_lexer.expect(RightBracket);
 	}
+
+	auto &container = m_lexer.match(Colon) ? m_module_attributes : m_pending_attributes;
+
+	container.insert(container.end(), attr_buffer.begin(), attr_buffer.end());
 }
 
 pars::Symbol pars::AST::get_symbol()
@@ -448,10 +456,11 @@ pars::Symbol pars::AST::get_symbol()
 		.name = m_lexer.expect(Identifier).lexeme
 	};
 
-	if (!m_pending_attributes.empty())
+	if (!m_pending_attributes.empty() || !m_module_attributes.empty())
 	{
-		symbol.attribute_count = m_pending_attributes.size();
+		symbol.attribute_count = m_pending_attributes.size() + m_module_attributes.size();
 		symbol.attribute_id = set_attributes(m_pending_attributes);
+		set_attributes(m_module_attributes);
 
 		m_pending_attributes.clear();
 	}
