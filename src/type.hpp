@@ -31,6 +31,8 @@ namespace pars
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_abs(EmitCtx &ctx, llvm::Value *value) const { return nullptr; }
+		virtual llvm::Value* op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
+		virtual llvm::Value* op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
 
 		virtual bool is_iterable() const { return false; }
 		virtual std::span<Type*> get_iter_bindings() const { return {}; }
@@ -119,6 +121,9 @@ virtual bool is_equal(Type const *other) const override							\
 
 		u32 get_size() override;
 
+		llvm::Value *op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
+		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
+
 		DEFAULT_INTEGRAL_EQUAL(Integral)
 	};
 
@@ -167,6 +172,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
 

@@ -75,21 +75,12 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *rhs_value = rhs->emit(ctx);
 
-	if (!lhs->type->is_ptr())
-	{
-		value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
-	}
-
 	if (op == Equal)
 	{
 		return ctx.builder.CreateStore(rhs_value, value);
 	}
 
 	auto *curr_value = lhs->emit(ctx);
-
-	// TODO i commented this out cause it can sometimes carryover instructions from other functions
-	// i didnt really think this through that well. whoops
-	//auto *ptr_value = ctx.pointer_cache[symbol];
 
 	TokenType op_op {};
 

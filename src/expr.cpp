@@ -207,24 +207,15 @@ llvm::Value* pars::CastExpr::emit(EmitCtx& ctx)
 {
 	auto *value = target->emit(ctx);
 
-	auto *target_type = type->get_llvm_type(ctx.llvm_ctx);
+	auto *result = original_type->op_cast(ctx, value, type);
 
-	// this is a bit of a hacky solution but its ok enough
-	auto a_integral = dynamic_cast<Integral*>(type);
-	auto b_integral = dynamic_cast<Integral*>(original_type);
-
-	auto src_signed = true;
-	auto dst_signed = true;
-
-	if (a_integral != nullptr && b_integral != nullptr)
+	if (result == nullptr)
 	{
-		src_signed = b_integral->is_signed;
-		dst_signed = a_integral->is_signed;
+		throw CompileError{this, fmt::format("cannot cast {} to {}",
+			original_type->get_type_name(), type->get_type_name())};
 	}
 
-	const auto op = llvm::CastInst::getCastOpcode(value, src_signed, target_type, dst_signed);
-
-	return ctx.builder.CreateCast(op, value, target_type);
+	return result;
 }
 
 llvm::Value * pars::NamedExpr::emit(EmitCtx &ctx)
@@ -281,8 +272,6 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 			{
 				throw CompileError{this, "Cannot dereference void pointer. size is not known"};
 			}
-
-			ctx.pointer_cache[symbol->symbol] = ptr_value;
 
 			return ctx.builder.CreateLoad(inner->get_llvm_type(ctx.llvm_ctx), ptr_value);
 		}

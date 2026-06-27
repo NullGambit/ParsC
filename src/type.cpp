@@ -89,6 +89,29 @@ u32 pars::Integral::get_size()
 	return bits / 8;
 }
 
+llvm::Value * pars::Integral::op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+{
+	auto *target_type = desired_type->get_llvm_type(ctx.llvm_ctx);
+
+	auto *other_type = dynamic_cast<Integral*>(desired_type);
+
+	const auto op = llvm::CastInst::getCastOpcode(value, is_signed, target_type, other_type->is_signed);
+
+	return ctx.builder.CreateCast(op, value, target_type);
+}
+
+llvm::Value * pars::Integral::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+{
+	auto *other_type = dynamic_cast<Integral*>(desired_type);
+
+	if (other_type->bits > bits)
+	{
+		return op_cast(ctx, value, desired_type);
+	}
+
+	return nullptr;
+}
+
 llvm::Type * pars::AliasType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return type->get_llvm_type(ctx);
@@ -235,6 +258,11 @@ llvm::Value * pars::Float::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs
 	}
 
 	return nullptr;
+}
+
+llvm::Value * pars::Float::get_default_value(llvm::LLVMContext *ctx) const
+{
+	return llvm::ConstantFP::get(get_llvm_type(ctx), 0.0f);
 }
 
 llvm::Value * pars::Float::op_abs(EmitCtx &ctx, llvm::Value *value) const
