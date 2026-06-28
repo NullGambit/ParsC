@@ -25,6 +25,11 @@ bool pars::check_type_equality(Type const *a_type, Type const *b_type)
 	return a_type->is_equal(b_type) || b_type->is_equal(a_type);
 }
 
+bool pars::is_assignable_from(Type const *from, Type const *to)
+{
+	return check_type_equality(from, to) || to->can_coerce_into(from);
+}
+
 llvm::Type * pars::Void::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::Type::getVoidTy(*ctx);
@@ -95,6 +100,11 @@ llvm::Value * pars::Integral::op_cast(EmitCtx &ctx, llvm::Value *value, Type *de
 
 	auto *other_type = dynamic_cast<Integral*>(desired_type);
 
+	if (other_type == nullptr)
+	{
+		return nullptr;
+	}
+
 	const auto op = llvm::CastInst::getCastOpcode(value, is_signed, target_type, other_type->is_signed);
 
 	return ctx.builder.CreateCast(op, value, target_type);
@@ -102,14 +112,14 @@ llvm::Value * pars::Integral::op_cast(EmitCtx &ctx, llvm::Value *value, Type *de
 
 llvm::Value * pars::Integral::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
 {
-	auto *other_type = dynamic_cast<Integral*>(desired_type);
+	return op_cast(ctx, value, desired_type);
+}
 
-	if (other_type->bits > bits)
-	{
-		return op_cast(ctx, value, desired_type);
-	}
+bool pars::Integral::can_coerce_into(Type const *desired_type) const
+{
+	auto *other_type = dynamic_cast<const Integral*>(desired_type);
 
-	return nullptr;
+	return bits > other_type->bits;
 }
 
 llvm::Type * pars::AliasType::get_llvm_type(llvm::LLVMContext *ctx) const

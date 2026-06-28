@@ -139,11 +139,13 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 
 	for (auto *arg : arguments)
 	{
+		Type *desired_type {};
+
 		if (index < prototype->signature.parameters.size())
 		{
-			auto *desired_type = prototype->signature.parameters[index]->type;
+			desired_type = prototype->signature.parameters[index]->type;
 
-			if (!check_type_equality(arg->type, desired_type))
+			if (!is_assignable_from(arg->type, desired_type))
 			{
 				throw CompileError
 				{
@@ -159,7 +161,14 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 			}
 		}
 
-		argv.emplace_back(arg->emit(ctx));
+		auto *value = arg->emit(ctx);
+
+		if (desired_type != nullptr && desired_type->can_coerce_into(arg->type))
+		{
+			value = arg->type->op_coerce(ctx, value, desired_type);
+		}
+
+		argv.emplace_back(value);
 
 		index++;
 	}

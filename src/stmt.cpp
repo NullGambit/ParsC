@@ -75,6 +75,11 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	auto *rhs_value = rhs->emit(ctx);
 
+	if (lhs->type->can_coerce_into(rhs->type))
+	{
+		rhs_value = lhs->type->op_coerce(ctx, rhs_value, lhs->type);
+	}
+
 	if (op == Equal)
 	{
 		return ctx.builder.CreateStore(rhs_value, value);

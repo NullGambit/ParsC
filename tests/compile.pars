@@ -12,8 +12,15 @@ import core.stdc.stdlib
 
 fn main()
 {
-    var x = 10
-    var s: i64
+    var file = fopen("test.txt", "a+")
 
-    s = x
+    fwrite("hello", 1, 5, file)
+
+    var buffer = cast(str)malloc(6)
+
+    fread(buffer, 1, 5, file)
+
+    printf("file contents %s\n", buffer)
+
+    fclose(file)
 }

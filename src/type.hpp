@@ -33,6 +33,7 @@ namespace pars
 		virtual llvm::Value* op_abs(EmitCtx &ctx, llvm::Value *value) const { return nullptr; }
 		virtual llvm::Value* op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
 		virtual llvm::Value* op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
+		virtual bool can_coerce_into(Type const *desired_type) const { return false; }
 
 		virtual bool is_iterable() const { return false; }
 		virtual std::span<Type*> get_iter_bindings() const { return {}; }
@@ -42,6 +43,8 @@ namespace pars
 	};
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
+
+	bool is_assignable_from(Type const *from, Type  const *to);
 
 	template<class T>
 	T const * types_match(Type const *a_type, Type  const *b_type)
@@ -123,6 +126,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
+		bool can_coerce_into(Type const *desired_type) const override;
 
 		DEFAULT_INTEGRAL_EQUAL(Integral)
 	};
@@ -268,9 +272,13 @@ virtual bool is_equal(Type const *other) const override							\
 	static const Char UCharType {8, !IS_SIGNED, "uchar"};
 	static const Pointer VoidPointerType {&VoidType};
 
-	struct Str : Type
+	struct Str : Pointer
 	{
 		DEFAULT_TYPE_EQUAL(Str)
+
+		Str() :
+			Pointer{&CharType}
+		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 

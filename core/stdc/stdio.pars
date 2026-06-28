@@ -6,6 +6,6 @@ alias FILE = distinct i32
 fn printf(fmt: str, ...): i32
 fn puts(fmt: str): i32
 fn fopen(filename: str, mode: str): ^FILE
-fn fwrite(ptr: str, size: i32, nmemb: i32, stream: ^FILE): u64
-fn fread(ptr: str, size: i32, nmemb: i32, stream: ^FILE): u64
+fn fwrite(ptr: str, size: u64, nmemb: u64, stream: ^FILE): u64
+fn fread(ptr: str, size: u64, nmemb: u64, stream: ^FILE): u64
 fn fclose(stream: ^FILE): i32
