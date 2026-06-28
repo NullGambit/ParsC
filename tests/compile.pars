@@ -10,17 +10,18 @@ import core.stdc.stdlib
 // correct constness
 // constness comes within types. even aliases
 
+fn do_math(x: i32) => | 1 - 2 ** 4 |
+
 fn main()
 {
-    var file = fopen("test.txt", "a+")
+    var limit = 10
 
-    fwrite("hello", 1, 5, file)
+    for i in 0..limit
+    {
+        printf("#%d\n", i)
+    }
 
-    var buffer = cast(str)malloc(6)
+    var y = do_math(32)
 
-    fread(buffer, 1, 5, file)
-
-    printf("file contents %s\n", buffer)
-
-    fclose(file)
+    printf("math result = %d\n", y)
 }

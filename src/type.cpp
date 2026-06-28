@@ -406,7 +406,7 @@ llvm::Value * pars::RangeType::iter_emit_condition(EmitCtx &ctx, Expr *iterable,
 
 	auto *v = ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), vars[0]);
 
-	return BoolType.op_binary(ctx, op, v, max);
+	return bin->left->type->op_binary(ctx, op, v, max);
 }
 
 llvm::Value * pars::RangeType::iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
