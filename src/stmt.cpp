@@ -32,24 +32,28 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		}
 	}
 
-	if (!has_flag(type_meta.flags, TypeFlags::Const))
+	auto *fn = ctx.builder.GetInsertBlock()->getParent();
+	auto &entry = fn->getEntryBlock();
+	auto insert_point = entry.getFirstNonPHIOrDbgOrAlloca();
+
+	llvm::IRBuilder<> temp_builder(&entry, insert_point);
+
+	auto *inst = temp_builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
+
+	if (has_flag(type_meta.flags, TypeFlags::Const))
 	{
-		auto *fn = ctx.builder.GetInsertBlock()->getParent();
-		auto &entry = fn->getEntryBlock();
-		auto insert_point = entry.getFirstNonPHIOrDbgOrAlloca();
+		auto const_md = ctx.llvm_ctx->getMDKindID("Const");
 
-		llvm::IRBuilder<> temp_builder(&entry, insert_point);
+		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
 
-		auto *inst = temp_builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
-
-		ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
-
-		value = inst;
+		inst->setMetadata(const_md, node);
 	}
 
-	ctx.named_values[symbol.name] = value;
+	ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
 
-	return value;
+	ctx.named_values[symbol.name] = inst;
+
+	return inst;
 }
 
 bool pars::VarDeclStmt::is_explicitly_typed() const
@@ -64,11 +68,21 @@ bool pars::VarDeclStmt::is_type_inferred() const
 
 llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 {
-	auto *value = ctx.named_values[symbol];
+	auto *value = lhs->emit_ptr(ctx);
 
 	if (value == nullptr || !value->getType()->isPointerTy())
 	{
 		throw CompileError{this, fmt::format("{} is not mutable", symbol)};
+	}
+
+	if (auto alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
+	{
+		auto *node = alloca->getMetadata("Const");
+
+		if (node != nullptr)
+		{
+			throw CompileError{this, fmt::format("{} is a constant variable", symbol)};
+		}
 	}
 
 	using enum TokenType;

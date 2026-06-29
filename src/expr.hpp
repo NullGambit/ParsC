@@ -19,6 +19,8 @@ namespace pars
 	struct Expr : Node
 	{
 		Type *type;
+
+		virtual llvm::Value *emit_ptr(EmitCtx &ctx) { return nullptr; }
 	};
 
 	using LiteralExprValue = std::variant
@@ -69,6 +71,8 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 
+		llvm::Value *emit_ptr(EmitCtx &ctx) override;
+
 		ACCEPT
 	};
 
@@ -88,6 +92,8 @@ namespace pars
 		Expr* inner;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
+
+		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
 		ACCEPT
 	};
@@ -173,9 +179,11 @@ namespace pars
 	struct PtrOpExpr : Expr
 	{
 		TokenType op;
-		SymbolExpr *symbol;
+		Expr *target;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
+
+		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
 		ACCEPT
 	};

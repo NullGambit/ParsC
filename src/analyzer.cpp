@@ -262,18 +262,18 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 				stmt->lhs->type->get_type_name(), stmt->rhs->type->get_type_name())};
 	}
 
-	if (auto *symbol = dynamic_cast<SymbolExpr*>(stmt->lhs))
-	{
-		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol->symbol_node))
-		{
-			var->flags |= VarFlags::ShouldAlloca;
-
-			if (has_flag(var->type_meta.flags, TypeFlags::Const))
-			{
-				throw FrontendError(var->token, fmt::format("Cannot mutate const variable '{}'", var->symbol.name));
-			}
-		}
-	}
+	// if (auto *symbol = dynamic_cast<SymbolExpr*>(stmt->lhs))
+	// {
+	// 	if (auto *var = dynamic_cast<VarDeclStmt*>(symbol->symbol_node))
+	// 	{
+	// 		var->flags |= VarFlags::ShouldAlloca;
+	//
+	// 		if (has_flag(var->type_meta.flags, TypeFlags::Const))
+	// 		{
+	// 			throw FrontendError(var->token, fmt::format("Cannot mutate const variable '{}'", var->symbol.name));
+	// 		}
+	// 	}
+	// }
 }
 
 void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
@@ -513,9 +513,9 @@ void pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 
 void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
-	expr->symbol->accept(this, ctx);
+	expr->target->accept(this, ctx);
 
-	if (auto *ptr = dynamic_cast<Pointer*>(expr->symbol->type))
+	if (auto *ptr = dynamic_cast<Pointer*>(expr->target->type))
 	{
 		expr->type = const_cast<Type*>(ptr->inner);
 	}
@@ -523,7 +523,7 @@ void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 	{
 		auto *p = new_node<Pointer>();
 
-		p->inner = expr->symbol->type;
+		p->inner = expr->target->type;
 
 		expr->type = p;
 	}

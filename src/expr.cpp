@@ -112,7 +112,7 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 		throw CompileError{this, fmt::format("unknown symbol '{}'", symbol)};
 	}
 
-	auto *value = ctx.named_values[symbol];
+	auto *value = emit_ptr(ctx);
 
 	if (llvm::isa<llvm::AllocaInst>(value))
 	{
@@ -120,6 +120,11 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 	}
 
 	return value;
+}
+
+llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx)
+{
+	return ctx.named_values[symbol];
 }
 
 llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
@@ -187,6 +192,11 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx)
 {
 	return inner->emit(ctx);
+}
+
+llvm::Value * pars::GroupExpr::emit_ptr(EmitCtx &ctx)
+{
+	return inner->emit_ptr(ctx);
 }
 
 llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)
@@ -258,7 +268,34 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 {
 	using enum TokenType;
 
-	auto *value = ctx.named_values[symbol->symbol];
+	auto *value = emit_ptr(ctx);
+
+	switch (op)
+	{
+		case Ampersand:
+		{
+			return value;
+		}
+		case Caret:
+		{
+			auto *inner = dynamic_cast<Pointer*>(target->type)->inner;
+
+			if (inner->is_equal(&VoidType))
+			{
+				throw CompileError{this, "Cannot dereference void pointer. size is not known"};
+			}
+
+			return ctx.builder.CreateLoad(inner->get_llvm_type(ctx.llvm_ctx), value);
+		}
+		default: return nullptr;
+ 	}
+}
+
+llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx)
+{
+	using enum TokenType;
+
+	auto *value = target->emit_ptr(ctx);
 
 	if (!value->getType()->isPointerTy())
 	{
@@ -273,19 +310,10 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
 		}
 		case Caret:
 		{
-			auto *ptr_value = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
-
-			auto *inner = dynamic_cast<Pointer*>(symbol->type)->inner;
-
-			if (inner->is_equal(&VoidType))
-			{
-				throw CompileError{this, "Cannot dereference void pointer. size is not known"};
-			}
-
-			return ctx.builder.CreateLoad(inner->get_llvm_type(ctx.llvm_ctx), ptr_value);
+			return ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
 		}
 		default: return nullptr;
- 	}
+	}
 }
 
 llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx)

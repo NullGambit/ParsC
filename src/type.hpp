@@ -231,6 +231,11 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override { return nullptr; }
 
+		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override
+		{
+			return value;
+		}
+
 		bool is_equal(Type const *other) const override;
 
 		bool is_ptr() const override

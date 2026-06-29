@@ -735,12 +735,12 @@ pars::Expr* pars::AST::parse_primary()
 
 		expr->op = m_lexer.peek_last().type;
 
-		expr->symbol = dynamic_cast<SymbolExpr*>(parse_primary());
+		expr->target = parse_primary();
 
-		if (expr->symbol == nullptr)
-		{
-			throw FrontendError{expr->token, "Cannot perform pointer operation on a temporary"};
-		}
+		// if (expr->symbol == nullptr)
+		// {
+		// 	throw FrontendError{expr->token, "Cannot perform pointer operation on a temporary"};
+		// }
 
 		return expr;
 	}
