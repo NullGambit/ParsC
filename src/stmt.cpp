@@ -260,6 +260,11 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 
 llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx)
 {
+	if (expr == nullptr)
+	{
+		return ctx.builder.CreateRetVoid();
+	}
+
 	auto *value = expr->emit(ctx);
 
 	return ctx.builder.CreateRet(value);

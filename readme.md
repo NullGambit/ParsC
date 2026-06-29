@@ -48,7 +48,7 @@ fn main()
     printf("math result = %d\n", y)
     
     // unrestricted memory access
-    var ptr = cast(i32)malloc(sizeof(i32))
+    var ptr = cast(^i32)malloc(sizeof(i32))
      
     if ptr == nil 
     {

@@ -1,3 +1,4 @@
+// built in c interop
 import core.stdc.stdio
 import core.stdc.stdlib
 
@@ -10,16 +11,41 @@ import core.stdc.stdlib
 // correct constness
 // constness comes within types. even aliases
 
+// | | abs operator and ** power operator
+fn do_math(x: i32) => | 1 - 2 ** -x |
+
 fn main()
 {
-    var x = 10
-    var y = 20
+    var limit = 10
+    
+    for i in 0..limit
+    {
+        printf("#%d\n", i)
+    }
 
-    var ptr = &x
+    if limit > 5
+    {
+        printf("%d is bigger than 5\n", limit)
+    }
+    else
+    {
+        printf("%d is smaller than 5\n", limit)
+    }
 
-    ptr += 1
-    ^ptr = 30
+    var y = do_math(32)
 
-    printf("%d %p %p\n", ^ptr, &ptr, ptr)
-
+    printf("math result = %d\n", y)
+    
+    // unrestricted memory access
+    var ptr = cast(^i32)malloc(sizeof(i32))
+     
+    if ptr == nil 
+    {
+        printf("pointer is nil\n")
+        return
+    }
+    
+    ^ptr = 10
+    
+    printf("%d %p\n", ^ptr, ptr)
 }

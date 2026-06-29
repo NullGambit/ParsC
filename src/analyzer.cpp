@@ -218,6 +218,11 @@ void pars::Analyzer::visit(ImportStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 {
+	if (stmt->expr== nullptr)
+	{
+		return;
+	}
+
 	auto *fn = get_current_fn();
 
 	stmt->expr->accept(this, {fn->signature.return_type});
