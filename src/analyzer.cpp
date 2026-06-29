@@ -163,7 +163,7 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	}
 
 	// var x: T = E
-	if (stmt->initializer != nullptr && stmt->is_explicitly_typed() && !stmt->initializer->type->is_equal(stmt->type))
+	if (stmt->initializer != nullptr && stmt->is_explicitly_typed() && !is_assignable_from(stmt->initializer->type, stmt->type))
 	{
 		throw FrontendError
 		{

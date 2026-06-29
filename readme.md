@@ -1,3 +1,23 @@
+# Pars
+
+Pars is a fast and expressive systems programming language that's rust without handbrakes.
+
+Currently, the language is extremely experimental and WIP.
+
+## Examples
+
+### Hello world
+```rs
+import core.std.stdio
+
+fn main()
+{
+    printf("hello world!\n)
+}
+```
+
+### Control Flow and functions
+```rs
 import core.stdc.stdio
 import core.stdc.stdlib
 
@@ -25,3 +45,4 @@ fn main()
 
     printf("math result = %d\n", y)
 }
+```
