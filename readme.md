@@ -18,15 +18,17 @@ fn main()
 
 ### Control Flow and functions
 ```rs
+// built in c interop
 import core.stdc.stdio
 import core.stdc.stdlib
 
+// | | abs operator and ** power operator
 fn do_math(x: i32) => | 1 - 2 ** -x |
 
 fn main()
 {
     var limit = 10
-
+    
     for i in 0..limit
     {
         printf("#%d\n", i)
@@ -44,5 +46,18 @@ fn main()
     var y = do_math(32)
 
     printf("math result = %d\n", y)
+    
+    // unrestricted memory access
+    var ptr = cast(i32)malloc(sizeof(i32))
+     
+    if ptr == nil 
+    {
+        printf("pointer is nil\n")
+        return
+    }
+    
+    ^ptr = 10
+    
+    printf("%d %p\n", ^ptr, ptr)
 }
 ```
