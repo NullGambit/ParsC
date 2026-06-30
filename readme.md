@@ -20,7 +20,6 @@ fn main()
 ```rs
 // built in c interop
 import core.stdc.stdio
-import core.stdc.stdlib
 
 // | | abs operator and ** power operator
 fn do_math(x: i32) => | 1 - 2 ** -x |
@@ -46,6 +45,9 @@ fn main()
     var y = do_math(32)
 
     printf("math result = %d\n", y)
+    
+    // local imports
+    import core.stdc.stdlib
     
     // unrestricted memory access
     var ptr = cast(^i32)malloc(sizeof(i32))

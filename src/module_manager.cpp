@@ -19,9 +19,6 @@ void pars::add_module_path(const std::filesystem::path &path)
 	g_include_paths.emplace_back(path);
 }
 
-// bar.windows.pars
-// bar.linux.pars
-
 enum class ModulePlatform
 {
 	Linux,
@@ -37,48 +34,62 @@ ModulePlatform PLATFORM = ModulePlatform::Windows;
 
 pars::Module* pars::get_module(std::filesystem::path &path)
 {
-	if (is_directory(path))
+	std::optional<SourceFile> maybe_source;
+
+	std::filesystem::path potential_path;
+
+	for (auto &include_path : g_include_paths)
 	{
-		path /= "package.pars";
+		potential_path = include_path / path;
+
+		if (is_directory(path))
+		{
+			potential_path /= "package.pars";
+		}
+
+		// TODO: use llvm target platform so this works with cross compilation
+		// TODO: the performance here is sucks. lots of room for optimizations.
+
+		auto p = potential_path.string();
+
+		if (std::filesystem::exists(p + ".linux.pars") && PLATFORM == ModulePlatform::Linux)
+		{
+			potential_path.replace_extension(".linux.pars");
+		}
+		else if (std::filesystem::exists(p + ".windows.pars") && PLATFORM == ModulePlatform::Windows)
+		{
+			potential_path.replace_extension(".windows.pars");
+		}
+
+		if (!is_directory(potential_path) && potential_path.extension() != "pars")
+		{
+			potential_path.replace_extension("pars");
+		}
+
+		auto iter = g_modules_table.find(potential_path);
+
+		if (iter != g_modules_table.end())
+		{
+			return iter->second;
+		}
+
+		maybe_source = load_file(potential_path.c_str());
+
+		if (maybe_source.has_value())
+		{
+			break;
+		}
 	}
-
-	// TODO: use llvm target platform so this works with cross compilation
-	// TODO: the performance here is sucks. lots of room for optimizations.
-
-	auto p = path.string();
-
-	if (std::filesystem::exists(p + ".linux.pars") && PLATFORM == ModulePlatform::Linux)
-	{
-		path.replace_extension(".linux.pars");
-	}
-	else if (std::filesystem::exists(p + ".windows.pars") && PLATFORM == ModulePlatform::Windows)
-	{
-		path.replace_extension(".windows.pars");
-	}
-
-	if (!is_directory(path) && path.extension() != "pars")
-	{
-		path.replace_extension("pars");
-	}
-
-	auto iter = g_modules_table.find(path);
-
-	if (iter != g_modules_table.end())
-	{
-		return iter->second;
-	}
-
-	auto maybe_source = load_file(path.c_str());
 
 	if (!maybe_source.has_value())
 	{
 		return nullptr;
 	}
 
-	auto *module = new Module{path.c_str(), &g_llvm_ctx};
+	auto *module = new Module{potential_path.c_str(), &g_llvm_ctx};
 
 	g_modules.emplace_back(module);
-	g_modules_table.emplace(path, module);
+	g_modules_table.emplace(potential_path, module);
 
 	auto *parse_ctx = new ParseCtx{.scope_table = {}, .source_file = maybe_source.value()};
 

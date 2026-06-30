@@ -24,6 +24,8 @@ namespace pars
 		u32 file_id;
 	};
 
+	// adds a module to search path when importing.
+	// NOT thread safe. but probably doesnt need to be
 	void add_module_path(const std::filesystem::path &path);
 
 	Module* get_module(std::filesystem::path &path);

@@ -266,19 +266,6 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 			fmt::format("assignment to type of {} cannot be done with type of {}",
 				stmt->lhs->type->get_type_name(), stmt->rhs->type->get_type_name())};
 	}
-
-	// if (auto *symbol = dynamic_cast<SymbolExpr*>(stmt->lhs))
-	// {
-	// 	if (auto *var = dynamic_cast<VarDeclStmt*>(symbol->symbol_node))
-	// 	{
-	// 		var->flags |= VarFlags::ShouldAlloca;
-	//
-	// 		if (has_flag(var->type_meta.flags, TypeFlags::Const))
-	// 		{
-	// 			throw FrontendError(var->token, fmt::format("Cannot mutate const variable '{}'", var->symbol.name));
-	// 		}
-	// 	}
-	// }
 }
 
 void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
@@ -352,7 +339,6 @@ void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 	auto bind = [this](VarDeclStmt *var, Type *type)
 	{
 		var->type = type;
-		var->flags |= VarFlags::ShouldAlloca;
 
 		m_ctx->scope_table.add_to_scope(var->symbol, var, PRIVATE_SYMBOL, m_ctx->scope_table.get_level() + 1);
 	};

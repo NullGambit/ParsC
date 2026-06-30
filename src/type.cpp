@@ -119,7 +119,7 @@ bool pars::Integral::can_coerce_into(Type const *desired_type) const
 {
 	auto *other_type = dynamic_cast<const Integral*>(desired_type);
 
-	return bits > other_type->bits;
+	return bits > other_type->bits || (bits == other_type->bits && is_signed == other_type->is_signed);
 }
 
 llvm::Type * pars::AliasType::get_llvm_type(llvm::LLVMContext *ctx) const

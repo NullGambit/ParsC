@@ -2,9 +2,13 @@
     even doing checks for eof seems to not work unless the file ended with a line feed
 - bitwise operators
 - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
+- improve literal analysis. literals should be coerced into anytype if they fit.
+- correctly handle float min and max value properties. currently its the same as integers which is obviously wrong.
 - replace recursive descent with operator precedent parsing (pratt parsing)
 - break and continue to label. possibly goto? probably a bad idea anyway
 - function pointers
+- automatic va_list creation when passing ... to another function
+- manual va_list support
 - theres too much repeated work between the ast parser and the analyzer. and sometimes even the code gen.
 - compile time for loops
 - make types be responsible for how they can be casted to other types

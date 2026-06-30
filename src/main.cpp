@@ -25,12 +25,15 @@ int main(int argc, char **argv)
 		fmt::panic("Must provide an entry file");
 	}
 
+	auto exe_path = std::filesystem::path{argv[0]};
 	auto source_path = std::filesystem::path{argv[1]};
+
+	pars::add_module_path("./");
+	pars::add_module_path(exe_path / "std");
+	pars::add_module_path(exe_path / "core");
 
 	try
 	{
-		pars::add_module_path("./");
-
 		init_global_symbols();
 
 		auto *main_module = pars::get_module(source_path);
