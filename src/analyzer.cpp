@@ -578,6 +578,11 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 	expr->lhs->accept(this, ctx);
 	expr->index->accept(this, ctx);
 
+	if (dynamic_cast<Integer*>(expr->index->type) == nullptr)
+	{
+		throw FrontendError{expr->index->token, "Array index must be an integer"};
+	}
+
 	auto *array_type = dynamic_cast<Array*>(expr->lhs->type);
 
 	if (array_type != nullptr)
