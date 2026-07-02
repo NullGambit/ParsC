@@ -340,3 +340,13 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx)
 
 	return array;
 }
+
+llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx)
+{
+	auto *array = lhs->emit_ptr(ctx);
+	auto *index_value = index->emit(ctx);
+
+	auto *ptr = ctx.builder.CreateInBoundsGEP(lhs->type->get_llvm_type(ctx.llvm_ctx), array, {ctx.builder.getInt64(0), index_value});
+
+	return ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), ptr);
+}

@@ -573,6 +573,19 @@ void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 	// }
 }
 
+void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
+{
+	expr->lhs->accept(this, ctx);
+	expr->index->accept(this, ctx);
+
+	auto *array_type = dynamic_cast<Array*>(expr->lhs->type);
+
+	if (array_type != nullptr)
+	{
+		expr->type = array_type->element_type;
+	}
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);

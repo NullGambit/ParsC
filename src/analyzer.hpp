@@ -46,6 +46,7 @@ namespace pars
 		void visit(PtrOpExpr* expr, VisitCtx ctx) override;
 		void visit(PackedExpr* expr, VisitCtx ctx) override;
 		void visit(ArrayLiteralExpr* expr, VisitCtx ctx) override;
+		void visit(IndexOpExpr* expr, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 

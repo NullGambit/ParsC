@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct IndexOpExpr;
 	struct ArrayLiteralExpr;
 	struct PackedExpr;
 	struct DereferenceExpr;
@@ -62,6 +63,7 @@ namespace pars
 		virtual void visit(PtrOpExpr *expr, VisitCtx ctx) {}
 		virtual void visit(PackedExpr *expr, VisitCtx ctx) {}
 		virtual void visit(ArrayLiteralExpr *expr, VisitCtx ctx) {}
+		virtual void visit(IndexOpExpr *expr, VisitCtx ctx) {}
 		virtual void visit(ImportStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}

@@ -667,6 +667,7 @@ pars::Expr* pars::AST::parse_primary()
 
 			return expr;
 		}
+
 		if (m_lexer.match(Dot))
 		{
 			auto *expr = new_node<MemberAccessExpr>();
@@ -676,10 +677,22 @@ pars::Expr* pars::AST::parse_primary()
 
 			return expr;
 		}
-
 		auto *expr = new_node<SymbolExpr>();
 
 		expr->symbol = identifier;
+
+		if (m_lexer.match(LeftBracket))
+		{
+			auto *index_op = new_node<IndexOpExpr>();
+
+			index_op->lhs = expr;
+
+			index_op->index = expression();
+
+			m_lexer.expect(RightBracket);
+
+			return index_op;
+		}
 
 		return expr;
 	}

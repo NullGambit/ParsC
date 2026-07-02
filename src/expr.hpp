@@ -203,4 +203,14 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct IndexOpExpr : Expr
+	{
+		Expr *lhs;
+		Expr *index;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }
