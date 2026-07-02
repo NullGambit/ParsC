@@ -1,5 +1,15 @@
 - BUG if expecting expression but got eof will make the compiler get stuck
     even doing checks for eof seems to not work unless the file ended with a line feed
+
+- stuff i need to do for arrays and array adjacent features:
+    - slices
+    - iterators
+    - convert string to be '[]const char' slice
+    - index access
+    - array programming
+    - type cache
+    - value properties and properties such as .length and .ptr
+
 - bitwise operators
 - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
 - improve literal analysis. literals should be coerced into anytype if they fit.
@@ -15,27 +25,20 @@
 - floor div with //
 - stringify operator
 - string interpolation
-- scope based attributes
-- handle type coercion and promotion
 - currently shadowing works fine. but this was unintended. in the future i might want to consider disallowing it.
 - integral literal suffixes
 - typeof operator
 - assert statement
 - integral literals in other bases such as hex or binary
-- builtin value properties such as my_string.length
 - improve api for compiler functions
 - real type that can accept any integral value and automatically does the correct code gen depending on its current value
 - vardiac arguments
 - function overloading
-- apply operators
 - static module initializer functions
 - runtime type information through a Type type
 - typeid system
 - type is expression
-- control flow
-- arrays
 - for loop where clause
-- pointers
 - references
 - auto references
 - functions as parameters
@@ -47,7 +50,6 @@
 - move and copy system
 - reflection
 - traits
-- implicitly imported modules
 - defer
 - raii
 - operator overloading
@@ -57,7 +59,6 @@
 - pattern matching
 - context system
 - mixins
-- compile time control flow
 - comptime blocks
 - closures
 - tuples and destructuring

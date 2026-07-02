@@ -330,10 +330,11 @@ pars::VarDeclStmt* pars::AST::parse_var()
 
 	if (m_lexer.match(Colon))
 	{
-		auto [name, flags] = parse_type();
+		auto old_flags = stmt->type_meta.flags;
 
-		stmt->type_meta.name = name;
-		stmt->type_meta.flags |= flags;
+		stmt->type_meta = parse_type();
+
+		stmt->type_meta.flags |= old_flags;
 	}
 
 	if (m_lexer.match(Equal))
@@ -748,6 +749,24 @@ pars::Expr* pars::AST::parse_primary()
 	{
 		return new_node<PackedExpr>();
 	}
+	if (m_lexer.match(LeftBracket))
+	{
+		auto *expr = new_node<ArrayLiteralExpr>();
+
+		while (true)
+		{
+			expr->elements.emplace_back(expression());
+
+			if (!m_lexer.match(Comma))
+			{
+				break;
+			}
+		}
+
+		m_lexer.expect(RightBracket);
+
+		return expr;
+	}
 
 	auto *literal = new_node<LiteralExpr>();
 
@@ -896,14 +915,31 @@ pars::TypeMeta pars::AST::parse_type()
 {
 	TypeMeta meta {};
 
-	if (m_lexer.match(Const))
+	while (!m_lexer.peek(Identifier))
 	{
-		meta.flags |= TypeFlags::Const;
-	}
+		if (m_lexer.match(Const))
+		{
+			meta.flags |= TypeFlags::Const;
+		}
 
-	if (m_lexer.match(Caret))
-	{
-		meta.flags |= TypeFlags::Pointer;
+		if (m_lexer.match(Caret))
+		{
+			meta.flags |= TypeFlags::Pointer;
+		}
+
+		if (m_lexer.match(LeftBracket))
+		{
+			if (m_lexer.match(IntegerLiteral))
+			{
+				auto sv = m_lexer.peek_last().lexeme;
+
+				std::from_chars(sv.data(), sv.data() + sv.size(), meta.array_size);
+			}
+
+			m_lexer.expect(RightBracket);
+
+			meta.flags |= TypeFlags::Array;
+		}
 	}
 
 	meta.name = m_lexer.expect(Identifier).lexeme;

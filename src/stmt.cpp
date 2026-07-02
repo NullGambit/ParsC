@@ -32,13 +32,20 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		}
 	}
 
-	auto *fn = ctx.builder.GetInsertBlock()->getParent();
-	auto &entry = fn->getEntryBlock();
-	auto insert_point = entry.getFirstNonPHIOrDbgOrAlloca();
+	llvm::AllocaInst *inst {};
 
-	llvm::IRBuilder<> temp_builder(&entry, insert_point);
+	if (auto *alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
+	{
+		inst = alloca;
+	}
+	else
+	{
+		auto builder = get_alloca_builder(ctx);
 
-	auto *inst = temp_builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
+		inst = builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
+
+		ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
+	}
 
 	if (has_flag(type_meta.flags, TypeFlags::Const))
 	{
@@ -48,8 +55,6 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 
 		inst->setMetadata(const_md, node);
 	}
-
-	ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
 
 	ctx.named_values[symbol.name] = inst;
 

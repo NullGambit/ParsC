@@ -363,6 +363,28 @@ llvm::Value * pars::Packed::get_default_value(llvm::LLVMContext *ctx) const
 	return VoidType.get_default_value(ctx);
 }
 
+llvm::Type * pars::Array::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	return llvm::ArrayType::get(element_type->get_llvm_type(ctx), size);
+}
+
+std::string_view pars::Array::get_type_name() const
+{
+	return "array";
+}
+
+llvm::Value * pars::Array::get_default_value(llvm::LLVMContext *ctx) const
+{
+	return llvm::ConstantAggregateZero::get(get_llvm_type(ctx));
+}
+
+bool pars::Array::is_equal(Type const *other) const
+{
+	auto *other_array = dynamic_cast<Array const*>(other);
+
+	return other_array != nullptr && other_array->size == size && other_array->element_type->is_equal(element_type);
+}
+
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);

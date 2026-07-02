@@ -194,4 +194,13 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct ArrayLiteralExpr : Expr
+	{
+		std::vector<Expr*> elements;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }

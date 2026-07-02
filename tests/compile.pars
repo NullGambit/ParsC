@@ -3,11 +3,22 @@ import core.stdc.stdio
 import core.stdc.stdlib
 
 // TODOS
-// add additional module path lookups
-// correct constness
 // constness comes within types. even aliases
+
+// alias InnerImut = ^const i32
+// alias OuterImut = const ^i32
+// alias BothImut = const ^const i32
+
+//fn imut_test()
+//{
+//    var x = 10
+//
+//    var inner_ptr: InnerImut
+//
+//    inner_ptr = &x
+//}
 
 fn main()
 {
-    puts("yes")
+    var arr1 = [1, 2, 3]
 }

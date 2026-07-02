@@ -21,3 +21,12 @@ bool pars::is_block_poison(EmitCtx &ctx, llvm::Value *value)
 {
 	return value == get_block_poison(ctx);
 }
+
+llvm::IRBuilder<> pars::get_alloca_builder(EmitCtx &ctx)
+{
+	auto *fn = ctx.builder.GetInsertBlock()->getParent();
+	auto &entry = fn->getEntryBlock();
+	auto insert_point = entry.getFirstNonPHIOrDbgOrAlloca();
+
+	return {&entry, insert_point};
+}

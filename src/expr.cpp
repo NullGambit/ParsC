@@ -14,6 +14,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
 #include "util/fmt.hpp"
+#include "util/llvm_utils.hpp"
 
 static pars::HashMap<std::string_view, llvm::GlobalVariable*> g_static_strings;
 
@@ -319,4 +320,23 @@ llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx)
 llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx)
 {
 	return Expr::emit(ctx);
+}
+
+llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx)
+{
+	auto *array_type = type->get_llvm_type(ctx.llvm_ctx);
+	auto *array = get_alloca_builder(ctx).CreateAlloca(array_type);
+
+	for (auto i = 0; auto *element : elements)
+	{
+		auto *element_value = element->emit(ctx);
+
+		auto *ptr = ctx.builder.CreateInBoundsGEP(array_type, array, {ctx.builder.getInt64(0), ctx.builder.getInt64(i)});
+
+		ctx.builder.CreateStore(element_value, ptr);
+
+		i++;
+	}
+
+	return array;
 }

@@ -143,6 +143,17 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	if (stmt->is_explicitly_typed())
 	{
 		stmt->type = resolve_type(stmt->type_meta, stmt);
+
+		if (has_flag(stmt->type_meta.flags, TypeFlags::Array))
+		{
+			auto *array_type = new_node<Array>();
+
+			array_type->element_type = stmt->type;
+
+			array_type->size = stmt->type_meta.array_size;
+
+			stmt->type = array_type;
+		}
 	}
 
 	// var x = E
@@ -523,6 +534,43 @@ void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 void pars::Analyzer::visit(PackedExpr *expr, VisitCtx ctx)
 {
 
+}
+
+void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
+{
+	if (expr->elements.empty())
+	{
+		return;
+	}
+
+	Type *type {};
+
+	for (auto *element : expr->elements)
+	{
+		element->accept(this, ctx);
+
+		if (type == nullptr)
+		{
+			type = element->type;
+		}
+
+		if (!type->is_equal(element->type))
+		{
+			throw FrontendError{element->token, "array literal element types dont all match"};
+		}
+	}
+
+	auto *array_type = new_node<Array>();
+
+	array_type->size = expr->elements.size();
+	array_type->element_type = type;
+
+	expr->type = array_type;
+
+	// if (ctx.type != nullptr && !type->is_equal(ctx.type))
+	// {
+	// 	throw FrontendError{expr->token, "got wrong array type"};
+	// }
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
