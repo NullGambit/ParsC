@@ -22,15 +22,19 @@ int main(int argc, char **argv)
 	// TODO: if entry file is not provided parse and compile all files in dir
 	if (argc < 2)
 	{
-		fmt::panic("Must provide an entry file");
+		fmt::panic("Must provide an entry file\n");
 	}
 
-	auto exe_path = std::filesystem::path{argv[0]};
+	// TODO make this cross-platform
+	auto exe_path = std::filesystem::canonical("/proc/self/exe");
+
+	// remove the executables name
+	exe_path.remove_filename();
+
 	auto source_path = std::filesystem::path{argv[1]};
 
 	pars::add_module_path("./");
-	pars::add_module_path(exe_path / "std");
-	pars::add_module_path(exe_path / "core");
+	pars::add_module_path(exe_path);
 
 	try
 	{

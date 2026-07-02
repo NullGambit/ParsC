@@ -18,11 +18,14 @@ import core.stdc.stdlib
 //    inner_ptr = &x
 //}
 
+alias IVec3 = [3]i32
+
 fn main()
 {
-    var arr1 = [1, 2, 3]
+    var arr1: IVec3 = [1, 2, 3]
 
-    var x = arr1[0]
-
-    printf("%d %d %d\n", x, arr1[1], arr1[2])
+    for i in 0..3
+    {
+        printf("#%d\n", arr1[i])
+    }
 }

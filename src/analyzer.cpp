@@ -585,10 +585,12 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 
 	auto *array_type = dynamic_cast<Array*>(expr->lhs->type);
 
-	if (array_type != nullptr)
+	if (array_type == nullptr)
 	{
-		expr->type = array_type->element_type;
+		throw FrontendError{expr->lhs->token, "left hand side is not an array"};
 	}
+
+	expr->type = array_type->element_type;
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
