@@ -64,11 +64,11 @@ void pars::compile_exe(std::string_view output_path)
 
 	std::vector<llvm::StringRef> linker_args =
 	{
-		"clang",           // or "gcc", "ld", "lld"
+		"clang",
 		"-o", output_path,
-		"-no-pie",         // if you used static reloc model
+		"-no-pie",
 		"-lm",
-		// "-Wl,-e,_start"  // custom entry point (see below)
+		// "-Wl,-e,_start"
 	};
 
 	auto obj_files_start = linker_args.size();

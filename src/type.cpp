@@ -148,6 +148,41 @@ bool pars::AliasType::is_equal(Type const *other) const
 	return true;
 }
 
+llvm::Value * pars::AliasType::op_abs(EmitCtx &ctx, llvm::Value *value) const
+{
+	return type->op_abs(ctx, value);
+}
+
+llvm::Value * pars::AliasType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	return type->op_binary(ctx, op, lhs, rhs);
+}
+
+llvm::Value * pars::AliasType::op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+{
+	return type->op_cast(ctx, value, desired_type);
+}
+
+llvm::Value * pars::AliasType::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+{
+	return type->op_coerce(ctx, value, desired_type);
+}
+
+llvm::Value * pars::AliasType::op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	return type->op_in(ctx, lhs, rhs);
+}
+
+llvm::Value * pars::AliasType::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
+{
+	return type->op_unary(ctx, op, rhs);
+}
+
+llvm::Value * pars::AliasType::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
+{
+	return type->op_index(ctx, target, index);
+}
+
 u32 pars::AliasType::get_size()
 {
 	return type->get_size();
@@ -393,6 +428,14 @@ bool pars::Array::is_equal(Type const *other) const
 	auto *other_array = dynamic_cast<Array const*>(other);
 
 	return other_array != nullptr && other_array->size == size && other_array->element_type->is_equal(element_type);
+}
+
+llvm::Value* pars::Array::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
+{
+	auto *ptr = ctx.builder.CreateInBoundsGEP(get_llvm_type(ctx.llvm_ctx), target,
+		{ctx.builder.getInt64(0), index});
+
+	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
 }
 
 pars::Type * pars::Array::get_inner() const

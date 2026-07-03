@@ -343,13 +343,23 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx)
 
 llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx)
 {
-	auto *ptr = emit_ptr(ctx);
+	auto *result = lhs->type->op_index(ctx, lhs->emit_ptr(ctx), index->emit(ctx));
 
-	return ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), ptr);
+	if (result == nullptr)
+	{
+		throw CompileError{this, fmt::format("type of {} cannot be indexed", type->get_type_name())};
+	}
+
+	return result;
 }
 
 llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx)
 {
+	if (!type->is_array())
+	{
+		throw CompileError{this, fmt::format("type of {} is not an array", type->get_type_name())};
+	}
+
 	auto *array = lhs->emit_ptr(ctx);
 	auto *index_value = index->emit(ctx);
 

@@ -35,6 +35,7 @@ namespace pars
 		virtual llvm::Value* op_abs(EmitCtx &ctx, llvm::Value *value) const { return nullptr; }
 		virtual llvm::Value* op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
 		virtual llvm::Value* op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
+		virtual llvm::Value* op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const { return nullptr; }
 		virtual bool can_coerce_into(Type const *desired_type) const { return false; }
 
 		virtual bool is_iterable() const { return false; }
@@ -143,6 +144,14 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 		std::string_view get_type_name() const override;
 		bool is_equal(Type const *other) const override;
+
+		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
+		llvm::Value *op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
+		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
+		llvm::Value *op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value *rhs) const override;
+		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
+		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
 
 		u32 get_size() override;
 
@@ -277,6 +286,8 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		bool is_equal(Type const *other) const override;
+
+		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
 
 		Type *get_inner() const override;
 
