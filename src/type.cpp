@@ -163,6 +163,16 @@ bool pars::AliasType::is_ptr() const
 	return type->is_ptr();
 }
 
+bool pars::AliasType::is_array() const
+{
+	return type->is_array() || has_flag(meta.flags, TypeFlags::Array);
+}
+
+pars::Type * pars::AliasType::get_inner() const
+{
+	return type;
+}
+
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);
@@ -383,6 +393,11 @@ bool pars::Array::is_equal(Type const *other) const
 	auto *other_array = dynamic_cast<Array const*>(other);
 
 	return other_array != nullptr && other_array->size == size && other_array->element_type->is_equal(element_type);
+}
+
+pars::Type * pars::Array::get_inner() const
+{
+	return element_type;
 }
 
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const

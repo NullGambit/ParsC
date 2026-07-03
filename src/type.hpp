@@ -25,7 +25,9 @@ namespace pars
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) const = 0;
 		virtual llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name);
+		virtual Type* get_inner() const { return nullptr; }
 		virtual bool is_ptr() const { return false; }
+		virtual bool is_array() const { return false; }
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
@@ -146,6 +148,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 		bool is_ptr() const override;
+		bool is_array() const override;
+		Type *get_inner() const override;
 
 		ACCEPT
 	};
@@ -273,6 +277,13 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		bool is_equal(Type const *other) const override;
+
+		Type *get_inner() const override;
+
+		bool is_array() const override
+		{
+			return true;
+		}
 	};
 
 	static const Void VoidType {};

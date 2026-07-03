@@ -144,16 +144,7 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	{
 		stmt->type = resolve_type(stmt->type_meta, stmt);
 
-		if (has_flag(stmt->type_meta.flags, TypeFlags::Array))
-		{
-			auto *array_type = new_node<Array>();
 
-			array_type->element_type = stmt->type;
-
-			array_type->size = stmt->type_meta.array_size;
-
-			stmt->type = array_type;
-		}
 	}
 
 	// var x = E
@@ -583,14 +574,12 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 		throw FrontendError{expr->index->token, "Array index must be an integer"};
 	}
 
-	auto *array_type = dynamic_cast<Array*>(expr->lhs->type);
-
-	if (array_type == nullptr)
+	if (!expr->lhs->type->is_array())
 	{
 		throw FrontendError{expr->lhs->token, "left hand side is not an array"};
 	}
 
-	expr->type = array_type->element_type;
+	expr->type = expr->lhs->type;
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
@@ -624,6 +613,17 @@ pars::Type* pars::Analyzer::resolve_type(TypeMeta meta, Node *node)
 		ptr->inner = type;
 
 		type = ptr;
+	}
+
+	if (has_flag(meta.flags, TypeFlags::Array))
+	{
+		auto *array_type = new_node<Array>();
+
+		array_type->element_type = type;
+
+		array_type->size = meta.array_size;
+
+		type = array_type;
 	}
 
 	return type;
