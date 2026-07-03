@@ -66,15 +66,19 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 
 llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 {
+	llvm::Value *result {};
+
 	if (left->type->is_array())
 	{
-		return left->type->op_binary(ctx, op, left->emit_ptr(ctx), right->emit_ptr(ctx));
+		result = left->type->op_binary(ctx, op, left->emit_ptr(ctx), right->emit_ptr(ctx));
 	}
+	else
+	{
+		auto lhs = left->emit(ctx);
+		auto rhs = right->emit(ctx);
 
-	auto lhs = left->emit(ctx);
-	auto rhs = right->emit(ctx);
-
-	auto *result = left->type->op_binary(ctx, op, lhs, rhs);
+		result = left->type->op_binary(ctx, op, lhs, rhs);
+	}
 
 	if (result == nullptr)
 	{

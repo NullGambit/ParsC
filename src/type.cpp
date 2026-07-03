@@ -440,39 +440,41 @@ llvm::Value* pars::Array::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Valu
 
 llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
+	using enum TokenType;
+
+	if (op != Plus && op != Minus && op != Star && op != ForwardSlash)
+	{
+		return nullptr;
+	}
+
 	const auto ALIGNMENT = llvm::Align(16);
 
-	switch (op)
+	auto *vec_type = llvm::FixedVectorType::get(element_type->get_llvm_type(ctx.llvm_ctx), size);
+
+	auto *aalloca = llvm::dyn_cast<llvm::AllocaInst>(lhs);
+	auto *balloca = llvm::dyn_cast<llvm::AllocaInst>(rhs);
+
+	if (aalloca != nullptr && balloca != nullptr)
 	{
-		case TokenType::Plus:
-		{
-			auto *vec_type = llvm::FixedVectorType::get(element_type->get_llvm_type(ctx.llvm_ctx), size);
-
-			auto *aalloca = llvm::dyn_cast<llvm::AllocaInst>(lhs);
-			auto *balloca = llvm::dyn_cast<llvm::AllocaInst>(rhs);
-
-			if (aalloca != nullptr && balloca != nullptr)
-			{
-				aalloca->setAlignment(ALIGNMENT);
-				balloca->setAlignment(ALIGNMENT);
-			}
-
-			auto *a = ctx.builder.CreateAlignedLoad(vec_type, lhs, ALIGNMENT);
-			auto *b = ctx.builder.CreateAlignedLoad(vec_type, rhs, ALIGNMENT);
-
-			return ctx.builder.CreateAdd(a, b);
-			// auto *result = ctx.builder.CreateAdd(a, b);
-			//
-			// auto *temp = ctx.builder.CreateAlloca(get_llvm_type(ctx.llvm_ctx));
-			//
-			// temp->setAlignment(llvm::Align(16));
-			//
-			// ctx.builder.CreateAlignedStore(result, temp, llvm::Align(16));
-			//
-			// return ctx.builder.CreateLoad(get_llvm_type(ctx.llvm_ctx), temp);
-		}
-		default: return nullptr;
+		aalloca->setAlignment(ALIGNMENT);
+		balloca->setAlignment(ALIGNMENT);
 	}
+
+	auto *a = ctx.builder.CreateAlignedLoad(vec_type, lhs, ALIGNMENT);
+	auto *b = ctx.builder.CreateAlignedLoad(vec_type, rhs, ALIGNMENT);
+
+	//TODO maybe align back down. idk if it causes problems as of now. keeping this here in case i need to do that in the future
+    // auto *result = ctx.builder.CreateAdd(a, b);
+    //
+    // auto *temp = ctx.builder.CreateAlloca(get_llvm_type(ctx.llvm_ctx));
+    //
+    // temp->setAlignment(llvm::Align(16));
+    //
+    // ctx.builder.CreateAlignedStore(result, temp, llvm::Align(16));
+    //
+    // return ctx.builder.CreateLoad(get_llvm_type(ctx.llvm_ctx), temp);
+
+	return element_type->op_binary(ctx, op, a, b);
 }
 
 pars::Type * pars::Array::get_inner() const
