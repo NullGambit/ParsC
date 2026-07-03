@@ -38,6 +38,7 @@ namespace pars
 		Type *type;
 		Expr* initializer;
 		VarFlags flags;
+		u32 alignment = 4;
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 

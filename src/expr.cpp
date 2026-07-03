@@ -66,6 +66,11 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 
 llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 {
+	if (left->type->is_array())
+	{
+		return left->type->op_binary(ctx, op, left->emit_ptr(ctx), right->emit_ptr(ctx));
+	}
+
 	auto lhs = left->emit(ctx);
 	auto rhs = right->emit(ctx);
 
@@ -326,6 +331,8 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx)
 {
 	auto *array_type = type->get_llvm_type(ctx.llvm_ctx);
 	auto *array = get_alloca_builder(ctx).CreateAlloca(array_type);
+
+	array->setAlignment(llvm::Align(16));
 
 	for (auto i = 0; auto *element : elements)
 	{

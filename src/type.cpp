@@ -438,6 +438,32 @@ llvm::Value* pars::Array::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Valu
 	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
 }
 
+llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	switch (op)
+	{
+		case TokenType::Plus:
+		{
+			auto *vec_type = llvm::FixedVectorType::get(element_type->get_llvm_type(ctx.llvm_ctx), size);
+
+			auto *a = ctx.builder.CreateAlignedLoad(vec_type, lhs, llvm::Align(16));
+			auto *b = ctx.builder.CreateAlignedLoad(vec_type, rhs, llvm::Align(16));
+
+			return ctx.builder.CreateAdd(a, b);
+			// auto *result = ctx.builder.CreateAdd(a, b);
+			//
+			// auto *temp = ctx.builder.CreateAlloca(get_llvm_type(ctx.llvm_ctx));
+			//
+			// temp->setAlignment(llvm::Align(16));
+			//
+			// ctx.builder.CreateAlignedStore(result, temp, llvm::Align(16));
+			//
+			// return ctx.builder.CreateLoad(get_llvm_type(ctx.llvm_ctx), temp);
+		}
+		default: return nullptr;
+	}
+}
+
 pars::Type * pars::Array::get_inner() const
 {
 	return element_type;
