@@ -5,7 +5,6 @@
     - slices
     - iterators
     - convert string to be '[]const char' slice
-    - array programming
     - type cache
     - value properties and properties such as .length and .ptr
 

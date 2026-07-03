@@ -440,14 +440,25 @@ llvm::Value* pars::Array::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Valu
 
 llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
+	const auto ALIGNMENT = llvm::Align(16);
+
 	switch (op)
 	{
 		case TokenType::Plus:
 		{
 			auto *vec_type = llvm::FixedVectorType::get(element_type->get_llvm_type(ctx.llvm_ctx), size);
 
-			auto *a = ctx.builder.CreateAlignedLoad(vec_type, lhs, llvm::Align(16));
-			auto *b = ctx.builder.CreateAlignedLoad(vec_type, rhs, llvm::Align(16));
+			auto *aalloca = llvm::dyn_cast<llvm::AllocaInst>(lhs);
+			auto *balloca = llvm::dyn_cast<llvm::AllocaInst>(rhs);
+
+			if (aalloca != nullptr && balloca != nullptr)
+			{
+				aalloca->setAlignment(ALIGNMENT);
+				balloca->setAlignment(ALIGNMENT);
+			}
+
+			auto *a = ctx.builder.CreateAlignedLoad(vec_type, lhs, ALIGNMENT);
+			auto *b = ctx.builder.CreateAlignedLoad(vec_type, rhs, ALIGNMENT);
 
 			return ctx.builder.CreateAdd(a, b);
 			// auto *result = ctx.builder.CreateAdd(a, b);

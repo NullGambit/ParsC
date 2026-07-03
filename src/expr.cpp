@@ -332,8 +332,6 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx)
 	auto *array_type = type->get_llvm_type(ctx.llvm_ctx);
 	auto *array = get_alloca_builder(ctx).CreateAlloca(array_type);
 
-	array->setAlignment(llvm::Align(16));
-
 	for (auto i = 0; auto *element : elements)
 	{
 		auto *element_value = element->emit(ctx);
