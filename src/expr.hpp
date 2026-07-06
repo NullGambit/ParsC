@@ -21,6 +21,8 @@ namespace pars
 		Type *type;
 
 		virtual llvm::Value *emit_ptr(EmitCtx &ctx) { return nullptr; }
+
+		virtual std::string_view get_symbol() { return {}; }
 	};
 
 	using LiteralExprValue = std::variant
@@ -73,6 +75,11 @@ namespace pars
 
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
+		std::string_view get_symbol() override
+		{
+			return symbol;
+		}
+
 		ACCEPT
 	};
 
@@ -84,6 +91,11 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx) override;
 
+		std::string_view get_symbol() override
+		{
+			return symbol;
+		}
+
 		ACCEPT
 	};
 
@@ -94,6 +106,11 @@ namespace pars
 		llvm::Value *emit(EmitCtx &ctx) override;
 
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
+
+		std::string_view get_symbol() override
+		{
+			return inner->get_symbol();
+		}
 
 		ACCEPT
 	};
@@ -120,7 +137,7 @@ namespace pars
 
 	struct MemberAccessExpr : Expr
 	{
-		std::string_view target_symbol;
+		Expr *target;
 		Expr *accessor;
 
 		llvm::Value* emit(EmitCtx& ctx) override;

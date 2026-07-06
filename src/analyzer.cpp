@@ -438,38 +438,51 @@ void pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 
 void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 {
-	auto *symbol = find_symbol(expr->target_symbol, expr->token);
+	// my_import.func()
+	// i32.max
+	// my_struct.field
+	// (my_struct).field
+	// array.length
+	// func().field
 
-	if (auto *import = dynamic_cast<ImportStmt*>(symbol))
+	auto symbol = expr->target->get_symbol();
+
+	if (!symbol.empty())
 	{
-		auto *old_ctx = m_ctx;
+		auto *symbol_node = find_symbol(symbol, expr->token);
 
-		m_ctx = import->module->ast.get_ctx();
-
-		expr->accessor->accept(this, ctx);
-
-		m_ctx = old_ctx;
-	}
-	if (auto *type = dynamic_cast<Type*>(symbol))
-	{
-		auto *prop_expr = new_node<TypePropExpr>();
-
-		auto *prop_symbol = dynamic_cast<SymbolExpr*>(expr->accessor);
-
-		if (prop_symbol == nullptr)
+		if (auto *import = dynamic_cast<ImportStmt*>(symbol_node))
 		{
-			throw FrontendError{symbol->token, "Expected identifier for type property access"};
+			auto *old_ctx = m_ctx;
+
+			m_ctx = import->module->ast.get_ctx();
+
+			expr->accessor->accept(this, ctx);
+
+			m_ctx = old_ctx;
 		}
+		else if (auto *type = dynamic_cast<Type*>(symbol_node))
+		{
+			auto *prop_expr = new_node<TypePropExpr>();
 
-		prop_expr->property_name = prop_symbol->symbol;
+			auto *prop_symbol = dynamic_cast<SymbolExpr*>(expr->accessor);
 
-		prop_expr->type = type;
+			if (prop_symbol == nullptr)
+			{
+				throw FrontendError{symbol_node->token, "Expected identifier for type property access"};
+			}
 
-		expr->accessor = prop_expr;
-		prop_expr->token = expr->token;
+			prop_expr->property_name = prop_symbol->symbol;
+
+			prop_expr->type = type;
+
+			expr->accessor = prop_expr;
+			prop_expr->token = expr->token;
+		}
 	}
 	else
 	{
+		expr->target->accept(this, ctx);
 		expr->accessor->accept(this, ctx);
 	}
 

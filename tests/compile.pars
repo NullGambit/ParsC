@@ -1,5 +1,5 @@
 // built in c interop
-import core.stdc.stdio
+import io = core.stdc.stdio
 import core.stdc.stdlib
 
 // TODOS
@@ -18,26 +18,7 @@ import core.stdc.stdlib
 //    inner_ptr = &x
 //}
 
-alias IVec3 = [3]i32
-
 fn main()
 {
-    var arr1 = [1, 2, 3]
-    var arr2 = [4, 5, 6]
-
-    var result = arr1 * arr2
-
-    const max_range = 3
-
-    for i in 0..max_range
-    {
-        printf("%d", result[i])
-
-        if i < max_range - 1
-        {
-            printf(", ")
-        }
-    }
-
-    puts("")
+    (io).printf("hello\n")
 }

@@ -2,11 +2,13 @@
     even doing checks for eof seems to not work unless the file ended with a line feed
 
 - stuff i need to do for arrays and array adjacent features:
+    - value properties and properties such as .length and .ptr
     - slices
     - iterators
+    - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
+    - currently deeply nested types can be parsed but the type information is lost and not used. such as '^^i32'.
     - convert string to be '[]const char' slice
     - type cache
-    - value properties and properties such as .length and .ptr
 
 - bitwise operators
 - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.

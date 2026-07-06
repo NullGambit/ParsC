@@ -603,89 +603,24 @@ pars::AliasType * pars::AST::parse_alias()
 
 pars::Expr* pars::AST::parse_primary()
 {
-	if (m_lexer.match(Dollar))
+	auto *inner = parse_primary_inner();
+
+	if (inner != nullptr)
 	{
-		auto identifier = m_lexer.expect(Identifier).lexeme;
-
-		auto iter = m_builtin_functions.find(identifier);
-
-		if (iter != m_builtin_functions.end())
-		{
-			if (m_lexer.match(LeftParen))
-			{
-				CallExpr expr;
-
-				expr.symbol = identifier;
-
-				expr.arguments = collect_call_arguments();
-
-				m_lexer.expect(RightParen);
-
-				return iter->second(expr.arguments);
-			}
-		}
-
-		return nullptr;
-	}
-
-	if (m_lexer.match(LeftParen))
-	{
-		auto *expr = expression();
-
-		m_lexer.expect(RightParen);
-
-		auto *group = new_node<GroupExpr>();
-
-		group->inner = expr;
-		group->type = expr->type;
-
-		return group;
-	}
-	if (m_lexer.match(Identifier))
-	{
-		const auto identifier = m_lexer.peek_last().lexeme;
-
-		if (m_lexer.match(Colon))
-		{
-			auto *expr = new_node<NamedExpr>();
-
-			expr->name = identifier;
-
-			expr->value = expression();
-
-			return expr;
-		}
-		if (m_lexer.match(LeftParen))
-		{
-			auto *expr = new_node<CallExpr>();
-
-			expr->symbol = identifier;
-
-			expr->arguments = collect_call_arguments();
-
-			m_lexer.expect(RightParen);
-
-			return expr;
-		}
-
 		if (m_lexer.match(Dot))
 		{
 			auto *expr = new_node<MemberAccessExpr>();
 
-			expr->target_symbol = identifier;
+			expr->target = inner;
 			expr->accessor = expression();
 
 			return expr;
 		}
-		auto *expr = new_node<SymbolExpr>();
-
-		expr->symbol = identifier;
-
 		if (m_lexer.match(LeftBracket))
 		{
 			auto *index_op = new_node<IndexOpExpr>();
 
-			index_op->lhs = expr;
+			index_op->lhs = inner;
 
 			index_op->index = expression();
 
@@ -694,91 +629,7 @@ pars::Expr* pars::AST::parse_primary()
 			return index_op;
 		}
 
-		return expr;
-	}
-	if (m_lexer.match(Sizeof))
-	{
-		auto *expr = new_node<SizeofExpr>();
-
-		expr->type = const_cast<Integer*>(&I32Type);
-
-		expr->expr = expression();
-
-		return expr;
-	}
-	if (m_lexer.match(Cast))
-	{
-		m_lexer.expect(LeftParen);
-
-		auto *expr = new_node<CastExpr>();
-
-		expr->type_expr = expression();
-
-		m_lexer.expect(RightParen);
-
-		expr->target = parse_unary();
-
-		return expr;
-	}
-	if (m_lexer.peek().type > _AttributeKeywordStart && m_lexer.peek().type < _AttributeKeywordEnd)
-	{
-		m_lexer.advance();
-
-		return new_node<KeywordExpr>();
-	}
-	if (m_lexer.match(LeftBrace))
-	{
-		// TODO parse field value pairs
-		m_lexer.expect(RightBrace);
-
-		return new_node<AnonInitExpr>();
-	}
-	if (m_lexer.match(Pipe))
-	{
-		auto *expr = new_node<AbsExpr>();
-
-		expr->value = expression();
-
-		m_lexer.expect(Pipe);
-
-		return expr;
-	}
-	if (m_lexer.match(Ampersand) || m_lexer.match(Caret))
-	{
-		auto *expr = new_node<PtrOpExpr>();
-
-		expr->op = m_lexer.peek_last().type;
-
-		expr->target = parse_primary();
-
-		// if (expr->symbol == nullptr)
-		// {
-		// 	throw FrontendError{expr->token, "Cannot perform pointer operation on a temporary"};
-		// }
-
-		return expr;
-	}
-	if (m_lexer.match(Ellipse))
-	{
-		return new_node<PackedExpr>();
-	}
-	if (m_lexer.match(LeftBracket))
-	{
-		auto *expr = new_node<ArrayLiteralExpr>();
-
-		while (true)
-		{
-			expr->elements.emplace_back(expression());
-
-			if (!m_lexer.match(Comma))
-			{
-				break;
-			}
-		}
-
-		m_lexer.expect(RightBracket);
-
-		return expr;
+		return inner;
 	}
 
 	auto *literal = new_node<LiteralExpr>();
@@ -882,6 +733,167 @@ pars::Expr* pars::AST::parse_unary()
 pars::Expr * pars::AST::parse_range()
 {
 	return parse_binary_rule<DotDot, DotDotEqual>(&AST::parse_unary);
+}
+
+pars::Expr * pars::AST::parse_primary_inner()
+{
+	if (m_lexer.match(Dollar))
+	{
+		auto identifier = m_lexer.expect(Identifier).lexeme;
+
+		auto iter = m_builtin_functions.find(identifier);
+
+		if (iter != m_builtin_functions.end())
+		{
+			if (m_lexer.match(LeftParen))
+			{
+				CallExpr expr;
+
+				expr.symbol = identifier;
+
+				expr.arguments = collect_call_arguments();
+
+				m_lexer.expect(RightParen);
+
+				return iter->second(expr.arguments);
+			}
+		}
+
+		return nullptr;
+	}
+
+	if (m_lexer.match(LeftParen))
+	{
+		auto *group = new_node<GroupExpr>();
+
+		auto *expr = expression();
+
+		m_lexer.expect(RightParen);
+
+		group->inner = expr;
+		group->type = expr->type;
+
+		return group;
+	}
+	if (m_lexer.match(Identifier))
+	{
+		const auto identifier = m_lexer.peek_last().lexeme;
+
+		if (m_lexer.match(Colon))
+		{
+			auto *expr = new_node<NamedExpr>();
+
+			expr->name = identifier;
+
+			expr->value = expression();
+
+			return expr;
+		}
+		if (m_lexer.match(LeftParen))
+		{
+			auto *expr = new_node<CallExpr>();
+
+			expr->symbol = identifier;
+
+			expr->arguments = collect_call_arguments();
+
+			m_lexer.expect(RightParen);
+
+			return expr;
+		}
+
+		auto *expr = new_node<SymbolExpr>();
+
+		expr->symbol = identifier;
+
+		return expr;
+	}
+	if (m_lexer.match(Sizeof))
+	{
+		auto *expr = new_node<SizeofExpr>();
+
+		expr->type = const_cast<Integer*>(&I32Type);
+
+		expr->expr = expression();
+
+		return expr;
+	}
+	if (m_lexer.match(Cast))
+	{
+		m_lexer.expect(LeftParen);
+
+		auto *expr = new_node<CastExpr>();
+
+		expr->type_expr = expression();
+
+		m_lexer.expect(RightParen);
+
+		expr->target = parse_unary();
+
+		return expr;
+	}
+	if (m_lexer.peek().type > _AttributeKeywordStart && m_lexer.peek().type < _AttributeKeywordEnd)
+	{
+		m_lexer.advance();
+
+		return new_node<KeywordExpr>();
+	}
+	if (m_lexer.match(LeftBrace))
+	{
+		// TODO parse field value pairs
+		m_lexer.expect(RightBrace);
+
+		return new_node<AnonInitExpr>();
+	}
+	if (m_lexer.match(Pipe))
+	{
+		auto *expr = new_node<AbsExpr>();
+
+		expr->value = expression();
+
+		m_lexer.expect(Pipe);
+
+		return expr;
+	}
+	if (m_lexer.match(Ampersand) || m_lexer.match(Caret))
+	{
+		auto *expr = new_node<PtrOpExpr>();
+
+		expr->op = m_lexer.peek_last().type;
+
+		expr->target = parse_primary();
+
+		// if (expr->symbol == nullptr)
+		// {
+		// 	throw FrontendError{expr->token, "Cannot perform pointer operation on a temporary"};
+		// }
+
+		return expr;
+	}
+	if (m_lexer.match(Ellipse))
+	{
+		return new_node<PackedExpr>();
+	}
+	if (m_lexer.match(LeftBracket))
+	{
+		auto *expr = new_node<ArrayLiteralExpr>();
+
+		while (true)
+		{
+			expr->elements.emplace_back(expression());
+
+			if (!m_lexer.match(Comma))
+			{
+				break;
+			}
+		}
+
+		m_lexer.expect(RightBracket);
+
+		return expr;
+	}
+
+	return nullptr;
 }
 
 pars::Expr * pars::AST::parse_exp()

@@ -2,56 +2,57 @@ module std.list
 
 import std.mem
 
-// drop disables explicit copying 
-struct List<T, A = #allocator> : Drop, Copy
+@readonly
+struct List<T, A = #allocator>
 {
-    @readonly
-    length: int
-    @readonly
-    capacity: int
+    length: u64
+    capacity: u64
     allocator: A
-    ptr: *T
+    ptr: ^T
+}
 
-    Self(T... args)
+impl List : Drop, Copy
+{
+    self(args: ...T)
     {
-        reserve(args.length)
+        self.reserve(args.length)
 
-        $for item in args 
+        $for item in args
         {
-            add(item)
+            self.add(item)
         }
     }
 
-    fn reserve(capacity: int)
+    fn reserve(capacity: u64)
     {
-        var temp = allocator.alloc(capacity)
+        var temp = self.allocator.alloc(capacity)
 
-        memcpy(ptr, temp, length)
+        memcpy(self.ptr, temp, self.length)
 
-        self.capacity = capacity 
+        self.capacity = capacity
 
-        allocator.free(ptr)
+        self.allocator.free(self.ptr)
 
-        ptr = temp
+        self.ptr = temp
     }
 
     // called automatically when no longer in scope
     fn drop()
     {
-        if ptr != nil 
+        if self.ptr != nil
         {
-            allocator.free(ptr)
+            self.allocator.free(self.ptr)
         }
 
-        length = 0
-        capacity = 0
-        ptr = nil
+        self.length = 0
+        self.capacity = 0
+        self.ptr = nil
     }
 
-    fn op_index(index: int) => ptr[index]
+    fn op_index(index: u64) => self.ptr[self.index]
 
-    // will be called when slicing 
-    fn op_slice(start, end: int) => ptr[start:end]
+    // will be called when slicing
+    fn op_slice(start, end: u64) => self.ptr[start:end]
 
     fn copy(): Self
     {
@@ -60,39 +61,48 @@ struct List<T, A = #allocator> : Drop, Copy
 
         new_self.ptr = new_self.allocator.alloc(new_self.capacity)
 
-        memcpy(ptr, new_self.ptr, length)
+        memcpy(self.ptr, new_self.ptr, self.length)
 
         return new_self
     }
 
-    fn ensure_size(length: int = 1)
+    fn ensure_size(length: u64 = 1)
     {
-        if self.length + length >= capacity
+        if self.length + length >= self.capacity
         {
-            const new_capacity = if capacity == 0 do length else capacity 
-            reserve(new_capacity * 2)
+            const new_capacity = if self.capacity == 0 do self.length else self.capacity
+            self.reserve(new_capacity * 2)
         }
     }
 
     fn add(T item): *T
     {
-        ensure_size()
+        self.ensure_size()
 
-        const index = length++
+        const index = self.length
 
-        ptr[index] = item
+        self.length += 1
 
-        return &ptr[index]
+        ptr[self.index] = item
+
+        return &self.ptr[index]
     }
 
-    fn pop() => @ptr[length--]
+    fn pop(): T
+    {
+        var last = @self.ptr[self.length]
+
+        self.length -= 1
+
+        return last
+    }
 
     // reader writer specialization
-    $if T is byte 
+    $if T is byte
     {
         fn write<T>(value: const &&T)
         {
-            import std.types 
+            import std.types
 
             const bytes = get_ptr(value)
             const size = get_length(value)
@@ -101,9 +111,9 @@ struct List<T, A = #allocator> : Drop, Copy
 
             memcpy(ptr + length, bytes, size)
 
-            length += size 
+            length += size
         }
 
-        fn read<T>(start: int, size := sizeof(T)) => cast(T) ptr[start:start+size]
+        fn read<T>(start: u64, size := sizeof(T)) => cast(T) ptr[start:start+size]
     }
 }
