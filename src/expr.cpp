@@ -217,8 +217,13 @@ llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)
 
 llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
 {
-	auto *target_value = target->emit(ctx);
+	auto *target_value = target->emit_ptr(ctx);
 	auto *accessor_value = accessor->emit(ctx);
+
+	if (target_value == nullptr)
+	{
+		target_value = target->emit(ctx);
+	}
 
 	// case: import_alias.func()
 	if (target_value == nullptr)
@@ -230,7 +235,7 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
 
 	if (result == nullptr)
 	{
-		throw CompileError{this, fmt::format("property '{}' does not exist for type {}", accessor->get_symbol())};
+		throw CompileError{this, fmt::format("property '{}' does not exist for type {}", accessor->get_symbol(), target->type->get_type_name())};
 	}
 
 	return result;

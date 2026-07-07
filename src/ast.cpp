@@ -612,7 +612,7 @@ pars::Expr* pars::AST::parse_primary()
 			auto *expr = new_node<MemberAccessExpr>();
 
 			expr->target = inner;
-			expr->accessor = expression();
+			expr->accessor = parse_primary();
 
 			return expr;
 		}

@@ -411,13 +411,6 @@ void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 	expr->left->accept(this, ctx);
 	expr->right->accept(this, ctx);
 
-	if (!expr->left->type->is_equal(expr->right->type))
-	{
-		throw FrontendError{expr->token, "binary expression operands types do not match"};
-	}
-
-	// TODO ask the type what the result of operators should be
-
 	if (expr->op > _ComparisonStart && expr->op < _ComparisonEnd)
 	{
 		expr->type = const_cast<Bool*>(&BoolType);
@@ -429,6 +422,12 @@ void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 	}
 	else
 	{
+		// TODO ask the type what the result of operators should be
+		if (!expr->left->type->is_equal(expr->right->type))
+		{
+			throw FrontendError{expr->token, "binary expression operands types do not match"};
+		}
+
 		expr->type = expr->left->type;
 	}
 }

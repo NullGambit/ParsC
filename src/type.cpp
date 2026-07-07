@@ -27,7 +27,7 @@ bool pars::check_type_equality(Type const *a_type, Type const *b_type)
 
 bool pars::is_assignable_from(Type const *from, Type const *to)
 {
-	return check_type_equality(from, to) || to->can_coerce_into(from);
+	return check_type_equality(from, to) || to->can_coerce_into(from) || from->can_coerce_into(to);
 }
 
 llvm::Type * pars::Void::get_llvm_type(llvm::LLVMContext *ctx) const
@@ -484,6 +484,10 @@ llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm
 	{
 		return ctx.builder.getInt(llvm::APInt(32, size));
 	}
+	if (symbol == "ptr")
+	{
+		return target;
+	}
 
 	return nullptr;
 }
@@ -493,6 +497,14 @@ std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol)
 	if (symbol == "length")
 	{
 		return MemberInfo{"length", const_cast<Integer*>(&U32Type)};
+	}
+	if (symbol == "ptr")
+	{
+		auto *ptr = new_node<Pointer>();
+
+		ptr->inner = element_type;
+
+		return MemberInfo{"ptr", ptr};
 	}
 
 	return {};

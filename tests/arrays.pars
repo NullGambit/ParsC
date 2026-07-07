@@ -7,13 +7,11 @@ fn main()
 
     var result = arr1 + arr2
 
-    const max_range = 3
-
-    for i in 0..max_range
+    for i in 0..arr1.length
     {
         printf("%d", result[i])
 
-        if i < max_range - 1
+        if i < arr1.length - cast(u32)1
         {
             printf(", ")
         }
