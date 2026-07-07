@@ -477,6 +477,27 @@ llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
 	return element_type->op_binary(ctx, op, a, b);
 }
 
+llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm::Value *accessor,
+	std::string_view symbol) const
+{
+	if (symbol == "length")
+	{
+		return ctx.builder.getInt(llvm::APInt(32, size));
+	}
+
+	return nullptr;
+}
+
+std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol) const
+{
+	if (symbol == "length")
+	{
+		return MemberInfo{"length", const_cast<Integer*>(&U32Type)};
+	}
+
+	return {};
+}
+
 pars::Type * pars::Array::get_inner() const
 {
 	return element_type;

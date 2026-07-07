@@ -68,12 +68,12 @@ namespace pars
 
 		void add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task);
 
-		Node* find_symbol(std::string_view name, Token &error_token);
+		Node* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr);
 
 		template<IsNode T>
-		T* find_symbol(std::string_view name, Token &error_token)
+		T* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr)
 		{
-			return dynamic_cast<T*>(find_symbol(name, error_token));
+			return dynamic_cast<T*>(find_symbol(name, error_token, table_override));
 		}
 	};
 }

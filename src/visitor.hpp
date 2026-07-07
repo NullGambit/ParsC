@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct ParseCtx;
 	struct IndexOpExpr;
 	struct ArrayLiteralExpr;
 	struct PackedExpr;
@@ -40,9 +41,11 @@ namespace pars
 
 	struct VisitCtx
 	{
-		Type *type;
-		Node *invoker;
-		Node **result;
+		Type *type {};
+		Node *invoker {};
+		Node **result {};
+		bool member {};
+		ParseCtx *parse_ctx_override {};
 	};
 
 	struct Visitor

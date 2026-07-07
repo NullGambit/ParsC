@@ -117,12 +117,12 @@ llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 
 llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
 {
-	if (type == nullptr)
-	{
-		throw CompileError{this, fmt::format("unknown symbol '{}'", symbol)};
-	}
-
 	auto *value = emit_ptr(ctx);
+
+	if (value == nullptr)
+	{
+		return nullptr;
+	}
 
 	if (llvm::isa<llvm::AllocaInst>(value))
 	{
@@ -217,7 +217,23 @@ llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)
 
 llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
 {
-	return accessor->emit(ctx);
+	auto *target_value = target->emit(ctx);
+	auto *accessor_value = accessor->emit(ctx);
+
+	// case: import_alias.func()
+	if (target_value == nullptr)
+	{
+		return accessor_value;
+	}
+
+ 	auto *result = target->type->access_member(ctx, target_value, accessor_value, accessor->get_symbol());
+
+	if (result == nullptr)
+	{
+		throw CompileError{this, fmt::format("property '{}' does not exist for type {}", accessor->get_symbol())};
+	}
+
+	return result;
 }
 
 llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx)

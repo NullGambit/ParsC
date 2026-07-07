@@ -20,5 +20,9 @@ import core.stdc.stdlib
 
 fn main()
 {
-    (io).printf("hello\n")
+    var array = [1, 2, 3]
+
+    var length = array.length
+
+    io.printf("%d\n", array.length)
 }

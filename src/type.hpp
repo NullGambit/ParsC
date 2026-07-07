@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <variant>
 
 #include "node.hpp"
@@ -15,6 +16,12 @@ namespace pars
 {
 	constexpr auto IS_SIGNED = true;
 
+	struct MemberInfo
+	{
+		std::string_view name;
+		Type *type;
+	};
+
 	struct Type : Node
 	{
 		virtual bool is_equal(Type const *other) const = 0;
@@ -28,6 +35,9 @@ namespace pars
 		virtual Type* get_inner() const { return nullptr; }
 		virtual bool is_ptr() const { return false; }
 		virtual bool is_array() const { return false; }
+
+		virtual llvm::Value* access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const { return nullptr; }
+		virtual std::optional<MemberInfo> get_member(std::string_view symbol) const { return {}; }
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
@@ -289,6 +299,9 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
+
+		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
 
 		Type *get_inner() const override;
 

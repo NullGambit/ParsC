@@ -11,7 +11,14 @@ using enum pars::TokenType;
 
 void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 {
-	expr->prototype = find_symbol<FnDecl>(expr->symbol, expr->token);
+	ScopeTable *table_override {};
+
+	if (ctx.parse_ctx_override != nullptr)
+	{
+		table_override = &ctx.parse_ctx_override->scope_table;
+	}
+
+	expr->prototype = find_symbol<FnDecl>(expr->symbol, expr->token, table_override);
 
 	expr->prototype->accept(this, {});
 
@@ -370,18 +377,33 @@ void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 
 void pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 {
-	auto *symbol = find_symbol(expr->symbol, expr->token);
-
-	if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
+	if (ctx.member)
 	{
-		expr->type = var->type;
+		auto maybe_member = expr->type->get_member(expr->symbol);
+
+		if (maybe_member.has_value())
+		{
+			auto member = maybe_member.value();
+
+			expr->type = member.type;
+		}
 	}
-	else if (auto *type = dynamic_cast<Type*>(symbol))
+	else
 	{
-		expr->type = type;
+		auto *symbol = find_symbol(expr->symbol, expr->token);
+
+		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
+		{
+			expr->type = var->type;
+		}
+		else if (auto *type = dynamic_cast<Type*>(symbol))
+		{
+			expr->type = type;
+		}
+
+		expr->symbol_node = symbol;
 	}
 
-	expr->symbol_node = symbol;
 }
 
 void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
@@ -446,43 +468,38 @@ void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	// func().field
 
 	auto symbol = expr->target->get_symbol();
+	auto *symbol_node = find_symbol(symbol, expr->token);
 
-	if (!symbol.empty())
+	if (auto *import = dynamic_cast<ImportStmt*>(symbol_node))
 	{
-		auto *symbol_node = find_symbol(symbol, expr->token);
+		ctx.parse_ctx_override = import->module->ast.get_ctx();
 
-		if (auto *import = dynamic_cast<ImportStmt*>(symbol_node))
+		expr->accessor->accept(this, ctx);
+	}
+	else if (auto *type = dynamic_cast<Type*>(symbol_node))
+	{
+		auto *prop_expr = new_node<TypePropExpr>();
+
+		auto *prop_symbol = dynamic_cast<SymbolExpr*>(expr->accessor);
+
+		if (prop_symbol == nullptr)
 		{
-			auto *old_ctx = m_ctx;
-
-			m_ctx = import->module->ast.get_ctx();
-
-			expr->accessor->accept(this, ctx);
-
-			m_ctx = old_ctx;
+			throw FrontendError{symbol_node->token, "Expected identifier for type property access"};
 		}
-		else if (auto *type = dynamic_cast<Type*>(symbol_node))
-		{
-			auto *prop_expr = new_node<TypePropExpr>();
 
-			auto *prop_symbol = dynamic_cast<SymbolExpr*>(expr->accessor);
+		prop_expr->property_name = prop_symbol->symbol;
 
-			if (prop_symbol == nullptr)
-			{
-				throw FrontendError{symbol_node->token, "Expected identifier for type property access"};
-			}
+		prop_expr->type = type;
 
-			prop_expr->property_name = prop_symbol->symbol;
-
-			prop_expr->type = type;
-
-			expr->accessor = prop_expr;
-			prop_expr->token = expr->token;
-		}
+		expr->accessor = prop_expr;
+		prop_expr->token = expr->token;
 	}
 	else
 	{
 		expr->target->accept(this, ctx);
+
+		ctx.member = true;
+		expr->accessor->type = expr->target->type;
 		expr->accessor->accept(this, ctx);
 	}
 
@@ -654,9 +671,10 @@ void pars::Analyzer::add_symbol_task(Type *type, std::string_view symbol, Symbol
 	}
 }
 
-pars::Node* pars::Analyzer::find_symbol(std::string_view name, Token &error_token)
+pars::Node* pars::Analyzer::find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override)
 {
-	auto *symbol = m_ctx->scope_table.find_symbol(name);
+	auto *scope_table = table_override != nullptr ? table_override : &m_ctx->scope_table;
+	auto *symbol = scope_table->find_symbol(name);
 
 	if (symbol == nullptr)
 	{
