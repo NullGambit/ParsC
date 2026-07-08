@@ -1,28 +1,14 @@
-// built in c interop
-import io = core.stdc.stdio
-import core.stdc.stdlib
+import core.stdc.stdio
 
-// TODOS
-// constness comes within types. even aliases
+struct User
+{
+    name: str
+    score: u32
+}
 
-// alias InnerImut = ^const i32
-// alias OuterImut = const ^i32
-// alias BothImut = const ^const i32
-
-//fn imut_test()
-//{
-//    var x = 10
-//
-//    var inner_ptr: InnerImut
-//
-//    inner_ptr = &x
-//}
+struct Tag
 
 fn main()
 {
-    var array = [1, 2, 3]
-
-    var length = array.length
-
-    io.printf("%d %p\n", array.length, array.ptr)
+    var user: User
 }

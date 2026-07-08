@@ -311,6 +311,32 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 	};
 
+	struct StructField
+	{
+		Symbol symbol;
+		TypeMeta type_meta;
+		Type *type;
+	};
+
+	struct Struct : Type
+	{
+		Symbol symbol;
+		std::vector<StructField> fields;
+
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		std::string_view get_type_name() const override;
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
+
+		bool is_equal(Type const *other) const override;
+
+		//llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+		//std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+
+		ACCEPT
+	};
+
 	static const Void VoidType {};
 	static const Integer I8Type {8, IS_SIGNED, "i8"};
 	static const Integer U8Type {8, !IS_SIGNED, "u8"};

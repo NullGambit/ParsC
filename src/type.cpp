@@ -515,6 +515,44 @@ pars::Type * pars::Array::get_inner() const
 	return element_type;
 }
 
+llvm::Type * pars::Struct::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	auto *type = llvm::StructType::getTypeByName(*ctx, symbol.name);
+
+	if (type == nullptr)
+	{
+		type = llvm::StructType::create(*ctx, symbol.name);
+
+		std::vector<llvm::Type*> llvm_types;
+
+		llvm_types.reserve(fields.size());
+
+		for (auto &field : fields)
+		{
+			llvm_types.emplace_back(field.type->get_llvm_type(ctx));
+		}
+
+		type->setBody(llvm_types);
+	}
+
+	return type;
+}
+
+std::string_view pars::Struct::get_type_name() const
+{
+	return symbol.name;
+}
+
+llvm::Value * pars::Struct::get_default_value(llvm::LLVMContext *ctx) const
+{
+	return llvm::ConstantAggregateZero::get(get_llvm_type(ctx));
+}
+
+bool pars::Struct::is_equal(Type const *other) const
+{
+	return this == other;
+}
+
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);

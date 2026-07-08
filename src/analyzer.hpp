@@ -23,6 +23,7 @@ namespace pars
 
 		void visit(CallExpr *expr, VisitCtx ctx) override;
 		void visit(FnDecl *fn, VisitCtx ctx) override;
+		void visit(Struct *stmt, VisitCtx ctx) override;
 		void visit(VarDeclStmt *stmt, VisitCtx ctx) override;
 		void visit(ImportStmt *stmt, VisitCtx ctx) override;
 		void visit(ReturnStmt *stmt, VisitCtx ctx) override;

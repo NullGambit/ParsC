@@ -3,6 +3,7 @@
 
 namespace pars
 {
+	struct Struct;
 	struct ParseCtx;
 	struct IndexOpExpr;
 	struct ArrayLiteralExpr;
@@ -78,6 +79,7 @@ namespace pars
 		virtual void visit(ContinueStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(Symbol *stmt, VisitCtx ctx) {}
 		virtual void visit(FnDecl *stmt, VisitCtx ctx) {}
+		virtual void visit(Struct *stmt, VisitCtx ctx) {}
 		virtual void visit(AliasType *stmt, VisitCtx ctx) {}
 		virtual void visit(SizeofExpr *stmt, VisitCtx ctx) {}
 		virtual void visit(TypeExpr *stmt, VisitCtx ctx) {}

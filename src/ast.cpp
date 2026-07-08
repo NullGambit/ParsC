@@ -107,6 +107,10 @@ pars::Node* pars::AST::declaration()
 	{
 		return parse_fn();
 	}
+	if (m_lexer.match(TokenType::Struct))
+	{
+		return parse_struct();
+	}
 	if (m_lexer.match(Var) || m_lexer.match(Const))
 	{
 		return parse_var();
@@ -566,6 +570,40 @@ pars::FnDecl* pars::AST::parse_fn()
 	m_function_stack.pop_back();
 
 	return fn;
+}
+
+pars::Struct * pars::AST::parse_struct()
+{
+	auto *stmt = new_node<Struct>();
+
+	stmt->symbol = get_symbol();
+
+	// fieldless struct
+	if (!m_lexer.peek(LeftBrace))
+	{
+		return stmt;
+	}
+
+	m_lexer.expect(LeftBrace);
+
+	while (!m_lexer.peek(RightBrace))
+	{
+		StructField field {};
+
+		field.symbol = get_symbol();
+
+		m_lexer.expect(Colon);
+
+		field.type_meta = parse_type();
+
+		stmt->fields.emplace_back(field);
+	}
+
+	m_lexer.expect(RightBrace);
+
+	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
+
+	return stmt;
 }
 
 pars::BlockStmt * pars::AST::parse_block()

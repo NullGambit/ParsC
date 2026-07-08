@@ -1,0 +1,24 @@
+// built in c interop
+import io = core.stdc.stdio
+import core.stdc.stdlib
+
+// TODOS
+// constness comes within types. even aliases
+
+// alias InnerImut = ^const i32
+// alias OuterImut = const ^i32
+// alias BothImut = const ^const i32
+
+//fn imut_test()
+//{
+//    var x = 10
+//
+//    var inner_ptr: InnerImut
+//
+//    inner_ptr = &x
+//}
+
+fn main()
+{
+
+}

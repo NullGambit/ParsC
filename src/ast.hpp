@@ -58,6 +58,7 @@ namespace pars
 		Symbol get_symbol();
 		FnSignature parse_fn_signature();
 		FnDecl* parse_fn();
+		Struct* parse_struct();
 		BlockStmt* parse_block();
 		AliasType* parse_alias();
 

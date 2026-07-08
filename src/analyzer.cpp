@@ -144,14 +144,27 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 	m_function_stack.pop_back();
 }
 
+void pars::Analyzer::visit(Struct *stmt, VisitCtx ctx)
+{
+	// already been resolved
+	if (!stmt->fields.empty() && stmt->fields.front().type != nullptr)
+	{
+		return;
+	}
+
+	for (auto &field : stmt->fields)
+	{
+		field.type = resolve_type(field.type_meta, stmt);
+	}
+
+}
+
 void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 {
 	// var x: T
 	if (stmt->is_explicitly_typed())
 	{
 		stmt->type = resolve_type(stmt->type_meta, stmt);
-
-
 	}
 
 	// var x = E
@@ -613,6 +626,7 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
+
 	visit_nodes(nodes);
 }
 
