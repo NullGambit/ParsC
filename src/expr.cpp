@@ -396,3 +396,21 @@ llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx)
 	return ctx.builder.CreateInBoundsGEP(lhs->type->get_llvm_type(ctx.llvm_ctx), array,
 		{ctx.builder.getInt64(0), index_value});
 }
+
+llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx)
+{
+	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
+	auto *value = get_alloca_builder(ctx).CreateAlloca(llvm_type);
+
+	for (auto i = 0; auto initializer : initializers)
+	{
+		auto *field = ctx.builder.CreateGEP(llvm_type, value,
+			{ctx.builder.getInt32(0), ctx.builder.getInt32(i)});
+
+		ctx.builder.CreateStore(initializer->emit(ctx), field);
+
+		i++;
+	}
+
+	return value;
+}

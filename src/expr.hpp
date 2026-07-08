@@ -232,4 +232,14 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct StructLiteral : Expr
+	{
+		std::string_view name;
+		std::vector<Expr*> initializers;
+
+		llvm::Value *emit(EmitCtx &ctx) override;
+
+		ACCEPT
+	};
 }

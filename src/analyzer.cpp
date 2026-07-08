@@ -624,9 +624,18 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 	expr->type = expr->lhs->type;
 }
 
+void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
+{
+	for (auto *initializer : expr->initializers)
+	{
+		initializer->accept(this, ctx);
+	}
+
+	expr->type = resolve_type({expr->name}, expr);
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
-
 	visit_nodes(nodes);
 }
 

@@ -1,7 +1,7 @@
 - BUG if expecting expression but got eof will make the compiler get stuck
     even doing checks for eof seems to not work unless the file ended with a line feed
 
-- stuff i need to do for arrays and array adjacent features:
+- arrays:
     - slices
     - iterators
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
@@ -9,55 +9,94 @@
     - convert string to be '[]const char' slice
     - type cache
 
-- bitwise operators
-- expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
-- improve literal analysis. literals should be coerced into anytype if they fit.
-- correctly handle float min and max value properties. currently its the same as integers which is obviously wrong.
-- replace recursive descent with operator precedent parsing (pratt parsing)
-- break and continue to label. possibly goto? probably a bad idea anyway
-- function pointers
-- automatic va_list creation when passing ... to another function
-- manual va_list support
-- theres too much repeated work between the ast parser and the analyzer. and sometimes even the code gen.
-- compile time for loops
-- make types be responsible for how they can be casted to other types
-- floor div with //
-- stringify operator
-- string interpolation
-- currently shadowing works fine. but this was unintended. in the future i might want to consider disallowing it.
-- integral literal suffixes
-- typeof operator
-- assert statement
-- integral literals in other bases such as hex or binary
-- improve api for compiler functions
-- real type that can accept any integral value and automatically does the correct code gen depending on its current value
-- vardiac arguments
-- function overloading
-- static module initializer functions
-- runtime type information through a Type type
-- typeid system
-- type is expression
-- for loop where clause
-- references
-- auto references
-- functions as parameters
-- generics
-- structs
-- offsetof operator for struct fields
-- readonly attribute
-- methods
-- move and copy system
-- reflection
-- traits
-- defer
-- raii
-- operator overloading
-- error unions
-- enums
-- sum types
-- pattern matching
-- context system
-- mixins
-- comptime blocks
-- closures
-- tuples and destructuring
+- structs:
+    - reflection
+    - refactor attributes to allow user defined types
+    - name mangling
+    - methods
+    - traits
+    - readonly attribute
+    - offsetof operator for struct fields
+    - raii
+    - operator overloading
+    - mixins
+    - move and copy system
+
+- other core features:
+    - generics
+    - context system
+    - errors
+
+- non-core features:
+    - defer
+    - error unions
+    - enums
+    - sum types
+    - pattern matching
+    - comptime blocks
+    - closures
+    - tuples and destructuring
+    - string interpolation
+
+- standard library:
+    - string
+    - list
+    - map
+    - set
+    - os
+    - io
+    - math
+    - linear algebra
+    - json
+    - csv
+    - flag parser
+    - memory
+    - path
+    - fs
+    - conv
+    - thread
+    - concurrency
+    - fmt
+    - algorithms
+    - logger
+    - time
+    - net
+    - process
+    - signals
+    - types
+    - uuid
+    - digest
+
+- misc:
+    - bitwise operators
+    - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
+    - improve literal analysis. literals should be coerced into anytype if they fit.
+    - correctly handle float min and max value properties. currently its the same as integers which is obviously wrong.
+    - replace recursive descent with operator precedent parsing (pratt parsing)
+    - break and continue to label. possibly goto? probably a bad idea anyway
+    - function pointers
+    - automatic va_list creation when passing ... to another function
+    - manual va_list support
+    - theres too much repeated work between the ast parser and the analyzer. and sometimes even the code gen.
+    - compile time for loops
+    - make types be responsible for how they can be casted to other types
+    - floor div with //
+    - stringify operator
+    - currently shadowing works fine. but this was unintended. in the future i might want to consider disallowing it.
+    - integral literal suffixes
+    - typeof operator
+    - assert statement
+    - integral literals in other bases such as hex or binary
+    - improve api for compiler functions
+    - real type that can accept any integral value and automatically does the correct code gen depending on its current value
+    - vardiac arguments
+    - function overloading
+    - static module initializer functions
+    - runtime type information through a Type type
+    - typeid system
+    - type is expression
+    - for loop where clause
+    - references
+    - auto references
+    - functions as parameters
+

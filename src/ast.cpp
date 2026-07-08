@@ -839,6 +839,26 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 			return expr;
 		}
+		if (m_lexer.match(LeftBrace))
+		{
+			auto *expr = new_node<StructLiteral>();
+
+			expr->name = identifier;
+
+			while (!m_lexer.peek(RightBrace))
+			{
+				expr->initializers.emplace_back(expression());
+
+				if (!m_lexer.match(Comma))
+				{
+					break;
+				}
+			}
+
+			m_lexer.expect(RightBrace);
+
+			return expr;
+		}
 
 		auto *expr = new_node<SymbolExpr>();
 

@@ -10,5 +10,8 @@ struct Tag
 
 fn main()
 {
-    var user: User
+    var user = User{"john", 100}
+    //var user2 = User{name: "henry", score: 50}
+    //var user3: User = {name: "jack", score: 10}
+
 }
