@@ -141,6 +141,7 @@ namespace pars
 		Expr *accessor;
 
 		llvm::Value* emit(EmitCtx& ctx) override;
+		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
 		ACCEPT
 	};

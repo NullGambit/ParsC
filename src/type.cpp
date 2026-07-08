@@ -553,6 +553,43 @@ bool pars::Struct::is_equal(Type const *other) const
 	return this == other;
 }
 
+llvm::Value * pars::Struct::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
+	std::string_view symbol) const
+{
+	auto index = UINT32_MAX;
+
+	for (auto i = 0; auto &field : fields)
+	{
+		if (field.symbol.name == symbol)
+		{
+			index = i;
+			break;
+		}
+
+		i++;
+	}
+
+	if (index == UINT32_MAX)
+	{
+		return nullptr;
+	}
+
+	return ctx.builder.CreateGEP(get_llvm_type(ctx.llvm_ctx), ptr, {ctx.builder.getInt32(0), ctx.builder.getInt32(index)});
+}
+
+std::optional<pars::MemberInfo> pars::Struct::get_member(std::string_view symbol) const
+{
+	auto iter = std::find_if(fields.begin(), fields.end(),
+		[symbol](auto &element) { return element.symbol.name == symbol; });
+
+	if (iter == fields.end())
+	{
+		return std::nullopt;
+	}
+
+	return MemberInfo{iter->symbol.name, iter->type};
+}
+
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);

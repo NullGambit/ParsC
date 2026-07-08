@@ -217,6 +217,18 @@ llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)
 
 llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
 {
+	auto *ptr = emit_ptr(ctx);
+
+	if (ptr->getType()->isPointerTy())
+	{
+		return ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), ptr);
+	}
+
+	return ptr;
+}
+
+llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx)
+{
 	auto *target_value = target->emit_ptr(ctx);
 	auto *accessor_value = accessor->emit(ctx);
 
@@ -231,7 +243,7 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
 		return accessor_value;
 	}
 
- 	auto *result = target->type->access_member(ctx, target_value, accessor_value, accessor->get_symbol());
+	auto *result = target->type->access_member(ctx, target_value, accessor_value, accessor->get_symbol());
 
 	if (result == nullptr)
 	{

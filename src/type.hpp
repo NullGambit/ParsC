@@ -331,8 +331,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 		bool is_equal(Type const *other) const override;
 
-		//llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
-		//std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
 
 		ACCEPT
 	};
