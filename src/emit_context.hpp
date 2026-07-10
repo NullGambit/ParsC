@@ -23,4 +23,9 @@ namespace pars
 		HashMap<std::string_view, llvm::Value*> named_values;
 		std::vector<LoopBasicBlocks> loop_bbs;
 	};
+
+	struct EmitParams
+	{
+		llvm::Value *target_ptr {};
+	};
 }

@@ -14,5 +14,8 @@ fn main()
     //var user2 = User{name: "henry", score: 50}
     //var user3: User = {name: "jack", score: 10}
 
-    printf("name = %s, score = %d %d\n", user.name, user.score)
+    // user.score = cast(u32)999
+    user = User{"henry", 50}
+
+    printf("name = %s, score = %d\n", user.name, user.score)
 }

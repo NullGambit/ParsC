@@ -13,13 +13,17 @@
 #include "util/fmt.hpp"
 #include "util/llvm_utils.hpp"
 
-llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx)
+llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	return init(ctx);
 }
 
 llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 {
+	auto builder = get_alloca_builder(ctx);
+
+	auto *inst = builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
+
 	if (value == nullptr)
 	{
 		if (initializer == nullptr)
@@ -28,22 +32,13 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		}
 		else
 		{
-			value = initializer->emit(ctx);
+			value = initializer->emit(ctx, {.target_ptr = inst});
 		}
 	}
 
-	llvm::AllocaInst *inst {};
-
-	if (auto *alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
+	// perhaps it handled store itself
+	if (value != nullptr)
 	{
-		inst = alloca;
-	}
-	else
-	{
-		auto builder = get_alloca_builder(ctx);
-
-		inst = builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
-
 		ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
 	}
 
@@ -71,7 +66,7 @@ bool pars::VarDeclStmt::is_type_inferred() const
 	return !is_explicitly_typed();
 }
 
-llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
+llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *value = lhs->emit_ptr(ctx);
 
@@ -92,7 +87,12 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx)
 
 	using enum TokenType;
 
-	auto *rhs_value = rhs->emit(ctx);
+	auto *rhs_value = rhs->emit(ctx, {.target_ptr = value});
+
+	if (rhs_value == nullptr)
+	{
+		return nullptr;
+	}
 
 	if (lhs->type->can_coerce_into(rhs->type))
 	{
@@ -164,7 +164,7 @@ llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, Fn
 	return fn;
 }
 
-llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
+llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *bb = ctx.builder.GetInsertBlock();
 
@@ -198,7 +198,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx)
 	return bb;
 }
 
-llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
+llvm::Value* pars::FnDecl::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *fn = signature.emit(ctx, symbol.name, flags);
 
@@ -263,7 +263,7 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx)
 	return fn;
 }
 
-llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx)
+llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	if (expr == nullptr)
 	{
@@ -275,7 +275,7 @@ llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx)
 	return ctx.builder.CreateRet(value);
 }
 
-llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
+llvm::Value * pars::IfStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *condition_value = condition->emit(ctx);
 
@@ -348,7 +348,7 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx)
 	return merge_bb;
 }
 
-llvm::Value * pars::CompIfStmt::emit(EmitCtx &ctx)
+llvm::Value * pars::CompIfStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *value = stmt->condition->emit(ctx);
 
@@ -365,7 +365,7 @@ llvm::Value * pars::CompIfStmt::emit(EmitCtx &ctx)
 	return nullptr;
 }
 
-llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx)
+llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *fn = ctx.builder.GetInsertBlock()->getParent();
 
@@ -397,7 +397,7 @@ llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx)
 	return merge_bb;
 }
 
-llvm::Value* pars::ForStmt::emit(EmitCtx &ctx)
+llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	std::vector<llvm::Value*> binding_values;
 
@@ -474,12 +474,12 @@ llvm::Value* do_break_continue(pars::Node *node, pars::EmitCtx &ctx, llvm::Basic
 	return ctx.builder.CreateBr(bb);
 }
 
-llvm::Value * pars::BreakStmt::emit(EmitCtx &ctx)
+llvm::Value * pars::BreakStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	return do_break_continue(this, ctx, ctx.loop_bbs.back().merge, "break");
 }
 
-llvm::Value * pars::ContinueStmt::emit(EmitCtx &ctx)
+llvm::Value * pars::ContinueStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	return do_break_continue(this, ctx, ctx.loop_bbs.back().start, "break");
 }

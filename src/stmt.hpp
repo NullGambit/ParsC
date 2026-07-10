@@ -39,7 +39,7 @@ namespace pars
 		Expr* initializer;
 		VarFlags flags;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *init(EmitCtx &ctx, llvm::Value *value = nullptr);
 
@@ -59,7 +59,7 @@ namespace pars
 		Expr *rhs;
 		TokenType op;
 
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -90,7 +90,7 @@ namespace pars
 	{
 		std::vector<Node*> nodes;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -102,7 +102,7 @@ namespace pars
 		BlockStmt *body;
 		FnFlags flags {};
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -132,21 +132,21 @@ namespace pars
 	{
 		Expr* expr {};
 
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
 
 	struct BreakStmt : Stmt, TerminatorStmt
 	{
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
 
 	struct ContinueStmt : Stmt, TerminatorStmt
 	{
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -157,7 +157,7 @@ namespace pars
 		BlockStmt *body;
 		Node *else_br {};
 
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -166,7 +166,7 @@ namespace pars
 	{
 		IfStmt *stmt;
 
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -176,7 +176,7 @@ namespace pars
 		Expr* condition;
 		BlockStmt *body;
 
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -187,7 +187,7 @@ namespace pars
 		Expr *iterable;
 		BlockStmt *body;
 
-		llvm::Value* emit(EmitCtx &ctx) override;
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		bool has_index() const;
 

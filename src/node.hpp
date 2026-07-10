@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "emit_context.hpp"
 #include "token.hpp"
 #include "visitor.hpp"
 
@@ -23,7 +24,7 @@ namespace pars
 		// mainly useful for error reporting
 		Token token;
 
-		virtual llvm::Value* emit(EmitCtx &ctx) { return nullptr; }
+		virtual llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }
 
 		virtual ~Node() = default;
 

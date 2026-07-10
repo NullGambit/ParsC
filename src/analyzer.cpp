@@ -156,7 +156,6 @@ void pars::Analyzer::visit(Struct *stmt, VisitCtx ctx)
 	{
 		field.type = resolve_type(field.type_meta, stmt);
 	}
-
 }
 
 void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)

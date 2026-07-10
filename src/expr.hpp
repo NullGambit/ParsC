@@ -39,7 +39,7 @@ namespace pars
 	{
 		LiteralExprValue value;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -50,7 +50,7 @@ namespace pars
 		TokenType op;
 		Expr *right;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -60,7 +60,7 @@ namespace pars
 		char op;
 		Expr *right;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -71,7 +71,7 @@ namespace pars
 		Node *symbol_node;
 		std::string_view symbol;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
@@ -89,7 +89,7 @@ namespace pars
 		std::string_view symbol;
 		std::vector<Expr*> arguments;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_symbol() override
 		{
@@ -103,7 +103,7 @@ namespace pars
 	{
 		Expr* inner;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
@@ -124,7 +124,7 @@ namespace pars
 	{
 		Expr *expr;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -140,7 +140,7 @@ namespace pars
 		Expr *target;
 		Expr *accessor;
 
-		llvm::Value* emit(EmitCtx& ctx) override;
+		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
 		ACCEPT
@@ -150,7 +150,7 @@ namespace pars
 	{
 		std::string_view property_name;
 
-		llvm::Value* emit(EmitCtx& ctx) override;
+		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 	};
 
 	struct CastExpr : Expr
@@ -160,7 +160,7 @@ namespace pars
 		// useful for correct integer casting when doing code gen
 		Type *original_type;
 
-		llvm::Value* emit(EmitCtx& ctx) override;
+		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -172,7 +172,7 @@ namespace pars
 
 		ACCEPT
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 	};
 
 	// represents any brace initialized value. also used for default value initializations
@@ -180,7 +180,7 @@ namespace pars
 	{
 		std::vector<NamedExpr> values;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -189,7 +189,7 @@ namespace pars
 	{
 		Expr *value;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -199,7 +199,7 @@ namespace pars
 		TokenType op;
 		Expr *target;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
@@ -208,7 +208,7 @@ namespace pars
 
 	struct PackedExpr : Expr
 	{
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -217,7 +217,7 @@ namespace pars
 	{
 		std::vector<Expr*> elements;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -227,7 +227,7 @@ namespace pars
 		Expr *lhs;
 		Expr *index;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
@@ -239,7 +239,7 @@ namespace pars
 		std::string_view name;
 		std::vector<Expr*> initializers;
 
-		llvm::Value *emit(EmitCtx &ctx) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};

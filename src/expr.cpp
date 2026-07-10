@@ -18,7 +18,7 @@
 
 static pars::HashMap<std::string_view, llvm::GlobalVariable*> g_static_strings;
 
-llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return std::visit(ccc::overload
 	{
@@ -64,7 +64,7 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx)
 	}, value);
 }
 
-llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	llvm::Value *result {};
 
@@ -89,7 +89,7 @@ llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx)
 	return result;
 }
 
-llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *rhs = right->emit(ctx);
 
@@ -115,7 +115,7 @@ llvm::Value * pars::UnaryExpr::emit(EmitCtx &ctx)
 	return result;
 }
 
-llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx)
+llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *value = emit_ptr(ctx);
 
@@ -137,7 +137,7 @@ llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx)
 	return ctx.named_values[symbol];
 }
 
-llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *fn = ctx.module->getFunction(symbol);
 
@@ -199,7 +199,7 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx)
 	return ctx.builder.CreateCall(fn, argv);
 }
 
-llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return inner->emit(ctx);
 }
@@ -209,13 +209,13 @@ llvm::Value * pars::GroupExpr::emit_ptr(EmitCtx &ctx)
 	return inner->emit_ptr(ctx);
 }
 
-llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto value = llvm::APInt(32, expr->type->get_size());
 	return llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 }
 
-llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx)
+llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)
 {
 	auto *ptr = emit_ptr(ctx);
 
@@ -253,7 +253,7 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx)
 	return result;
 }
 
-llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx)
+llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx, EmitParams params)
 {
 	auto *prop = type->get_property(ctx.llvm_ctx, property_name);
 
@@ -265,7 +265,7 @@ llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx)
 	return prop;
 }
 
-llvm::Value* pars::CastExpr::emit(EmitCtx& ctx)
+llvm::Value* pars::CastExpr::emit(EmitCtx& ctx, EmitParams params)
 {
 	auto *value = target->emit(ctx);
 
@@ -280,12 +280,12 @@ llvm::Value* pars::CastExpr::emit(EmitCtx& ctx)
 	return result;
 }
 
-llvm::Value * pars::NamedExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::NamedExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return value->emit(ctx);
 }
 
-llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	if (values.empty())
 	{
@@ -293,7 +293,7 @@ llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx)
 	}
 }
 
-llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *llvm_value = value->emit(ctx);
 
@@ -307,7 +307,7 @@ llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx)
 	return result;
 }
 
-llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx)
+llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	using enum TokenType;
 
@@ -359,31 +359,36 @@ llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx)
 	}
 }
 
-llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return Expr::emit(ctx);
 }
 
-llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *array_type = type->get_llvm_type(ctx.llvm_ctx);
-	auto *array = get_alloca_builder(ctx).CreateAlloca(array_type);
+
+	if (params.target_ptr == nullptr)
+	{
+		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(array_type);
+	}
 
 	for (auto i = 0; auto *element : elements)
 	{
 		auto *element_value = element->emit(ctx);
 
-		auto *ptr = ctx.builder.CreateInBoundsGEP(array_type, array, {ctx.builder.getInt64(0), ctx.builder.getInt64(i)});
+		auto *ptr = ctx.builder.CreateInBoundsGEP(array_type, params.target_ptr,
+			{ctx.builder.getInt64(0), ctx.builder.getInt64(i)});
 
 		ctx.builder.CreateStore(element_value, ptr);
 
 		i++;
 	}
 
-	return array;
+	return nullptr;
 }
 
-llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx)
+llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *result = lhs->type->op_index(ctx, lhs->emit_ptr(ctx), index->emit(ctx));
 
@@ -409,14 +414,18 @@ llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx)
 		{ctx.builder.getInt64(0), index_value});
 }
 
-llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx)
+llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
-	auto *value = get_alloca_builder(ctx).CreateAlloca(llvm_type);
+
+	if (params.target_ptr == nullptr)
+	{
+		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(llvm_type);
+	}
 
 	for (auto i = 0; auto initializer : initializers)
 	{
-		auto *field = ctx.builder.CreateGEP(llvm_type, value,
+		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
 			{ctx.builder.getInt32(0), ctx.builder.getInt32(i)});
 
 		ctx.builder.CreateStore(initializer->emit(ctx), field);
@@ -424,5 +433,5 @@ llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx)
 		i++;
 	}
 
-	return value;
+	return nullptr;
 }
