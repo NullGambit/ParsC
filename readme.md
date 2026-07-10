@@ -63,3 +63,53 @@ fn main()
     printf("%d %p\n", ^ptr, ptr)
 }
 ```
+
+### Structs
+
+```rs
+import core.stdc.stdio
+
+struct User
+{
+    name: str
+    score: u32
+}
+
+fn init_user(user: ^User): bool
+{
+    if user == nil
+    {
+        return false
+    }
+    
+    // automatic dereferncing
+    user.name = "unnamed user"
+    user.score = u32.min
+
+    return true
+}
+
+fn fatal(message: str, code: i32 = -1)
+{
+    import core.stdc.stdlib : exit
+
+    printf("[FATAL] %s\n", message)
+
+    exit(code)
+}
+
+fn main()
+{
+    var user = User{}
+
+    var ok = init_user(&user)
+
+    if !ok
+    {
+        fatal("could not init user", code: 20)
+    }
+
+    printf("user: name = %s, score = %d\n", user.name, user.score)
+}
+
+```

@@ -5,3 +5,4 @@ fn malloc(size: i32): ^void
 fn free(ptr: ^void)
 fn rand(): i32
 fn srand(seed: u32)
+fn exit(code: i32)

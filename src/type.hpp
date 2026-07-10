@@ -248,6 +248,9 @@ virtual bool is_equal(Type const *other) const override							\
 
 		std::string_view get_type_name() const override;
 
+		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;

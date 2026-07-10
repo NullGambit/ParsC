@@ -192,8 +192,9 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 	for (auto i = index; i < prototype->signature.parameters.size(); i++)
 	{
 		auto *param = prototype->signature.parameters[index];
+		auto *value = ctx.builder.CreateLoad(param->type->get_llvm_type(ctx.llvm_ctx), param->emit(ctx));
 
-		argv.emplace_back(param->emit(ctx));
+		argv.emplace_back(value);
 	}
 
 	return ctx.builder.CreateCall(fn, argv);
@@ -241,6 +242,11 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx)
 	if (target_value == nullptr)
 	{
 		return accessor_value;
+	}
+
+	if (target->type->is_ptr())
+	{
+		target_value = ctx.builder.CreateLoad(target->type->get_llvm_type(ctx.llvm_ctx), target_value);
 	}
 
 	auto *result = target->type->access_member(ctx, target_value, accessor_value, accessor->get_symbol());

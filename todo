@@ -10,6 +10,8 @@
     - type cache
 
 - structs:
+    - var user2 = User{name: "henry", score: 50}
+    - var user3: User = {name: "jack", score: 10}
     - reflection
     - refactor attributes to allow user defined types
     - name mangling
@@ -21,6 +23,7 @@
     - operator overloading
     - mixins
     - move and copy system
+    - allow initialization of structs without braces (maybe bad idea?)
 
 - other core features:
     - generics

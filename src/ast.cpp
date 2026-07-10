@@ -578,6 +578,8 @@ pars::Struct * pars::AST::parse_struct()
 
 	stmt->symbol = get_symbol();
 
+	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
+
 	// fieldless struct
 	if (!m_lexer.peek(LeftBrace))
 	{
@@ -600,8 +602,6 @@ pars::Struct * pars::AST::parse_struct()
 	}
 
 	m_lexer.expect(RightBrace);
-
-	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 
 	return stmt;
 }
@@ -839,7 +839,15 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 			return expr;
 		}
-		if (m_lexer.match(LeftBrace))
+		// insanely hacky and terrible way to disambiguate this expression.
+		// this is to fix ambiguity with a statement such as
+		// if is_true {}
+		// and any similar statement
+		// in theory this should work 99% of time but
+		// TODO please fix future me
+		// on possible fix could be recording a stack of statement types or passing the current statement type to expressions
+		// and disallowing struct initialization within statement heads
+		if (isupper(identifier[0]) && m_lexer.match(LeftBrace))
 		{
 			auto *expr = new_node<StructLiteral>();
 

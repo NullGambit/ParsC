@@ -368,6 +368,17 @@ std::string_view pars::Pointer::get_type_name() const
 	return "pointer";
 }
 
+std::optional<pars::MemberInfo> pars::Pointer::get_member(std::string_view symbol) const
+{
+	return inner->get_member(symbol);
+}
+
+llvm::Value * pars::Pointer::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
+	std::string_view symbol) const
+{
+	return inner->access_member(ctx, ptr, accessor, symbol);
+}
+
 llvm::Value * pars::Pointer::get_default_value(llvm::LLVMContext *ctx) const
 {
 	auto *type = static_cast<llvm::PointerType*>(get_llvm_type(ctx));
