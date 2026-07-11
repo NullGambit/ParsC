@@ -7,15 +7,19 @@
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
     - currently deeply nested types can be parsed but the type information is lost and not used. such as '^^i32'.
     - convert string to be '[]const char' slice
+    - enum indexed arrays
     - type cache
 
 - structs:
     - var user2 = User{name: "henry", score: 50}
     - var user3: User = {name: "jack", score: 10}
+    - anonymous nested structs
+    - structural struct equality. eg: fn take_structure(s: {x: i32, s: str})
     - reflection
     - refactor attributes to allow user defined types
     - name mangling
     - methods
+    - null coalescing
     - traits
     - readonly attribute
     - offsetof operator for struct fields
@@ -32,9 +36,10 @@
 
 - non-core features:
     - defer
+    - union literals A | B
+    - unions
     - error unions
     - enums
-    - sum types
     - pattern matching
     - comptime blocks
     - closures

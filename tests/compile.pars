@@ -1,43 +1,37 @@
 import core.stdc.stdio
 
-struct User
+struct B
 {
-    name: str
-    score: u32
+    x: i32
 }
 
-fn init_user(user: ^User): bool
+struct A
 {
-    if user == nil
-    {
-        return false
-    }
-
-    user.name = "unnamed user"
-    user.score = u32.min
-
-    return true
+    b: B
 }
 
-fn fatal(message: str, code: i32 = -1)
-{
-    import core.stdc.stdlib : exit
-
-    printf("[FATAL] %s\n", message)
-
-    exit(code)
-}
+//struct JsonData
+//{
+//    subfields:
+//    {
+//        value: str
+//    }
+//    x: i32
+//}
+//
+//fn take_structure(a: {x: i32})
+//{
+//
+//}
 
 fn main()
 {
-    var user = User{}
+    var a = A{B{10}}
 
-    var ok = init_user(&user)
+    a.b = B{20}
 
-    if !ok
-    {
-        fatal("could not init user", code: 20)
-    }
+    a.b.x += 30
 
-    printf("user: name = %s, score = %d\n", user.name, user.score)
+    printf("%d\n", a.b.x)
 }
+

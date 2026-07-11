@@ -143,6 +143,8 @@ namespace pars
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx) override;
 
+		std::string_view get_symbol() override;
+
 		ACCEPT
 	};
 

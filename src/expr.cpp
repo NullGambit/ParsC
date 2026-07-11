@@ -220,7 +220,7 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)
 {
 	auto *ptr = emit_ptr(ctx);
 
-	if (ptr->getType()->isPointerTy())
+	if (ptr != nullptr && ptr->getType()->isPointerTy())
 	{
 		return ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), ptr);
 	}
@@ -257,6 +257,11 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx)
 	}
 
 	return result;
+}
+
+std::string_view pars::MemberAccessExpr::get_symbol()
+{
+	return target->get_symbol();
 }
 
 llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx, EmitParams params)
@@ -434,7 +439,12 @@ llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)
 		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
 			{ctx.builder.getInt32(0), ctx.builder.getInt32(i)});
 
-		ctx.builder.CreateStore(initializer->emit(ctx), field);
+		auto *result = initializer->emit(ctx, {.target_ptr = field});
+
+		if (result != nullptr)
+		{
+			ctx.builder.CreateStore(result, field);
+		}
 
 		i++;
 	}
