@@ -1,37 +1,11 @@
 import core.stdc.stdio
 
-struct B
-{
-    x: i32
-}
-
-struct A
-{
-    b: B
-}
-
-//struct JsonData
-//{
-//    subfields:
-//    {
-//        value: str
-//    }
-//    x: i32
-//}
-//
-//fn take_structure(a: {x: i32})
-//{
-//
-//}
-
 fn main()
 {
-    var a = A{B{10}}
+    var array: [3]i32
 
-    a.b = B{20}
+    array[0] = 10
 
-    a.b.x += 30
-
-    printf("%d\n", a.b.x)
+    printf("%d\n", array[0])
 }
 

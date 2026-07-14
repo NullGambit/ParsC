@@ -638,7 +638,7 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 		throw FrontendError{expr->lhs->token, "left hand side is not an array"};
 	}
 
-	expr->type = expr->lhs->type;
+	expr->type = expr->lhs->type->get_inner();
 }
 
 void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)

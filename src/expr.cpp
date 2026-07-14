@@ -413,11 +413,6 @@ llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx)
 {
-	if (!type->is_array())
-	{
-		throw CompileError{this, fmt::format("type of {} is not an array", type->get_type_name())};
-	}
-
 	auto *array = lhs->emit_ptr(ctx);
 	auto *index_value = index->emit(ctx);
 

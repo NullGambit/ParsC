@@ -14,7 +14,7 @@
     - var user2 = User{name: "henry", score: 50}
     - var user3: User = {name: "jack", score: 10}
     - anonymous nested structs
-    - structural struct equality. eg: fn take_structure(s: {x: i32, s: str})
+    - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
     - reflection
     - refactor attributes to allow user defined types
     - name mangling
@@ -30,6 +30,7 @@
     - allow initialization of structs without braces (maybe bad idea?)
 
 - other core features:
+    - enums
     - generics
     - context system
     - errors
@@ -39,7 +40,6 @@
     - union literals A | B
     - unions
     - error unions
-    - enums
     - pattern matching
     - comptime blocks
     - closures
