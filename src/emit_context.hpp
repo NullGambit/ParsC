@@ -22,6 +22,7 @@ namespace pars
 		llvm::Module *module;
 		HashMap<std::string_view, llvm::Value*> named_values;
 		std::vector<LoopBasicBlocks> loop_bbs;
+		std::vector<llvm::BasicBlock*> if_merge_bbs;
 	};
 
 	struct EmitParams

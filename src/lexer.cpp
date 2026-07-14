@@ -362,6 +362,13 @@ static constexpr auto ESCAPE_BUFFER_SIZE = MB(128);
 // buffer shared by all escaped strings
 static pars::Arena g_escape_buffer;
 
+// ill probably never use msvc anyway, i hope...
+__attribute__((constructor))
+void init_escape_buffer()
+{
+    g_escape_buffer.init(ESCAPE_BUFFER_SIZE);
+}
+
 /*
  * TODO: handle wide strings
  * TODO: add escape support for numeric values such as octal or hex (ive never had much of a use for this myself so likely wont implement for a while)
@@ -380,11 +387,6 @@ pars::Token pars::Lexer::build_string()
         {
             if (escape_buffer_start == UINT32_MAX)
             {
-                if (g_escape_buffer.memory == nullptr)
-                {
-                    g_escape_buffer.init(ESCAPE_BUFFER_SIZE);
-                }
-
                 auto s = m_reader.slice();
 
                 s = s.substr(0, s.size() - 2);

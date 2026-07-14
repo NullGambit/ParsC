@@ -10,6 +10,7 @@
 #include "type.hpp"
 #include "debug/ast_printer.hpp"
 #include "magic_enum/magic_enum.hpp"
+#include "util/defer.hpp"
 #include "util/fmt.hpp"
 #include "util/llvm_utils.hpp"
 
@@ -295,6 +296,27 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx, EmitParams params)
 	};
 
 	auto *then_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "then", fn);
+	llvm::BasicBlock *merge_bb;
+	auto pop_bb = false;
+
+	if (ctx.if_merge_bbs.empty())
+	{
+		merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
+		ctx.if_merge_bbs.emplace_back(merge_bb);
+		pop_bb = true;
+	}
+	else
+	{
+		merge_bb = ctx.if_merge_bbs.back();
+	}
+
+	defer
+	{
+		if (pop_bb)
+		{
+			ctx.if_merge_bbs.pop_back();
+		}
+	};
 
 	ctx.builder.SetInsertPoint(then_bb);
 
@@ -317,7 +339,6 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx, EmitParams params)
 		return get_block_poison(ctx);
 	}
 
-	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
 
 	if (else_br == nullptr)
 	{
@@ -481,5 +502,5 @@ llvm::Value * pars::BreakStmt::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::ContinueStmt::emit(EmitCtx &ctx, EmitParams params)
 {
-	return do_break_continue(this, ctx, ctx.loop_bbs.back().start, "break");
+	return do_break_continue(this, ctx, ctx.loop_bbs.back().start, "continue");
 }

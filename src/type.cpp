@@ -352,6 +352,11 @@ llvm::Value * pars::Bool::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs)
 	return nullptr;
 }
 
+llvm::Value * pars::Char::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	return Integer{bits, is_signed, "char"}.op_binary(ctx, op, lhs, rhs);
+}
+
 llvm::Type * pars::Char::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);

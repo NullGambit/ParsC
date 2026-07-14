@@ -478,7 +478,6 @@ void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	// array.length
 	// func().field
 
-
 	auto symbol = expr->target->get_symbol();
 
 	auto *symbol_node = ctx.member ? nullptr : find_symbol(symbol, expr->token);
@@ -509,25 +508,6 @@ void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	}
 	else
 	{
-		// expr->target->accept(this, ctx);
-		//
-		// auto subsymbol = expr->accessor->get_symbol();
-		//
-		// auto maybe_member = expr->target->type->get_member(subsymbol);
-		//
-		// // a.b.c
-		// if (maybe_member.has_value())
-		// {
-		// 	expr->accessor->type = maybe_member.value().type;
-		// }
-		// else
-		// {
-		// 	expr->accessor->type = expr->target->type;
-		// }
-		//
-		// ctx.member = true;
-		// expr->accessor->accept(this, ctx);
-
 		if (expr->type == nullptr)
 		{
 			expr->target->accept(this, ctx);

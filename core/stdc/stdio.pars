@@ -4,9 +4,11 @@ alias FILE = distinct i32
 @extern:
 
 fn printf(fmt: str, ...): i32
+fn scanf(fmt: str, ...): i32
 fn puts(fmt: str): i32
 fn fopen(filename: str, mode: str): ^FILE
 fn fwrite(ptr: str, size: u64, nmemb: u64, stream: ^FILE): i32
 fn fread(ptr: str, size: u64, nmemb: u64, stream: ^FILE): i32
 fn fclose(stream: ^FILE): i32
 fn vprintf(fmt: str, args: i32): i32
+fn getchar(): i32

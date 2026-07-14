@@ -1,0 +1,44 @@
+import std.io
+import std.random
+
+enum Result
+{
+    Heads
+    Tails
+    Invalid
+}
+
+fn main()
+{
+    loop
+    {
+        println("heads or tails (h | t | q): ")
+
+        var input = get_term_input()
+
+        // explicit typing forces a coercion 
+        var correct: Result = rand_range(0, 1)
+
+        var answer: i32
+
+        var result = match input 
+        {
+            'h' => Heads
+            't' => Tails
+            _ => 
+            {
+                println($"invalid input '{input}' try again")
+                continue
+            }
+        }
+
+        if answer == result
+        {
+            printf("You win!\n")
+        }
+        else
+        {
+            printf("you lose\n")
+        }
+    }
+}

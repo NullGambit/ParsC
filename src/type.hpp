@@ -226,6 +226,8 @@ virtual bool is_equal(Type const *other) const override							\
 			Integral{bits, is_signed, type_name}
 		{}
 
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		DEFAULT_INTEGRAL_EQUAL(Char)

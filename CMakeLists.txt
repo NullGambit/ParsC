@@ -83,6 +83,7 @@ add_executable(ParsC src/main.cpp
         src/type_meta.hpp
         src/util/llvm_utils.cpp
         src/util/llvm_utils.hpp
+        src/util/defer.hpp
 )
 
 set(LLVM_STATIC ON)

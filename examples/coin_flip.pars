@@ -1,0 +1,59 @@
+import core.stdc.stdio
+import core.stdc.stdlib
+import core.stdc.time
+
+fn main()
+{
+    const HEADS = 0
+    const TAILS = 1
+
+    init()
+
+    loop
+    {
+        printf("heads or tails (h | t | q): ")
+
+        var input: char
+
+        scanf(" %c", &input)
+
+        var result = rand_range(0, 1)
+
+        var answer: i32
+
+        if input == 'h'
+        {
+            answer = HEADS
+        }
+        else if input == 't'
+        {
+            answer = TAILS
+        }
+        else if input == 'q'
+        {
+            break
+        }
+        else
+        {
+            printf("invalid input '%c' try again\n", input)
+            continue
+        }
+
+        if answer == result
+        {
+            printf("You win!\n")
+        }
+        else
+        {
+            printf("you lose\n")
+        }
+    }
+}
+
+fn rand_range(min: i32, max: i32) => rand() % (max + 1 - min) + min
+
+fn init()
+{
+    srand(time(nil))
+}
+
