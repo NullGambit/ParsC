@@ -124,7 +124,8 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 		return nullptr;
 	}
 
-	if (llvm::isa<llvm::AllocaInst>(value))
+	//if (llvm::isa<llvm::AllocaInst>(value))
+	if (value->getType()->isPointerTy())
 	{
 		value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
 	}

@@ -1,11 +1,20 @@
 import core.stdc.stdio
 
+const global = 10
+
 fn main()
 {
-    var array: [3]i32
+    //var array: [3]i32
+//
+    //array[0] = 10
+//
+    //printf("%d\n", array[0])
 
-    array[0] = 10
+    //global = 20
+    var local = 30
 
-    printf("%d\n", array[0])
+    local += global
+
+    printf("local = %d global = %d\n", local, global)
 }
 

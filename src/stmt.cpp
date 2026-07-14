@@ -21,35 +21,66 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 {
-	auto builder = get_alloca_builder(ctx);
+	llvm::Value *inst {};
 
-	auto *inst = builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx), nullptr, symbol.name);
+	auto *var_type = type->get_llvm_type(ctx.llvm_ctx);
 
-	if (value == nullptr)
+	auto produce_value = [&]
 	{
-		if (initializer == nullptr)
+		if (value == nullptr)
 		{
-			value = type->get_default_value(ctx.llvm_ctx);
+			if (initializer == nullptr)
+			{
+				return type->get_default_value(ctx.llvm_ctx);
+			}
+
+			return initializer->emit(ctx, {.target_ptr = inst});
+		}
+
+		return value;
+	};
+
+	if (has_flag(flags, VarFlags::Global))
+	{
+		auto *global = llvm::cast<llvm::GlobalVariable>(ctx.module->getOrInsertGlobal(symbol.name, var_type));
+
+		global->setLinkage(llvm::GlobalValue::InternalLinkage);
+
+		auto init_value = produce_value();
+
+		if (auto *constant = llvm::dyn_cast<llvm::Constant>(init_value))
+		{
+			global->setInitializer(constant);
 		}
 		else
 		{
-			value = initializer->emit(ctx, {.target_ptr = inst});
+			throw CompileError{this, "global initializer must be known at compile time"};
 		}
-	}
 
-	// perhaps it handled store itself
-	if (value != nullptr)
+		inst = global;
+	}
+	else
 	{
-		ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
+		auto builder = get_alloca_builder(ctx);
+
+		auto *alloca = builder.CreateAlloca(var_type, nullptr, symbol.name);
+
+		value = produce_value();
+
+		// perhaps it handled store itself
+		if (value != nullptr)
+		{
+			ctx.builder.CreateStore(value, alloca, has_flag(flags, VarFlags::Volatile));
+		}
+
+		inst = alloca;
 	}
 
 	if (has_flag(type_meta.flags, TypeFlags::Const))
 	{
-		auto const_md = ctx.llvm_ctx->getMDKindID("Const");
-
 		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
 
-		inst->setMetadata(const_md, node);
+		set_metadata(ctx.llvm_ctx, inst, node, "Const");
 	}
 
 	ctx.named_values[symbol.name] = inst;
@@ -76,14 +107,11 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx, EmitParams params)
 		throw CompileError{this, fmt::format("{} is not mutable", symbol)};
 	}
 
-	if (auto alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
-	{
-		auto *node = alloca->getMetadata("Const");
+	auto *is_const_node = get_metadata(value, "Const");
 
-		if (node != nullptr)
-		{
-			throw CompileError{this, fmt::format("{} is a constant variable", symbol)};
-		}
+	if (is_const_node != nullptr)
+	{
+		throw CompileError{this, fmt::format("{} is a constant variable", symbol)};
 	}
 
 	using enum TokenType;

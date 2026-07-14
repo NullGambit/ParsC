@@ -207,6 +207,11 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		stmt->flags |= VarFlags::Volatile;
 	}
 
+	if (m_ctx->scope_table.get_level() == 0)
+	{
+		stmt->flags |= VarFlags::Global;
+	}
+
 	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 }
 
