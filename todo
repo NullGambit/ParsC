@@ -6,13 +6,14 @@
     - iterators
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
     - currently deeply nested types can be parsed but the type information is lost and not used. such as '^^i32'.
+    - allow setting the size of a static array with any compile time constant not just integer literals.
     - convert string to be '[]const char' slice
     - enum indexed arrays
     - type cache
 
 - structs:
-    - var user2 = User{name: "henry", score: 50}
     - var user3: User = {name: "jack", score: 10}
+    - during struct initialization any unspecified field should be set to its default value.
     - anonymous nested structs
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
     - reflection

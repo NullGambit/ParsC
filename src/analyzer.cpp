@@ -648,12 +648,54 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 
 void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
+	expr->type = resolve_type({expr->name}, expr);
+
+	auto *struct_type = dynamic_cast<Struct*>(expr->type);
+
+	thread_local HashMap<NamedExpr*, u32> index_map;
+
+	index_map.clear();
+
 	for (auto *initializer : expr->initializers)
 	{
+		auto any_match = false;
+
+		if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
+		{
+			for (auto index = 0; auto &field : struct_type->fields)
+			{
+				if (field.symbol.name == named_expr->name)
+				{
+					index_map[named_expr] = index;
+					any_match = true;
+					break;
+				}
+
+				index++;
+			}
+
+			if (!any_match)
+			{
+				throw FrontendError{expr->token,
+					fmt::format("struct {} has no field named {}", struct_type->symbol.name, named_expr->name)};
+			}
+		}
+
 		initializer->accept(this, ctx);
 	}
 
-	expr->type = resolve_type({expr->name}, expr);
+	for (auto i = 0; auto &[named_expr, index] : index_map)
+	{
+		if (i == index)
+		{
+			continue;
+		}
+
+		expr->initializers[index] = named_expr;
+
+		i++;
+	}
+
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)

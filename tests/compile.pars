@@ -1,20 +1,21 @@
 import core.stdc.stdio
 
-const global = 10
+struct User
+{
+    name: str
+    score: i32
+    is_valid: bool
+}
 
 fn main()
 {
-    //var array: [3]i32
-//
-    //array[0] = 10
-//
-    //printf("%d\n", array[0])
+    //var user = User{score: 50, name: "henry"}
+    //var user = User{"henry", score: 50}
+    //var user = User{name: "henry", score: 50}
+    var user = User{"henry", score: 50, true}
 
-    //global = 20
-    var local = 30
+    //user.name = "empty"
 
-    local += global
-
-    printf("local = %d global = %d\n", local, global)
+    printf("name: %s, score: %d, is_valid: %b\n", user.name, user.score, user.is_valid)
 }
 

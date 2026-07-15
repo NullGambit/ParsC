@@ -598,6 +598,9 @@ pars::Struct * pars::AST::parse_struct()
 
 		field.type_meta = parse_type();
 
+		// optional comma for inline structs
+		m_lexer.match(Comma);
+
 		stmt->fields.emplace_back(field);
 	}
 
