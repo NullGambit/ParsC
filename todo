@@ -46,6 +46,7 @@
     - closures
     - tuples and destructuring
     - string interpolation
+    - module initializers. and per thread module initializers
 
 - standard library:
     - string
@@ -100,7 +101,6 @@
     - real type that can accept any integral value and automatically does the correct code gen depending on its current value
     - vardiac arguments
     - function overloading
-    - static module initializer functions
     - runtime type information through a Type type
     - typeid system
     - type is expression

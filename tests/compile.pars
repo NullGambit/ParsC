@@ -12,10 +12,12 @@ fn main()
     //var user = User{score: 50, name: "henry"}
     //var user = User{"henry", score: 50}
     //var user = User{name: "henry", score: 50}
-    var user = User{"henry", score: 50, true}
+    //var user = User{"henry", score: 50, true}
+    //var user = User{score: 50, true}
+    var user = User{score: 50}
 
     //user.name = "empty"
 
-    printf("name: %s, score: %d, is_valid: %b\n", user.name, user.score, user.is_valid)
+    printf("name: %s, score: %d, is_valid: %d\n", user.name, user.score, user.is_valid)
 }
 

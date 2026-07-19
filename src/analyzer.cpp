@@ -1,5 +1,7 @@
 #include "analyzer.hpp"
 
+#include <ranges>
+
 #include "parse_ctx.hpp"
 #include "ast.hpp"
 #include "frontend_error.hpp"
@@ -652,50 +654,70 @@ void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 
 	auto *struct_type = dynamic_cast<Struct*>(expr->type);
 
-	thread_local HashMap<NamedExpr*, u32> index_map;
+	std::vector<std::pair<Expr*, u32>> expr_list;
 
-	index_map.clear();
-
-	for (auto *initializer : expr->initializers)
+	for (auto index = 0; auto &field : struct_type->fields)
 	{
-		auto any_match = false;
+		Expr *initializer {};
+
+		if (index < expr->initializers.size())
+		{
+			initializer = expr->initializers[index];
+		}
+		else
+		{
+			initializer = new_node<AnonInitExpr>();
+		}
 
 		if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
 		{
-			for (auto index = 0; auto &field : struct_type->fields)
+			auto it = std::ranges::find_if(struct_type->fields, [&](StructField &field)
 			{
-				if (field.symbol.name == named_expr->name)
-				{
-					index_map[named_expr] = index;
-					any_match = true;
-					break;
-				}
+				return named_expr->name == field.symbol.name;
+			});
 
-				index++;
+			auto i = index;
+			auto real_index = std::distance(struct_type->fields.begin(), it);
+
+			while (i < real_index)
+			{
+				auto &f = struct_type->fields[i];
+
+				auto empty = new_node<AnonInitExpr>();
+
+				expr_list.emplace_back(empty, i);
+
+				empty->accept(this, {.type = f.type});
+
+				i++;
 			}
 
-			if (!any_match)
-			{
-				throw FrontendError{expr->token,
-					fmt::format("struct {} has no field named {}", struct_type->symbol.name, named_expr->name)};
-			}
+			index = real_index;
 		}
 
-		initializer->accept(this, ctx);
-	}
+		expr_list.emplace_back(initializer, index);
 
-	for (auto i = 0; auto &[named_expr, index] : index_map)
-	{
-		if (i == index)
+		initializer->accept(this, {.type = struct_type->fields[index].type});
+
+		index++;
+
+		if (index >= struct_type->fields.size())
 		{
-			continue;
+			break;
 		}
-
-		expr->initializers[index] = named_expr;
-
-		i++;
 	}
 
+	std::ranges::sort(expr_list, [&](const auto &a, const auto &b)
+	{
+		return a.second < b.second;
+	});
+
+	expr->initializers.clear();
+
+	for (auto key : expr_list | std::views::keys)
+	{
+		expr->initializers.emplace_back(key);
+	}
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
