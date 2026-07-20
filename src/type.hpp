@@ -35,6 +35,7 @@ namespace pars
 		virtual Type* get_inner() const { return nullptr; }
 		virtual bool is_ptr() const { return false; }
 		virtual bool is_array() const { return false; }
+		virtual bool is_struct() const { return false; }
 
 		virtual llvm::Value* access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const { return nullptr; }
 		virtual std::optional<MemberInfo> get_member(std::string_view symbol) const { return {}; }
@@ -168,6 +169,7 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 		bool is_ptr() const override;
 		bool is_array() const override;
+		bool is_struct() const override;
 		Type *get_inner() const override;
 
 		ACCEPT
@@ -333,6 +335,11 @@ virtual bool is_equal(Type const *other) const override							\
 		std::string_view get_type_name() const override;
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
+
+		bool is_struct() const override
+		{
+			return true;
+		}
 
 		bool is_equal(Type const *other) const override;
 

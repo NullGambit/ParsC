@@ -203,6 +203,11 @@ bool pars::AliasType::is_array() const
 	return type->is_array() || has_flag(meta.flags, TypeFlags::Array);
 }
 
+bool pars::AliasType::is_struct() const
+{
+	return type->is_struct();
+}
+
 pars::Type * pars::AliasType::get_inner() const
 {
 	return type;

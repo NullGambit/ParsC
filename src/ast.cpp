@@ -609,6 +609,25 @@ pars::Struct * pars::AST::parse_struct()
 	return stmt;
 }
 
+std::vector<std::pair<pars::Expr *, u32>> pars::AST::parse_brace_list()
+{
+	std::vector<std::pair<Expr *, u32>> out;
+
+	while (!m_lexer.peek(RightBrace))
+	{
+		out.emplace_back(expression(), UINT32_MAX);
+
+		if (!m_lexer.match(Comma))
+		{
+			break;
+		}
+	}
+
+	m_lexer.expect(RightBrace);
+
+	return out;
+}
+
 pars::BlockStmt * pars::AST::parse_block()
 {
 	auto *stmt = new_node<BlockStmt>();
@@ -856,17 +875,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 			expr->name = identifier;
 
-			while (!m_lexer.peek(RightBrace))
-			{
-				expr->initializers.emplace_back(expression(), UINT32_MAX);
-
-				if (!m_lexer.match(Comma))
-				{
-					break;
-				}
-			}
-
-			m_lexer.expect(RightBrace);
+			expr->initializers = parse_brace_list();
 
 			return expr;
 		}
@@ -909,10 +918,11 @@ pars::Expr * pars::AST::parse_primary_inner()
 	}
 	if (m_lexer.match(LeftBrace))
 	{
-		// TODO parse field value pairs
-		m_lexer.expect(RightBrace);
+		auto *expr = new_node<AnonInitExpr>();
 
-		return new_node<AnonInitExpr>();
+		expr->values = parse_brace_list();
+
+		return expr;
 	}
 	if (m_lexer.match(Pipe))
 	{

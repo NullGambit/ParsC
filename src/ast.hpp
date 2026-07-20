@@ -59,6 +59,7 @@ namespace pars
 		FnSignature parse_fn_signature();
 		FnDecl* parse_fn();
 		Struct* parse_struct();
+		std::vector<std::pair<Expr*, u32>> parse_brace_list();
 		BlockStmt* parse_block();
 		AliasType* parse_alias();
 

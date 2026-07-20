@@ -556,6 +556,11 @@ void pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 void pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 {
 	expr->type = ctx.type;
+
+	if (auto *struct_type = dynamic_cast<Struct*>(expr->type))
+	{
+		assign_struct_indices(struct_type, expr->values);
+	}
 }
 
 void pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
@@ -654,50 +659,7 @@ void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 
 	auto *struct_type = dynamic_cast<Struct*>(expr->type);
 
-	auto cursor = 0;
-
-	for (auto i = 0; auto &field : struct_type->fields)
-	{
-		auto &[initializer, pos] = expr->initializers[i];
-
-		if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
-		{
-			auto it = std::ranges::find_if(struct_type->fields, [&](StructField &field)
-			{
-				return named_expr->name == field.symbol.name;
-			});
-
-			pos = std::distance(struct_type->fields.begin(), it);
-			cursor = pos;
-		}
-		else
-		{
-			pos = i;
-		}
-
-		auto &f = struct_type->fields[cursor];
-		auto *expected_type = f.type;
-
-		initializer->accept(this, {.type = expected_type});
-
-		if (!expected_type->is_equal(initializer->type))
-		{
-			throw FrontendError{initializer->token,
-				fmt::format("cannot initialize struct field {} of type {} with type {}",
-					f.symbol.name,
-					expected_type->get_type_name(),
-					initializer->type->get_type_name())};
-		}
-
-		pos = cursor;
-		cursor++;
-		i++;
-
-		if (i >= expr->initializers.size())
-		{
-			break;
-		}
-	}
+	assign_struct_indices(struct_type, expr->initializers);
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
@@ -770,6 +732,53 @@ pars::Node* pars::Analyzer::find_symbol(std::string_view name, Token &error_toke
 	}
 
 	return symbol;
+}
+
+void pars::Analyzer::assign_struct_indices(const Struct *struct_type, std::vector<std::pair<Expr *, u32>> &initializers)
+{
+	auto cursor = 0;
+
+	for (auto i = 0; i < struct_type->fields.size(); i++)
+	{
+		if (i >= initializers.size())
+		{
+			break;
+		}
+
+		auto &[initializer, pos] = initializers[i];
+
+		if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
+		{
+			auto it = std::ranges::find_if(struct_type->fields, [&](const StructField &field)
+			{
+				return named_expr->name == field.symbol.name;
+			});
+
+			pos = std::distance(struct_type->fields.begin(), it);
+			cursor = pos;
+		}
+		else
+		{
+			pos = i;
+		}
+
+		auto &field = struct_type->fields[cursor];
+		auto *expected_type = field.type;
+
+		initializer->accept(this, {.type = expected_type});
+
+		if (!expected_type->is_equal(initializer->type))
+		{
+			throw FrontendError{initializer->token,
+				fmt::format("cannot initialize struct field {} of type {} with type {}",
+					field.symbol.name,
+					expected_type->get_type_name(),
+					initializer->type->get_type_name())};
+		}
+
+		pos = cursor;
+		cursor++;
+	}
 }
 
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)

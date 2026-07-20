@@ -177,10 +177,12 @@ namespace pars
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 	};
 
+	using BraceInitList = std::vector<std::pair<Expr*, u32>>;
+
 	// represents any brace initialized value. also used for default value initializations
 	struct AnonInitExpr : Expr
 	{
-		std::vector<NamedExpr> values;
+		BraceInitList values;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -239,7 +241,7 @@ namespace pars
 	struct StructLiteral : Expr
 	{
 		std::string_view name;
-		std::vector<std::pair<Expr*, u32>> initializers;
+		BraceInitList initializers;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 

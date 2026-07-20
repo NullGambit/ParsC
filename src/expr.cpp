@@ -297,12 +297,46 @@ llvm::Value * pars::NamedExpr::emit(EmitCtx &ctx, EmitParams params)
 	return value->emit(ctx);
 }
 
+llvm::Value * emit_brace_list(pars::EmitCtx &ctx, pars::EmitParams params, const pars::Type *type, const pars::BraceInitList &initializers)
+{
+	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
+
+	auto should_return = false;
+
+	if (params.target_ptr == nullptr)
+	{
+		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(llvm_type);
+		should_return = true;
+	}
+
+	ctx.builder.CreateStore(type->get_default_value(ctx.llvm_ctx), params.target_ptr);
+
+	for (auto i = 0; auto [initializer, pos] : initializers)
+	{
+		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
+			{ctx.builder.getInt32(0), ctx.builder.getInt32(pos)});
+
+		auto *result = initializer->emit(ctx, {.target_ptr = field});
+
+		if (result != nullptr)
+		{
+			ctx.builder.CreateStore(result, field);
+		}
+
+		i++;
+	}
+
+	return should_return ? ctx.builder.CreateLoad(llvm_type, params.target_ptr) : nullptr;
+}
+
 llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	if (values.empty())
 	{
 		return type->get_default_value(ctx.llvm_ctx);
 	}
+
+	return emit_brace_list(ctx, params, type, values);
 }
 
 llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx, EmitParams params)
@@ -423,29 +457,5 @@ llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx)
 
 llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)
 {
-	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
-
-	if (params.target_ptr == nullptr)
-	{
-		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(llvm_type);
-	}
-
-	ctx.builder.CreateStore(type->get_default_value(ctx.llvm_ctx), params.target_ptr);
-
-	for (auto i = 0; auto [initializer, pos] : initializers)
-	{
-		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
-			{ctx.builder.getInt32(0), ctx.builder.getInt32(pos)});
-
-		auto *result = initializer->emit(ctx, {.target_ptr = field});
-
-		if (result != nullptr)
-		{
-			ctx.builder.CreateStore(result, field);
-		}
-
-		i++;
-	}
-
-	return nullptr;
+	return emit_brace_list(ctx, params, type, initializers);
 }

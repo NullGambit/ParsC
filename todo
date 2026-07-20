@@ -10,6 +10,8 @@
     - convert string to be '[]const char' slice
     - enum indexed arrays
     - type cache
+    - named elements
+    - named element swizzling
 
 - structs:
     - var user3: User = {name: "jack", score: 10}
