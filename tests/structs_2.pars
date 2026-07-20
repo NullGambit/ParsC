@@ -1,0 +1,29 @@
+import core.stdc.stdio
+
+struct User
+{
+    name: str
+    score: i32
+    is_valid: bool
+}
+
+fn print_user(user: User) => printf("name: %s, score: %d, is_valid: %d\n", user.name, user.score, user.is_valid)
+
+fn main()
+{
+    var user: User = {score: 50, name: "henry"}
+    var user2 = User{"henry", score: 50}
+    var user3 = User{name: "henry", score: 50}
+    var user4 = User{"henry", score: 50, true}
+    var user5 = User{score: 50, true}
+    var user6 = User{score: 50}
+
+    print_user(user)
+    print_user(user2)
+    print_user(user3)
+    print_user(user4)
+    print_user(user5)
+    print_user(user6)
+    print_user({name: "john", score: 5, is_valid: false})
+}
+

@@ -414,9 +414,12 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *array_type = type->get_llvm_type(ctx.llvm_ctx);
 
+	auto should_return = false;
+
 	if (params.target_ptr == nullptr)
 	{
 		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(array_type);
+		should_return = true;
 	}
 
 	for (auto i = 0; auto *element : elements)
@@ -431,7 +434,7 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 		i++;
 	}
 
-	return nullptr;
+	return should_return ? ctx.builder.CreateLoad(array_type, params.target_ptr) : nullptr;
 }
 
 llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx, EmitParams params)
