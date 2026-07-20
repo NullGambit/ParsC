@@ -239,7 +239,7 @@ namespace pars
 	struct StructLiteral : Expr
 	{
 		std::string_view name;
-		std::vector<Expr*> initializers;
+		std::vector<std::pair<Expr*, u32>> initializers;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 

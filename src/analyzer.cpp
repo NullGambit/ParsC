@@ -654,20 +654,11 @@ void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 
 	auto *struct_type = dynamic_cast<Struct*>(expr->type);
 
-	std::vector<std::pair<Expr*, u32>> expr_list;
+	auto cursor = 0;
 
-	for (auto index = 0; auto &field : struct_type->fields)
+	for (auto i = 0; auto &field : struct_type->fields)
 	{
-		Expr *initializer {};
-
-		if (index < expr->initializers.size())
-		{
-			initializer = expr->initializers[index];
-		}
-		else
-		{
-			initializer = new_node<AnonInitExpr>();
-		}
+		auto &[initializer, pos] = expr->initializers[i];
 
 		if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
 		{
@@ -676,47 +667,36 @@ void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 				return named_expr->name == field.symbol.name;
 			});
 
-			auto i = index;
-			auto real_index = std::distance(struct_type->fields.begin(), it);
-
-			while (i < real_index)
-			{
-				auto &f = struct_type->fields[i];
-
-				auto empty = new_node<AnonInitExpr>();
-
-				expr_list.emplace_back(empty, i);
-
-				empty->accept(this, {.type = f.type});
-
-				i++;
-			}
-
-			index = real_index;
+			pos = std::distance(struct_type->fields.begin(), it);
+			cursor = pos;
+		}
+		else
+		{
+			pos = i;
 		}
 
-		expr_list.emplace_back(initializer, index);
+		auto &f = struct_type->fields[cursor];
+		auto *expected_type = f.type;
 
-		initializer->accept(this, {.type = struct_type->fields[index].type});
+		initializer->accept(this, {.type = expected_type});
 
-		index++;
+		if (!expected_type->is_equal(initializer->type))
+		{
+			throw FrontendError{initializer->token,
+				fmt::format("cannot initialize struct field {} of type {} with type {}",
+					f.symbol.name,
+					expected_type->get_type_name(),
+					initializer->type->get_type_name())};
+		}
 
-		if (index >= struct_type->fields.size())
+		pos = cursor;
+		cursor++;
+		i++;
+
+		if (i >= expr->initializers.size())
 		{
 			break;
 		}
-	}
-
-	std::ranges::sort(expr_list, [&](const auto &a, const auto &b)
-	{
-		return a.second < b.second;
-	});
-
-	expr->initializers.clear();
-
-	for (auto key : expr_list | std::views::keys)
-	{
-		expr->initializers.emplace_back(key);
 	}
 }
 

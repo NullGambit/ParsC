@@ -858,7 +858,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 			while (!m_lexer.peek(RightBrace))
 			{
-				expr->initializers.emplace_back(expression());
+				expr->initializers.emplace_back(expression(), UINT32_MAX);
 
 				if (!m_lexer.match(Comma))
 				{

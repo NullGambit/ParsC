@@ -78,6 +78,7 @@
     - digest
 
 - misc:
+    - undefined keyword that can be used when setting the initial value of a variable. this will make it not default init.
     - bitwise operators
     - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
     - improve literal analysis. literals should be coerced into anytype if they fit.

@@ -430,10 +430,12 @@ llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)
 		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(llvm_type);
 	}
 
-	for (auto i = 0; auto initializer : initializers)
+	ctx.builder.CreateStore(type->get_default_value(ctx.llvm_ctx), params.target_ptr);
+
+	for (auto i = 0; auto [initializer, pos] : initializers)
 	{
 		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
-			{ctx.builder.getInt32(0), ctx.builder.getInt32(i)});
+			{ctx.builder.getInt32(0), ctx.builder.getInt32(pos)});
 
 		auto *result = initializer->emit(ctx, {.target_ptr = field});
 
