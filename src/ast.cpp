@@ -678,11 +678,30 @@ pars::Expr* pars::AST::parse_primary()
 		}
 		if (m_lexer.match(LeftBracket))
 		{
+			auto *index = expression();
+
+			if (m_lexer.match(Colon))
+			{
+				auto *slice_expr = new_node<SliceExpr>();
+
+				slice_expr->lhs = inner;
+				slice_expr->start = index;
+
+				if (!m_lexer.peek(RightBracket))
+				{
+					slice_expr->end = expression();
+				}
+
+				m_lexer.expect(RightBracket);
+
+				return slice_expr;
+			}
+
 			auto *index_op = new_node<IndexOpExpr>();
 
 			index_op->lhs = inner;
 
-			index_op->index = expression();
+			index_op->index = index;
 
 			m_lexer.expect(RightBracket);
 
@@ -1038,6 +1057,10 @@ pars::TypeMeta pars::AST::parse_type()
 				auto sv = m_lexer.peek_last().lexeme;
 
 				std::from_chars(sv.data(), sv.data() + sv.size(), meta.array_size);
+			}
+			else if (m_lexer.match(Question))
+			{
+				meta.flags |= TypeFlags::ArrayInferSize;
 			}
 
 			m_lexer.expect(RightBracket);

@@ -1,0 +1,6 @@
+
+struct Slice<T>
+{
+    ptr: ^T
+    length: u32
+}

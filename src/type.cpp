@@ -429,6 +429,42 @@ llvm::Value * pars::Packed::get_default_value(llvm::LLVMContext *ctx) const
 	return VoidType.get_default_value(ctx);
 }
 
+llvm::Value * pars::BaseArray::get_default_value(llvm::LLVMContext *ctx) const
+{
+	return llvm::ConstantAggregateZero::get(get_llvm_type(ctx));
+}
+
+llvm::Value * pars::BaseArray::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
+{
+	auto *ptr = ctx.builder.CreateInBoundsGEP(get_llvm_type(ctx.llvm_ctx), target,
+		{ctx.builder.getInt32(0), index}, "array.op_index");
+
+	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
+}
+
+std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view symbol) const
+{
+	if (symbol == "length")
+	{
+		return MemberInfo{"length", const_cast<Integer*>(&U32Type)};
+	}
+	if (symbol == "ptr")
+	{
+		auto *ptr = new_node<Pointer>();
+
+		ptr->inner = element_type;
+
+		return MemberInfo{"ptr", ptr};
+	}
+
+	return {};
+}
+
+pars::Type * pars::BaseArray::get_inner() const
+{
+	return element_type;
+}
+
 llvm::Type * pars::Array::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::ArrayType::get(element_type->get_llvm_type(ctx), size);
@@ -439,24 +475,12 @@ std::string_view pars::Array::get_type_name() const
 	return "array";
 }
 
-llvm::Value * pars::Array::get_default_value(llvm::LLVMContext *ctx) const
-{
-	return llvm::ConstantAggregateZero::get(get_llvm_type(ctx));
-}
-
 bool pars::Array::is_equal(Type const *other) const
 {
 	auto *other_array = dynamic_cast<Array const*>(other);
 
-	return other_array != nullptr && other_array->size == size && other_array->element_type->is_equal(element_type);
-}
-
-llvm::Value* pars::Array::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
-{
-	auto *ptr = ctx.builder.CreateInBoundsGEP(get_llvm_type(ctx.llvm_ctx), target,
-		{ctx.builder.getInt64(0), index});
-
-	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
+	return other_array != nullptr
+	&& (other_array->size == size || other_array->size == UNSIZED_ARRAY) && other_array->element_type->is_equal(element_type);
 }
 
 llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
@@ -513,27 +537,48 @@ llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm
 	return nullptr;
 }
 
-std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol) const
+llvm::Type * pars::Slice::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	auto *ptr_type = llvm::PointerType::get(element_type->get_llvm_type(ctx), 0);
+	return llvm::StructType::get(*ctx, {ptr_type, U32Type.get_llvm_type(ctx)});
+}
+
+std::string_view pars::Slice::get_type_name() const
+{
+	return "slice";
+}
+
+bool pars::Slice::is_equal(Type const *other) const
+{
+	return other->is_array() && element_type->is_equal(other->get_inner());
+}
+
+llvm::Value * pars::Slice::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
+{
+	auto *base_ptr = ctx.builder.CreateConstInBoundsGEP2_32(get_llvm_type(ctx.llvm_ctx), target, 0, 0, "slice.ptr");
+	auto *ptr_type = llvm::PointerType::get(element_type->get_llvm_type(ctx.llvm_ctx), 0);
+	auto *array = ctx.builder.CreateLoad(ptr_type, base_ptr);
+
+	auto *ptr = ctx.builder.CreateGEP(element_type->get_llvm_type(ctx.llvm_ctx), array, {index}, "array.op_index");
+
+	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
+}
+
+llvm::Value * pars::Slice::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
+	std::string_view symbol) const
 {
 	if (symbol == "length")
 	{
-		return MemberInfo{"length", const_cast<Integer*>(&U32Type)};
+		auto *len_ptr = ctx.builder.CreateConstInBoundsGEP2_32(get_llvm_type(ctx.llvm_ctx), ptr, 0, 1);
+
+		return ctx.builder.CreateLoad(U32Type.get_llvm_type(ctx.llvm_ctx), len_ptr, "slice.length");
 	}
 	if (symbol == "ptr")
 	{
-		auto *ptr = new_node<Pointer>();
-
-		ptr->inner = element_type;
-
-		return MemberInfo{"ptr", ptr};
+		return ctx.builder.CreateConstInBoundsGEP2_32(get_llvm_type(ctx.llvm_ctx), ptr, 0, 0, "slice.ptr");
 	}
 
-	return {};
-}
-
-pars::Type * pars::Array::get_inner() const
-{
-	return element_type;
+	return nullptr;
 }
 
 llvm::Type * pars::Struct::get_llvm_type(llvm::LLVMContext *ctx) const

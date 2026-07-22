@@ -168,6 +168,11 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		stmt->type = resolve_type(stmt->type_meta, stmt);
 	}
 
+	if (has_flag(stmt->type_meta.flags, TypeFlags::ArrayInferSize) && stmt->initializer == nullptr)
+	{
+		throw FrontendError{stmt->token, "Cannot infer size of array"};
+	}
+
 	// var x = E
 	if (stmt->initializer != nullptr)
 	{
@@ -197,6 +202,12 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 				stmt->symbol.name, stmt->type->get_type_name(), stmt->initializer->type->get_type_name()
 			)
 		};
+
+	}
+
+	if (stmt->initializer != nullptr)
+	{
+		stmt->type = stmt->initializer->type;
 	}
 
 	if (dynamic_cast<Pointer*>(stmt->type))
@@ -662,6 +673,28 @@ void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 	assign_struct_indices(struct_type, expr->initializers);
 }
 
+void pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
+{
+	expr->lhs->accept(this, ctx);
+	expr->start->accept(this, ctx);
+
+	if (expr->end != nullptr)
+	{
+		expr->end->accept(this, ctx);
+	}
+
+	if (!expr->lhs->type->is_array())
+	{
+		throw FrontendError{expr->token, fmt::format("type of {} cannot be sliced", expr->type->get_type_name())};
+	}
+
+	auto *slice_type = new_node<Slice>();
+
+	slice_type->element_type = expr->lhs->type->get_inner();
+
+	expr->type = slice_type;
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);
@@ -697,13 +730,24 @@ pars::Type* pars::Analyzer::resolve_type(TypeMeta meta, Node *node)
 
 	if (has_flag(meta.flags, TypeFlags::Array))
 	{
-		auto *array_type = new_node<Array>();
+		if (meta.array_size != UNSIZED_ARRAY || has_flag(meta.flags, TypeFlags::ArrayInferSize))
+		{
+			auto *array_type = new_node<Array>();
 
-		array_type->element_type = type;
+			array_type->element_type = type;
 
-		array_type->size = meta.array_size;
+			array_type->size = meta.array_size;
 
-		type = array_type;
+			type = array_type;
+		}
+		if (meta.array_size == UNSIZED_ARRAY || !has_flag(meta.flags, TypeFlags::ArrayInferSize))
+		{
+			auto *array_type = new_node<Slice>();
+
+			array_type->element_type = type;
+
+			type = array_type;
+		}
 	}
 
 	return type;
@@ -751,6 +795,9 @@ void pars::Analyzer::assign_struct_indices(const Struct *struct_type, std::vecto
 		{
 			auto it = std::ranges::find_if(struct_type->fields, [&](const StructField &field)
 			{
+				// TODO perhaps implementing a string interning system within the compiler to speed up this comparison
+				// or see if llvm has one i can already use
+				// or use hashes
 				return named_expr->name == field.symbol.name;
 			});
 

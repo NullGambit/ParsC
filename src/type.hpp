@@ -291,23 +291,14 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 	};
 
-	struct Array : Type
+	struct BaseArray : Type
 	{
 		Type *element_type;
-		u32 size;
-
-		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
-
-		std::string_view get_type_name() const override;
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
-		bool is_equal(Type const *other) const override;
-
 		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
-		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
-		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
 		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
 
 		Type *get_inner() const override;
@@ -316,6 +307,36 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return true;
 		}
+
+		llvm::Value *do_op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index, llvm::Type *type) const;
+	};
+
+	struct Array : BaseArray
+	{
+		u32 size{};
+
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		std::string_view get_type_name() const override;
+
+		bool is_equal(Type const *other) const override;
+
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
+
+		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+	};
+
+	struct Slice : BaseArray
+	{
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		std::string_view get_type_name() const override;
+
+		bool is_equal(Type const *other) const override;
+
+		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
+
+		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
 	};
 
 	struct StructField

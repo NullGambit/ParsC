@@ -247,4 +247,15 @@ namespace pars
 
 		ACCEPT
 	};
+
+	struct SliceExpr : Expr
+	{
+		Expr *lhs {};
+		Expr *start {};
+		Expr *end {};
+
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
+
+		ACCEPT
+	};
 }

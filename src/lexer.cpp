@@ -339,7 +339,7 @@ pars::Token pars::Lexer::build_digit()
     return build_token(type);
 }
 
-
+// TODO handle invalid escape sequence
 char escaped_char(char c)
 {
    switch (c)

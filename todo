@@ -2,7 +2,6 @@
     even doing checks for eof seems to not work unless the file ended with a line feed
 
 - arrays:
-    - slices
     - iterators
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
     - currently deeply nested types can be parsed but the type information is lost and not used. such as '^^i32'.
@@ -14,8 +13,6 @@
     - named element swizzling
 
 - structs:
-    - var user3: User = {name: "jack", score: 10}
-    - during struct initialization any unspecified field should be set to its default value.
     - anonymous nested structs
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
     - reflection
@@ -81,6 +78,7 @@
 
 - misc:
     - undefined keyword that can be used when setting the initial value of a variable. this will make it not default init.
+    - change keyword attributes to not actually be real keywords so they can be used for symbols. possibly just use structs defined inside core package.
     - bitwise operators
     - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
     - improve literal analysis. literals should be coerced into anytype if they fit.

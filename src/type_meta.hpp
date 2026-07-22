@@ -12,6 +12,7 @@ namespace pars
 		OuterConst = 1 << 2,
 		InnerConst = 1 << 3,
 		Array = 1 << 4,
+		ArrayInferSize =  1 << 5,
 	};
 
 	PARS_FLAGIFY(TypeFlags);
@@ -22,6 +23,6 @@ namespace pars
 	{
 		std::string_view name;
 		TypeFlags flags {};
-		u32 array_size {};
+		u32 array_size = UNSIZED_ARRAY;
 	};
 }

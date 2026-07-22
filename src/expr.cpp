@@ -462,3 +462,45 @@ llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)
 {
 	return emit_brace_list(ctx, params, type, initializers);
 }
+
+llvm::Value * pars::SliceExpr::emit(EmitCtx &ctx, EmitParams params)
+{
+	auto *ptr = lhs->emit_ptr(ctx);
+
+	auto *slice_type = dynamic_cast<Slice*>(type);
+
+	auto should_return = false;
+
+	if (params.target_ptr == nullptr)
+	{
+		params.target_ptr = ctx.builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx));
+		should_return = true;
+	}
+
+	auto *start_value = start->emit(ctx, params);
+	llvm::Value *end_value {};
+
+	if (end != nullptr)
+	{
+		end_value = end->emit(ctx, params);
+	}
+	else
+	{
+		auto *array_type = dynamic_cast<Array*>(lhs->type);
+		end_value = ctx.builder.getInt32(array_type->size);
+	}
+
+	auto *offset_ptr = ctx.builder.CreateInBoundsGEP(lhs->type->get_llvm_type(ctx.llvm_ctx), ptr,
+			{ctx.builder.getInt64(0), start_value}, "slice_offsets");
+
+	auto *array_ptr = slice_type->access_member(ctx, params.target_ptr, nullptr, "ptr");
+	auto *len_ptr = ctx.builder.CreateConstInBoundsGEP2_32(slice_type->get_llvm_type(ctx.llvm_ctx), params.target_ptr, 0, 1);
+
+	auto *length_value = ctx.builder.CreateSub(end_value, start_value);
+
+	ctx.builder.CreateStore(length_value, len_ptr);
+
+	ctx.builder.CreateStore(offset_ptr, array_ptr);
+
+	return should_return ? ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), params.target_ptr) : nullptr;
+}

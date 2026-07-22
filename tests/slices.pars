@@ -2,8 +2,6 @@ import core.stdc.stdio
 
 fn print_array(arr: []i32)
 {
-    printf("printing array of size %d\n", arr.length)
-
     for i in 0..arr.length
     {
         printf("%d\n", arr[i])

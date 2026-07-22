@@ -7,13 +7,20 @@ struct Range<T: Integer>
     max: T
 }
 
-struct RangeIter<T: Integer>: Iterator
+impl Range: Iterable
+{
+    fn op_in(value: T) => value > self.min and value < self.max
+
+    fn iter() => RangeIter{end: self.max}
+}
+
+struct RangeIter<T: Integer>
 {
     end: T
     cursor: T
 }
 
-impl RangeIter 
+impl RangeIter : Iterator
 {
     fn has_next() => self.cursor < self.max
 
@@ -25,11 +32,4 @@ impl RangeIter
 
         return self.cursor
     }
-}
-
-impl Range: Iterable
-{
-    fn op_in(value: T) => value > self.min and value < self.max 
-
-    fn iter() => RangeIter{end: self.max}
 }
