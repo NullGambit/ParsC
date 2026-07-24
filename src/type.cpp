@@ -557,9 +557,6 @@ llvm::StructType* get_slice_struct(llvm::LLVMContext *ctx)
 llvm::Value * pars::Array::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
 {
 	auto *ptr = ctx.builder.CreateAlloca(get_slice_struct(ctx.llvm_ctx));
-	// auto *base = ctx.builder.CreateAlloca(get_llvm_type(ctx.llvm_ctx));
-	//
-	// ctx.builder.CreateStore(value, base);
 
 	return op_slice(ctx, value, ptr, ctx.builder.getInt64(0), ctx.builder.getInt32(size));
 }

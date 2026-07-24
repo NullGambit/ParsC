@@ -678,7 +678,12 @@ pars::Expr* pars::AST::parse_primary()
 		}
 		if (m_lexer.match(LeftBracket))
 		{
-			auto *index = expression();
+			Expr *index {};
+
+			if (!m_lexer.peek(Colon))
+			{
+				index = expression();
+			}
 
 			if (m_lexer.match(Colon))
 			{

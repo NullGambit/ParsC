@@ -676,7 +676,11 @@ void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 void pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 {
 	expr->lhs->accept(this, ctx);
-	expr->start->accept(this, ctx);
+
+	if (expr->start != nullptr)
+	{
+		expr->start->accept(this, ctx);
+	}
 
 	if (expr->end != nullptr)
 	{

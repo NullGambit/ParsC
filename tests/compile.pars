@@ -20,6 +20,8 @@ fn main()
 
     print_array(slice)
     print_array(my_array[1:])
+    print_array(my_array[:2])
+    print_array(my_array[:])
     print_array(my_array)
 }
 

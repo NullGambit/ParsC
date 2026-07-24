@@ -479,8 +479,17 @@ llvm::Value * pars::SliceExpr::emit(EmitCtx &ctx, EmitParams params)
 		should_return = true;
 	}
 
-	auto *start_value = start->emit(ctx, params);
+	llvm::Value *start_value {};
 	llvm::Value *end_value {};
+
+	if (start != nullptr)
+	{
+		start_value = start->emit(ctx, params);
+	}
+	else
+	{
+		start_value = ctx.builder.getInt32(0);
+	}
 
 	if (end != nullptr)
 	{

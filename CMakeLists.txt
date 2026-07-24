@@ -79,7 +79,6 @@ add_executable(ParsC src/main.cpp
         src/analyzer.hpp
         src/visitor.cpp
         src/parse_ctx.hpp
-        src/containers/ptr_list.hpp
         src/type_meta.hpp
         src/util/llvm_utils.cpp
         src/util/llvm_utils.hpp

@@ -82,6 +82,7 @@
 - misc:
     - undefined keyword that can be used when setting the initial value of a variable. this will make it not default init.
     - currently a lot of types have wonky sizes. implement more accurate sizes.
+    - pure functions with the pure attribute. perhaps even automatic pure detection.
     - change keyword attributes to not actually be real keywords so they can be used for symbols. possibly just use structs defined inside core package.
     - bitwise operators
     - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
