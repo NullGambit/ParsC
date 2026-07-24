@@ -47,6 +47,7 @@ namespace pars
 		virtual llvm::Value* op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
 		virtual llvm::Value* op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
 		virtual llvm::Value* op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const { return nullptr; }
+		virtual llvm::Value* op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start, llvm::Value *end) const { return nullptr; }
 		virtual bool can_coerce_into(Type const *desired_type) const { return false; }
 
 		virtual bool is_iterable() const { return false; }
@@ -315,6 +316,8 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		u32 size{};
 
+		u32 get_size() override;
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		std::string_view get_type_name() const override;
@@ -324,6 +327,11 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+
+		bool can_coerce_into(Type const *desired_type) const override;
+		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
+
+		llvm::Value *op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start, llvm::Value *end) const override;
 	};
 
 	struct Slice : BaseArray
@@ -350,6 +358,8 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		Symbol symbol;
 		std::vector<StructField> fields;
+
+		u32 get_size() override;
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
@@ -402,6 +412,11 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
+
+		bool can_coerce_into(Type const *desired_type) const override
+		{
+			return false;
+		}
 	};
 
 	static const Str StrType {};
@@ -422,6 +437,7 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return true;
 		}
+
 		std::span<Type*> get_iter_bindings() const override;
 		llvm::Value *iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
 		llvm::Value *iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;

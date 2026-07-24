@@ -7,7 +7,7 @@ struct Range<T: Integer>
     max: T
 }
 
-impl Range: Iterable
+impl Range : Iterable
 {
     fn op_in(value: T) => value > self.min and value < self.max
 
@@ -30,6 +30,6 @@ impl RangeIter : Iterator
 
         self.cursor += 1 
 
-        return self.cursor
+        return value
     }
 }

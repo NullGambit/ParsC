@@ -4,3 +4,9 @@ struct Slice<T>
     ptr: ^T
     length: u32
 }
+
+impl Slice : Iterable
+{
+    fn op_slice(start: u32, end: u32) => self.ptr[start:end]
+    fn op_index(index: u32) => self.ptr[index]
+}

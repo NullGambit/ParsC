@@ -3,21 +3,22 @@
 
 - arrays:
     - iterators
+    - make member access be immutable by having member flags.
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
     - currently deeply nested types can be parsed but the type information is lost and not used. such as '^^i32'.
+    - named elements
+    - named element swizzling
     - allow setting the size of a static array with any compile time constant not just integer literals.
     - convert string to be '[]const char' slice
     - enum indexed arrays
     - type cache
-    - named elements
-    - named element swizzling
 
 - structs:
+    - name mangling
     - anonymous nested structs
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
     - reflection
     - refactor attributes to allow user defined types
-    - name mangling
     - methods
     - null coalescing
     - traits
@@ -31,11 +32,13 @@
 
 - other core features:
     - enums
+    - function pointers
     - generics
     - context system
     - errors
 
 - non-core features:
+    - uniform function call syntax
     - defer
     - union literals A | B
     - unions
@@ -78,6 +81,7 @@
 
 - misc:
     - undefined keyword that can be used when setting the initial value of a variable. this will make it not default init.
+    - currently a lot of types have wonky sizes. implement more accurate sizes.
     - change keyword attributes to not actually be real keywords so they can be used for symbols. possibly just use structs defined inside core package.
     - bitwise operators
     - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
@@ -85,7 +89,6 @@
     - correctly handle float min and max value properties. currently its the same as integers which is obviously wrong.
     - replace recursive descent with operator precedent parsing (pratt parsing)
     - break and continue to label. possibly goto? probably a bad idea anyway
-    - function pointers
     - automatic va_list creation when passing ... to another function
     - manual va_list support
     - theres too much repeated work between the ast parser and the analyzer. and sometimes even the code gen.

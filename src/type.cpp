@@ -6,6 +6,7 @@
 #include <llvm/IR/Type.h>
 
 #include <cmath>
+#include <numeric>
 
 #include "emit_context.hpp"
 #include "expr.hpp"
@@ -465,6 +466,11 @@ pars::Type * pars::BaseArray::get_inner() const
 	return element_type;
 }
 
+u32 pars::Array::get_size()
+{
+	return size * element_type->get_size();
+}
+
 llvm::Type * pars::Array::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::ArrayType::get(element_type->get_llvm_type(ctx), size);
@@ -537,10 +543,50 @@ llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm
 	return nullptr;
 }
 
+bool pars::Array::can_coerce_into(Type const *desired_type) const
+{
+	return dynamic_cast<const Slice*>(desired_type);
+}
+
+llvm::StructType* get_slice_struct(llvm::LLVMContext *ctx)
+{
+	auto *ptr_type = llvm::PointerType::get(*ctx, 0);
+	return llvm::StructType::get(*ctx, {ptr_type, pars::U32Type.get_llvm_type(ctx)});
+}
+
+llvm::Value * pars::Array::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+{
+	auto *ptr = ctx.builder.CreateAlloca(get_slice_struct(ctx.llvm_ctx));
+	// auto *base = ctx.builder.CreateAlloca(get_llvm_type(ctx.llvm_ctx));
+	//
+	// ctx.builder.CreateStore(value, base);
+
+	return op_slice(ctx, value, ptr, ctx.builder.getInt64(0), ctx.builder.getInt32(size));
+}
+
+llvm::Value * pars::Array::op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start,
+	llvm::Value *end) const
+{
+	auto *slice_struct = get_slice_struct(ctx.llvm_ctx);
+
+	auto *offset_ptr = ctx.builder.CreateInBoundsGEP(get_llvm_type(ctx.llvm_ctx), array,
+			{ctx.builder.getInt64(0), start}, "slice_offsets");
+
+	auto *array_ptr = ctx.builder.CreateConstInBoundsGEP2_32(slice_struct, target, 0, 0);
+	auto *len_ptr = ctx.builder.CreateConstInBoundsGEP2_32(slice_struct, target, 0, 1);
+
+	auto *length_value = ctx.builder.CreateSub(end, start);
+
+	ctx.builder.CreateStore(length_value, len_ptr);
+
+	ctx.builder.CreateStore(offset_ptr, array_ptr);
+
+	return ctx.builder.CreateLoad(slice_struct, target);
+}
+
 llvm::Type * pars::Slice::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	auto *ptr_type = llvm::PointerType::get(element_type->get_llvm_type(ctx), 0);
-	return llvm::StructType::get(*ctx, {ptr_type, U32Type.get_llvm_type(ctx)});
+	return get_slice_struct(ctx);
 }
 
 std::string_view pars::Slice::get_type_name() const
@@ -579,6 +625,15 @@ llvm::Value * pars::Slice::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::V
 	}
 
 	return nullptr;
+}
+
+u32 pars::Struct::get_size()
+{
+	// TODO calculate alignment
+	return std::accumulate(fields.begin(), fields.end(), u32{0}, [](u32 a, const StructField &b)
+	{
+		return a + b.type->get_size();
+	});
 }
 
 llvm::Type * pars::Struct::get_llvm_type(llvm::LLVMContext *ctx) const
