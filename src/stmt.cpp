@@ -450,20 +450,23 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	std::vector<llvm::Value*> binding_values;
 
-	binding_values.reserve(bindings.size());
+	binding_values.reserve(bindings.size() + 1);
+
+	if (!has_index())
+	{
+		auto *index_binding = new_node<VarDeclStmt>();
+
+		index_binding->type = const_cast<Integer*>(&U32Type);
+
+		bindings.emplace_back(index_binding);
+	}
 
 	for (auto *binding : bindings)
 	{
 		binding_values.emplace_back(binding->emit(ctx));
 	}
 
-	llvm::Value *index_ptr = nullptr;
-
-	if (has_index())
-	{
-		index_ptr = binding_values.back();
-		binding_values.pop_back();
-	}
+	auto *index_ptr = binding_values.back();
 
 	auto *fn = ctx.builder.GetInsertBlock()->getParent();
 
@@ -491,8 +494,6 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 
 	ctx.builder.SetInsertPoint(update_bb);
 
-	iterable->type->iter_emit_update(ctx, iterable, binding_values);
-
 	if (index_ptr != nullptr)
 	{
 		auto *index_type = bindings.back()->type->get_llvm_type(ctx.llvm_ctx);
@@ -500,6 +501,8 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 		auto *inc = I32Type.op_binary(ctx, TokenType::Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
 		ctx.builder.CreateStore(inc, index_ptr);
 	}
+
+	iterable->type->iter_emit_update(ctx, iterable, binding_values);
 
 	ctx.builder.CreateBr(preloop_bb);
 
