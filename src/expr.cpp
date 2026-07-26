@@ -133,7 +133,7 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 	return value;
 }
 
-llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx)
+llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
 	return ctx.named_values[symbol];
 }
@@ -210,7 +210,7 @@ llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx, EmitParams params)
 	return inner->emit(ctx);
 }
 
-llvm::Value * pars::GroupExpr::emit_ptr(EmitCtx &ctx)
+llvm::Value * pars::GroupExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
 	return inner->emit_ptr(ctx);
 }
@@ -233,7 +233,7 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)
 	return ptr;
 }
 
-llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx)
+llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
 	auto *target_value = target->emit_ptr(ctx);
 	auto *accessor_value = accessor->emit(ctx);
@@ -384,7 +384,7 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx, EmitParams params)
  	}
 }
 
-llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx)
+llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
 	using enum TokenType;
 
@@ -453,7 +453,7 @@ llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx, EmitParams params)
 	return result;
 }
 
-llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx)
+llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
 	auto *array = lhs->emit_ptr(ctx);
 	auto *index_value = index->emit(ctx);
@@ -469,14 +469,18 @@ llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::SliceExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	auto *ptr = lhs->emit_ptr(ctx);
+	emit_ptr(ctx, params);
 
-	auto should_return = false;
+	return params.target_ptr == nullptr ? m_cached_result : nullptr;
+}
+
+llvm::Value * pars::SliceExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
+{
+	auto *ptr = lhs->emit_ptr(ctx);
 
 	if (params.target_ptr == nullptr)
 	{
-		params.target_ptr = ctx.builder.CreateAlloca(type->get_llvm_type(ctx.llvm_ctx));
-		should_return = true;
+		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(type->get_llvm_type(ctx.llvm_ctx));
 	}
 
 	llvm::Value *start_value {};
@@ -501,12 +505,12 @@ llvm::Value * pars::SliceExpr::emit(EmitCtx &ctx, EmitParams params)
 		end_value = ctx.builder.getInt32(array_type->size);
 	}
 
-	auto *result = lhs->type->op_slice(ctx, ptr, params.target_ptr, start_value, end_value);
+	m_cached_result = lhs->type->op_slice(ctx, ptr, params.target_ptr, start_value, end_value);
 
-	if (result == nullptr)
+	if (m_cached_result == nullptr)
 	{
 		throw CompileError{this, fmt::format("cannot slice type {}", lhs->type->get_type_name())};
 	}
 
-	return should_return ? result : nullptr;
+	return params.target_ptr;
 }

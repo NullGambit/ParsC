@@ -316,8 +316,6 @@ virtual bool is_equal(Type const *other) const override							\
 			return true;
 		}
 
-		virtual llvm::Value* get_array_size(EmitCtx &ctx, llvm::Value *ptr) const = 0;
-
 		std::span<Type*> get_iter_bindings() const override;
 		llvm::Value *iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
 		llvm::Value *iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
@@ -344,8 +342,6 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 
 		llvm::Value *op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start, llvm::Value *end) const override;
-
-		llvm::Value *get_array_size(EmitCtx &ctx, llvm::Value *ptr) const override;
 	};
 
 	struct Slice : BaseArray
@@ -359,8 +355,6 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
 
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
-
-		llvm::Value *get_array_size(EmitCtx &ctx, llvm::Value *ptr) const override;
 	};
 
 	struct StructField

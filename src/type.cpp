@@ -491,7 +491,7 @@ llvm::Value * pars::BaseArray::iter_emit_condition(EmitCtx &ctx, Expr *iterable,
 	using enum TokenType;
 
 	auto *index = ctx.builder.CreateLoad(U32Type.get_llvm_type(ctx.llvm_ctx), vars[1]);
-	auto *size = get_array_size(ctx, iterable->emit_ptr(ctx));
+	auto *size = access_member(ctx, iterable->emit_ptr(ctx), nullptr, "length");
 
 	return U32Type.op_binary(ctx, Less, index, size);
 }
@@ -500,10 +500,7 @@ llvm::Value * pars::BaseArray::iter_emit_update(EmitCtx &ctx, Expr *iterable, st
 {
 	auto *index = ctx.builder.CreateLoad(U32Type.get_llvm_type(ctx.llvm_ctx), vars[1]);
 
-	auto *ptr = ctx.builder.CreateInBoundsGEP(get_llvm_type(ctx.llvm_ctx), iterable->emit_ptr(ctx),
-		{ctx.builder.getInt64(0), index});
-
-	auto *value = ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
+	auto *value = op_index(ctx, iterable->emit_ptr(ctx), index);
 
 	return ctx.builder.CreateStore(value, vars[0]);
 }
@@ -623,11 +620,6 @@ llvm::Value * pars::Array::op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Valu
 	return ctx.builder.CreateLoad(slice_struct, target);
 }
 
-llvm::Value * pars::Array::get_array_size(EmitCtx &ctx, llvm::Value *ptr) const
-{
-	return ctx.builder.getInt32(size);
-}
-
 llvm::Type * pars::Slice::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return get_slice_struct(ctx);
@@ -669,11 +661,6 @@ llvm::Value * pars::Slice::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::V
 	}
 
 	return nullptr;
-}
-
-llvm::Value * pars::Slice::get_array_size(EmitCtx &ctx, llvm::Value *ptr) const
-{
-	return access_member(ctx, ptr, nullptr, "length");
 }
 
 u32 pars::Struct::get_size()

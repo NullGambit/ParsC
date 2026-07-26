@@ -20,7 +20,7 @@ namespace pars
 	{
 		Type *type;
 
-		virtual llvm::Value *emit_ptr(EmitCtx &ctx) { return nullptr; }
+		virtual llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }
 
 		virtual std::string_view get_symbol() { return {}; }
 	};
@@ -73,7 +73,7 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
-		llvm::Value *emit_ptr(EmitCtx &ctx) override;
+		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_symbol() override
 		{
@@ -105,7 +105,7 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
-		llvm::Value *emit_ptr(EmitCtx &ctx) override;
+		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_symbol() override
 		{
@@ -141,7 +141,7 @@ namespace pars
 		Expr *accessor;
 
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
-		llvm::Value *emit_ptr(EmitCtx &ctx) override;
+		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_symbol() override;
 
@@ -205,7 +205,7 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
-		llvm::Value *emit_ptr(EmitCtx &ctx) override;
+		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -233,7 +233,7 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
-		llvm::Value *emit_ptr(EmitCtx &ctx) override;
+		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};
@@ -255,7 +255,11 @@ namespace pars
 		Expr *end {};
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
+		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
+
+	private:
+		llvm::Value *m_cached_result {};
 	};
 }

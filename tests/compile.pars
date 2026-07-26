@@ -1,29 +1,19 @@
 import core.stdc.stdio
 
-fn print_array(arr: []i32)
-{
-    printf("printing array of size %d\n", arr.length)
-
-    for i in 0..arr.length
-    {
-        printf("%d\n", arr[i])
-    }
-}
-
 fn main()
 {
-    var my_array = [4, 3, 6, 32]
-
-    for n, i in my_array
-    {
-        printf("#%d: %d\n", i, n)
-    }
-
     //var my_array = [4, 3, 6, 32]
-
-    //for n, i in my_array[1:3]
+//
+    //for n, i in my_array
     //{
     //    printf("#%d: %d\n", i, n)
     //}
+
+    var my_array = [4, 3, 6, 32]
+
+    for n, i in my_array[1:3]
+    {
+        printf("#%d: %d\n", i, n)
+    }
 }
 
