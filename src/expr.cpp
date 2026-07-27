@@ -261,6 +261,15 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		throw CompileError{this, fmt::format("property '{}' does not exist for type {}", accessor->get_symbol(), target->type->get_type_name())};
 	}
 
+	auto member = target->type->get_member(accessor->get_symbol()).value();
+
+	if (member.access == MemberAccess::Readonly || member.access == MemberAccess::Private)
+	{
+		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
+
+		set_metadata(ctx.llvm_ctx, result, node, "Const");
+	}
+
 	return result;
 }
 

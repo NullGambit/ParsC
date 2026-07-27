@@ -111,7 +111,7 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx, EmitParams params)
 
 	if (is_const_node != nullptr)
 	{
-		throw CompileError{this, fmt::format("{} is a constant variable", symbol)};
+		throw CompileError{this, fmt::format("{} is not mutable", symbol)};
 	}
 
 	using enum TokenType;

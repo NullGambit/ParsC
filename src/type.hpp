@@ -16,10 +16,18 @@ namespace pars
 {
 	constexpr auto IS_SIGNED = true;
 
+	enum class MemberAccess
+	{
+		Public,
+		Private,
+		Readonly,
+	};
+
 	struct MemberInfo
 	{
 		std::string_view name;
 		Type *type;
+		MemberAccess access;
 	};
 
 	struct Type : Node

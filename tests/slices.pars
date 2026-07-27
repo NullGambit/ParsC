@@ -2,9 +2,9 @@ import core.stdc.stdio
 
 fn print_array(arr: []i32)
 {
-    for i in 0..arr.length
+    for n in arr
     {
-        printf("%d\n", arr[i])
+        printf("%d\n", n)
     }
 }
 

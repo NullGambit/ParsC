@@ -455,7 +455,7 @@ std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view sym
 {
 	if (symbol == "length")
 	{
-		return MemberInfo{"length", const_cast<Integer*>(&U32Type)};
+		return MemberInfo{"length", const_cast<Integer*>(&U32Type), MemberAccess::Readonly};
 	}
 	if (symbol == "ptr")
 	{
@@ -463,7 +463,7 @@ std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view sym
 
 		ptr->inner = element_type;
 
-		return MemberInfo{"ptr", ptr};
+		return MemberInfo{"ptr", ptr, MemberAccess::Readonly};
 	}
 
 	return {};

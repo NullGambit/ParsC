@@ -33,11 +33,15 @@ llvm::IRBuilder<> pars::get_alloca_builder(EmitCtx &ctx)
 
 llvm::MDNode * pars::get_metadata(llvm::Value *value, llvm::StringRef kind)
 {
-	if (auto alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
+	if (auto *inst = llvm::dyn_cast<llvm::Instruction>(value))
+	{
+		return inst->getMetadata(kind);
+	}
+	if (auto *alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
 	{
 		return alloca->getMetadata(kind);
 	}
-	if (auto global = llvm::dyn_cast<llvm::GlobalObject>(value))
+	if (auto *global = llvm::dyn_cast<llvm::GlobalObject>(value))
 	{
 		return global->getMetadata(kind);
 	}
@@ -49,11 +53,15 @@ void pars::set_metadata(llvm::LLVMContext *ctx, llvm::Value *value, llvm::MDTupl
 {
 	auto const_md = ctx->getMDKindID(kind);
 
-	if (auto alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
+	if (auto *inst = llvm::dyn_cast<llvm::Instruction>(value))
+	{
+		inst->setMetadata(const_md, md_tuple);
+	}
+	else if (auto *alloca = llvm::dyn_cast<llvm::AllocaInst>(value))
 	{
 		alloca->setMetadata(const_md, md_tuple);
 	}
-	if (auto global = llvm::dyn_cast<llvm::GlobalObject>(value))
+	else if (auto *global = llvm::dyn_cast<llvm::GlobalObject>(value))
 	{
 		global->setMetadata(const_md, md_tuple);
 	}

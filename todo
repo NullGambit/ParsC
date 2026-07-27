@@ -2,7 +2,6 @@
     even doing checks for eof seems to not work unless the file ended with a line feed
 
 - arrays:
-    - iterators
     - make member access be immutable by having member flags.
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
     - currently deeply nested types can be parsed but the type information is lost and not used. such as '^^i32'.
