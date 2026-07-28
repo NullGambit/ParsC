@@ -31,6 +31,11 @@ llvm::IRBuilder<> pars::get_alloca_builder(EmitCtx &ctx)
 	return {&entry, insert_point};
 }
 
+llvm::AllocaInst * pars::create_alloca(EmitCtx &ctx, llvm::Type *type, const llvm::Twine &name)
+{
+	return get_alloca_builder(ctx).CreateAlloca(type, nullptr, name);
+}
+
 llvm::MDNode * pars::get_metadata(llvm::Value *value, llvm::StringRef kind)
 {
 	if (auto *inst = llvm::dyn_cast<llvm::Instruction>(value))

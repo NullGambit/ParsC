@@ -61,18 +61,14 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 	}
 	else
 	{
-		auto builder = get_alloca_builder(ctx);
-
-		auto *alloca = builder.CreateAlloca(var_type, nullptr, symbol.name);
-
-		inst = alloca;
+		inst = create_alloca(ctx, var_type, symbol.name);
 
 		value = produce_value();
 
 		// perhaps it handled store itself
 		if (value != nullptr)
 		{
-			ctx.builder.CreateStore(value, alloca, has_flag(flags, VarFlags::Volatile));
+			ctx.builder.CreateStore(value, inst, has_flag(flags, VarFlags::Volatile));
 		}
 	}
 

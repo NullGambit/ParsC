@@ -15,6 +15,7 @@ namespace pars
 	bool is_block_poison(EmitCtx &ctx, llvm::Value *value);
 
 	llvm::IRBuilder<> get_alloca_builder(EmitCtx &ctx);
+	llvm::AllocaInst* create_alloca(EmitCtx &ctx, llvm::Type *type, const llvm::Twine &name = "");
 
 	llvm::MDNode* get_metadata(llvm::Value *value, llvm::StringRef kind);
 

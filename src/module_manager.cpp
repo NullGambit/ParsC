@@ -1,8 +1,11 @@
 #include "module_manager.hpp"
 
+#include <llvm/IR/Verifier.h>
+
 #include "containers/hash_map.hpp"
 #include "module.hpp"
 #include "analyzer.hpp"
+#include "compile_error.hpp"
 #include "parse_ctx.hpp"
 #include "util/fmt.hpp"
 
@@ -110,6 +113,29 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	}
 
 	ctx.module->print(llvm::outs(), nullptr);
+
+	std::string error_str;
+	llvm::raw_string_ostream error_stream(error_str);
+
+	auto has_error = llvm::verifyModule(*ctx.module, &error_stream);
+
+	if (has_error)
+	{
+		// print error to the bottom of the module ir
+		// otherwise easy to miss verification errors
+		std::string module_str;
+		llvm::raw_string_ostream module_stream(module_str);
+
+		ctx.module->print(module_stream, nullptr);
+
+		module_str += error_str;
+
+		error_stream.flush();
+
+		return nullptr;
+
+		//throw CompileError{this, std::move(module_str)};
+	}
 
 	return module;
 }

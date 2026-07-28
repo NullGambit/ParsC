@@ -616,7 +616,13 @@ void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		return;
 	}
 
-	Type *type {};
+	auto *type = ctx.type;
+
+	if (type != nullptr)
+	{
+		type = type->get_inner();
+		ctx.type = type;
+	}
 
 	for (auto *element : expr->elements)
 	{
@@ -625,6 +631,7 @@ void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		if (type == nullptr)
 		{
 			type = element->type;
+			ctx.type = type;
 		}
 
 		if (!type->is_equal(element->type))
@@ -734,7 +741,7 @@ pars::Type* pars::Analyzer::resolve_type(TypeMeta meta, Node *node)
 
 	if (has_flag(meta.flags, TypeFlags::Array))
 	{
-		if (meta.array_size != UNSIZED_ARRAY || has_flag(meta.flags, TypeFlags::ArrayInferSize))
+		if (has_flag(meta.flags, TypeFlags::ArrayInferSize))
 		{
 			auto *array_type = new_node<Array>();
 
@@ -744,7 +751,7 @@ pars::Type* pars::Analyzer::resolve_type(TypeMeta meta, Node *node)
 
 			type = array_type;
 		}
-		if (meta.array_size == UNSIZED_ARRAY || !has_flag(meta.flags, TypeFlags::ArrayInferSize))
+		else if (meta.array_size == UNSIZED_ARRAY || !has_flag(meta.flags, TypeFlags::ArrayInferSize))
 		{
 			auto *array_type = new_node<Slice>();
 

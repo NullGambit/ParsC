@@ -124,7 +124,6 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 		return nullptr;
 	}
 
-	//if (llvm::isa<llvm::AllocaInst>(value))
 	if (value->getType()->isPointerTy())
 	{
 		value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
@@ -318,7 +317,7 @@ llvm::Value * emit_brace_list(pars::EmitCtx &ctx, pars::EmitParams params, const
 
 	if (params.target_ptr == nullptr)
 	{
-		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(llvm_type);
+		params.target_ptr = pars::create_alloca(ctx, llvm_type);
 		should_return = true;
 	}
 
@@ -431,7 +430,7 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 
 	if (params.target_ptr == nullptr)
 	{
-		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(array_type);
+		params.target_ptr = create_alloca(ctx, array_type);
 		should_return = true;
 	}
 
@@ -489,7 +488,7 @@ llvm::Value * pars::SliceExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 	if (params.target_ptr == nullptr)
 	{
-		params.target_ptr = get_alloca_builder(ctx).CreateAlloca(type->get_llvm_type(ctx.llvm_ctx));
+		params.target_ptr = create_alloca(ctx, type->get_llvm_type(ctx.llvm_ctx));
 	}
 
 	llvm::Value *start_value {};
