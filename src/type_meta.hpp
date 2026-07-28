@@ -1,5 +1,6 @@
 #pragma once
 #include <string_view>
+#include <cstddef>
 
 #include "util/macros.hpp"
 
@@ -9,10 +10,8 @@ namespace pars
 	{
 		Pointer = 1 << 0,
 		Const = 1 << 1,
-		OuterConst = 1 << 2,
-		InnerConst = 1 << 3,
-		Array = 1 << 4,
-		ArrayInferSize =  1 << 5,
+		Array = 1 << 2,
+		ArrayInferSize =  1 << 3,
 	};
 
 	PARS_FLAGIFY(TypeFlags);
@@ -24,5 +23,6 @@ namespace pars
 		std::string_view name;
 		TypeFlags flags {};
 		u32 array_size = UNSIZED_ARRAY;
+
 	};
 }

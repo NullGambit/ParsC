@@ -1,16 +1,9 @@
 import core.stdc.stdio
 
-fn console_log(message: str)
-{
-    printf("[LOG] %s\n", message)
-}
+var array = [1, 2, 3]
 
 fn main()
 {
-    var log_fn: fn(str)
 
-    log_fn = &console_log
-
-    log_fn("hello")
 }
 

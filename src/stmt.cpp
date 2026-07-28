@@ -46,6 +46,8 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 
 		global->setLinkage(llvm::GlobalValue::InternalLinkage);
 
+		inst = global;
+
 		auto init_value = produce_value();
 
 		if (auto *constant = llvm::dyn_cast<llvm::Constant>(init_value))
@@ -56,8 +58,6 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		{
 			throw CompileError{this, "global initializer must be known at compile time"};
 		}
-
-		inst = global;
 	}
 	else
 	{

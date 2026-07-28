@@ -434,6 +434,30 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 		should_return = true;
 	}
 
+	auto *block = ctx.builder.GetInsertBlock();
+
+	if (block == nullptr)
+	{
+		std::vector<llvm::Constant*> constants;
+
+		constants.reserve(elements.size());
+
+		for (auto *element : elements)
+		{
+			auto *value = element->emit(ctx);
+			auto *constant = llvm::dyn_cast<llvm::Constant>(value);
+
+			if (constant == nullptr)
+			{
+				throw CompileError{this, "All global array elements must be known at compile time"};
+			}
+
+			constants.emplace_back(constant);
+		}
+
+		return llvm::ConstantArray::get((llvm::ArrayType*)array_type, constants);
+	}
+
 	for (auto i = 0; auto *element : elements)
 	{
 		auto *element_value = element->emit(ctx);
