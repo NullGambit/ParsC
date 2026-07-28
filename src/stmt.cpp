@@ -320,10 +320,20 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx, EmitParams params)
 	};
 
 	auto *then_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "then", fn);
-	llvm::BasicBlock *merge_bb;
+
+	llvm::BasicBlock *merge_bb {};
+
+	ctx.builder.SetInsertPoint(then_bb);
+
+	body->emit(ctx);
+
 	auto pop_bb = false;
 
-	if (ctx.if_merge_bbs.empty())
+	if (ctx.builder.GetInsertBlock() != then_bb)
+	{
+		merge_bb = ctx.builder.GetInsertBlock();
+	}
+	else if (ctx.if_merge_bbs.empty())
 	{
 		merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
 		ctx.if_merge_bbs.emplace_back(merge_bb);
@@ -341,10 +351,6 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx, EmitParams params)
 			ctx.if_merge_bbs.pop_back();
 		}
 	};
-
-	ctx.builder.SetInsertPoint(then_bb);
-
-	body->emit(ctx);
 
 	llvm::BasicBlock *else_bb {};
 
@@ -433,7 +439,10 @@ llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx, EmitParams params)
 
 	body->emit(ctx);
 
-	ctx.builder.CreateBr(before_bb);
+	if (ctx.builder.GetInsertBlock()->getTerminator() == nullptr)
+	{
+		ctx.builder.CreateBr(before_bb);
+	}
 
 	ctx.builder.SetInsertPoint(merge_bb);
 
