@@ -1049,13 +1049,11 @@ pars::TypeMeta pars::AST::parse_type()
 		{
 			meta.flags |= TypeFlags::Const;
 		}
-
-		if (m_lexer.match(Caret))
+		else if (m_lexer.match(Caret))
 		{
 			meta.flags |= TypeFlags::Pointer;
 		}
-
-		if (m_lexer.match(LeftBracket))
+		else if (m_lexer.match(LeftBracket))
 		{
 			if (m_lexer.match(IntegerLiteral))
 			{
@@ -1071,6 +1069,11 @@ pars::TypeMeta pars::AST::parse_type()
 			m_lexer.expect(RightBracket);
 
 			meta.flags |= TypeFlags::Array;
+		}
+		else if (!m_lexer.peek(Identifier))
+		{
+			// TODO get a real token here
+			throw FrontendError{{}, "invalid token found while parsing type"};
 		}
 	}
 

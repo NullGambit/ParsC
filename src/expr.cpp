@@ -180,7 +180,14 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 
 		if (desired_type != nullptr && arg->type->can_coerce_into(desired_type))
 		{
-			value = arg->type->op_coerce(ctx, arg->emit_ptr(ctx), desired_type);
+			auto *to_be = arg->emit_ptr(ctx);
+
+			if (to_be == nullptr)
+			{
+				to_be = arg->emit(ctx);;
+			}
+
+			value = arg->type->op_coerce(ctx, to_be, desired_type);
 		}
 		else
 		{
