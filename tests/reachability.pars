@@ -1,6 +1,4 @@
-@[extern, private]
-fn printf(fmt: str, n: i32): i32
-
+import core.stdc.stdio
 
 fn test(condition: bool): i32
 {
@@ -19,13 +17,6 @@ fn main()
     var value = test(condition: true)
 
     printf("%d\n", value)
-
-    //const print_yes = true
-
-    //$if print_yes
-    //{
-    //    printf("yes\n")
-    //}
 }
 
 

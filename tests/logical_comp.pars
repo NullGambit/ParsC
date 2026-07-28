@@ -1,5 +1,4 @@
-@[extern, private]
-fn printf(fmt: str, n: bool): i32
+import core.stdc.stdio
 
 fn main()
 {

@@ -28,8 +28,12 @@
     - move and copy system
     - allow initialization of structs without braces (maybe bad idea?)
 
+- enums:
+    - payloads
+    - flag enums
+    - iota members
+
 - other core features:
-    - enums
     - function pointers
     - generics
     - context system
@@ -37,6 +41,14 @@
 
 - non-core features:
     - uniform function call syntax
+    - chained template inference. the compiler will infer the template type from the context. example:
+            var x: i32 = "5".parse()
+        typically you'd have to call it such as parse<i32>() but this will infer it from the context.
+        the reason why it is called chained template inference is because this can be combined with
+        uniform function call syntax to keep updating the context type so a template rarely has to be called such as:
+            var x: i32 = "5".parse.mul.log10
+        the biggest benefit of this is it makes long declarative code very readable and simple because
+        the type is only specified once.
     - defer
     - union literals A | B
     - unions

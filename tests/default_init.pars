@@ -1,5 +1,4 @@
-@[extern, private]
-fn printf(fmt: str, n: i32): i32
+import core.stdc.stdio
 
 fn default(x: i32, y: i32 = {})
 {

@@ -1,26 +1,16 @@
 import core.stdc.stdio
 
-struct Test
+fn console_log(message: str)
 {
-    a: i32
-}
-
-fn print_tests(tests: []Test)
-{
-    for test in tests
-    {
-        printf("%d\n", test.a)
-    }
+    printf("[LOG] %s\n", message)
 }
 
 fn main()
 {
-    var tests1 = [Test{1}, {2}, {3}]
-    var tests2: []Test = [{1}, {2}, {3}]
-    var tests3: [?]Test = [{1}, {2}, {3}]
+    var log_fn: fn(str)
 
-    print_tests(tests1)
-    print_tests(tests2)
-    print_tests(tests3)
+    log_fn = &console_log
+
+    log_fn("hello")
 }
 
