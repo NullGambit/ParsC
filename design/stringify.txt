@@ -1,6 +1,4 @@
-
 // anything can be turned into a string using the stringify operator
-
 
 struct Data
 {

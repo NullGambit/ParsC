@@ -1,9 +1,0 @@
-
-// 2 ways to bind to C functions 
-// the first only externs the function 
-// the second externs the entire scope 
-
-extern C: fn pow(f: float): float 
-
-extern C:
-    fn pow(f: float): float

@@ -540,11 +540,13 @@ void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		auto maybe_member = expr->target->type->get_member(subsymbol);
 
 		// a.b.c
-		if (maybe_member.has_value())
+		if (!maybe_member.has_value())
 		{
-			expr->accessor->type = maybe_member.value().type;
+			throw FrontendError{expr->token, fmt::format("member '{}' does not exist on '{}' object",
+				subsymbol, expr->target->get_symbol())};
 		}
 
+		expr->accessor->type = maybe_member.value().type;
 		ctx.member = true;
 
 		expr->accessor->accept(this, ctx);
@@ -647,10 +649,10 @@ void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 	expr->type = array_type;
 
-	// if (ctx.type != nullptr && !type->is_equal(ctx.type))
-	// {
-	// 	throw FrontendError{expr->token, "got wrong array type"};
-	// }
+	if (ctx.type != nullptr && !type->is_equal(ctx.type))
+	{
+		throw FrontendError{expr->token, "got wrong array type"};
+	}
 }
 
 void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)

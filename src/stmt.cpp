@@ -439,10 +439,7 @@ llvm::Value * pars::WhileStmt::emit(EmitCtx &ctx, EmitParams params)
 
 	body->emit(ctx);
 
-	if (ctx.builder.GetInsertBlock()->getTerminator() == nullptr)
-	{
-		ctx.builder.CreateBr(before_bb);
-	}
+	create_safe_br(ctx, ctx.builder.GetInsertBlock(), before_bb);
 
 	ctx.builder.SetInsertPoint(merge_bb);
 

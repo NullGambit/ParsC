@@ -5,6 +5,12 @@ fn make_tuple(): (i32, str)
     return (10, "hello")
 }
 
+fn make_named_tuple(): (n: i32, message: str)
+{   
+    // can also just use positional syntax as well
+    return (n: 10, message: "hello")
+}
+
 fn main()
 {
     var x, s = make_tuple()
@@ -14,4 +20,8 @@ fn main()
     var tuple = make_tuple()
 
     println($"{tuple[0]} {tuple[1]}")
+
+    var named = make_named_tuple()
+
+    println($"{named.message} {named.n}")
 }

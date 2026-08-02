@@ -8,7 +8,7 @@ fn make_strings(): List<String>
 
     for i in 0..10
     {
-        strings.Add($"{i}")
+        strings.add($"{i}")
     }
 
     return strings

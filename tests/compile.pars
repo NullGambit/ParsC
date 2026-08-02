@@ -1,71 +1,27 @@
-@[extern, private]
-fn printf(fmt: str, ptr: ^i32, n: i32): i32
+import core.stdc.stdio
 
-@[extern, private]
-fn puts(s: str): i32
-
-@extern
-fn malloc(size: i32): ^void
-
-@extern
-fn free(ptr: ^void)
-
-fn print_ptr(p: ^i32) => printf("address = %p\nvalue = %d\n", p, ^p)
-
-fn test2()
+struct Base
 {
-    var value = 10
-
-    // void pointers are any pointers
-    var vptr: *void
-
-    vptr = &value
-
-    print_ptr(&value)
+    name: str
+    score: i32
 }
 
-fn test1()
+struct Derived
 {
-    var x = 10
+    super: Base
+}
 
-    var ptr = &x
-
-    ^ptr += 20
-
-    if ptr != nil
-    {
-        print_ptr(ptr)
-    }
-
-    var ptr2: ^i32
-
-    ptr2 = &x
-
-    if ptr == ptr2
-    {
-        puts("pointers match")
-    }
+fn print_base(base: ^Base)
+{
+    printf("%s %d\n", base.name, base.score)
 }
 
 fn main()
 {
-    var ptr = cast(^i32)malloc(sizeof(i32) * 2)
+    var derived: Derived
 
-    ^ptr = 10
+    derived.super.str = "john"
+    derived.super.score = 100
 
-    print_ptr(ptr)
-
-    ptr += 1
-
-    ^ptr = 20
-
-    print_ptr(ptr)
-
-    ptr -= 1
-
-    print_ptr(ptr)
-
-    free(ptr)
+    print_base(cast(^Base)&derived)
 }
-
-

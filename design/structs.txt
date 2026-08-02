@@ -128,9 +128,8 @@ trait DefaultTraitTest
 
 struct TypeWrapper<T>
 {
-    T value
-
-    alias value
+    @alias_this
+    value: T
 }
 
 fn test_wrapper()

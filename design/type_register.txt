@@ -11,7 +11,7 @@ struct Get
 }
 
 // because the Get attribute has the Register attribute this function will be Registered in the global registry
-@get{"url"}
+@Get{"url"}
 fn my_handler(r: Request)
 {
 

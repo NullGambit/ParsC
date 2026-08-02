@@ -71,3 +71,13 @@ void pars::set_metadata(llvm::LLVMContext *ctx, llvm::Value *value, llvm::MDTupl
 		global->setMetadata(const_md, md_tuple);
 	}
 }
+
+llvm::BranchInst * pars::create_safe_br(EmitCtx &ctx, llvm::BasicBlock *current_block, llvm::BasicBlock *next_block)
+{
+	if (current_block != nullptr && current_block->getTerminator() == nullptr)
+	{
+		return ctx.builder.CreateBr(next_block);
+	}
+
+	return nullptr;
+}

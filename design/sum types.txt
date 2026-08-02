@@ -1,22 +1,16 @@
-alias JsonValue = int | float | string | bool
+alias JsonValue = i32 | f32 | str | bool
 
 fn test_unions(value: JsonValue)
 {
     match value
     {
-        int => println("value is an int"),
+        i32 => println("value is an int"),
         _ => println("has some other value")
     }
 
-    if value as string
+    if value is string
     {
         // value will only be a string here
-        println(value)
-    }
-
-    if value is bool
-    {
-        // value will still be a union but now we know for sure its a bool
         println(value)
     }
 }
@@ -26,8 +20,35 @@ fn test_unions(value: JsonValue)
 // useful sometimes
 union JsonUnion 
 {
-    i: int
-    f: float 
+    i: i32
+    f: f32 
     s: str 
     b: bool 
 }
+
+enum JsonKind 
+{
+    Int
+    Float
+    String
+    Boo
+}
+
+// tagged union
+struct JsonValue 
+{
+    as: JsonUnion 
+    kind: JsonKind
+}
+
+// rust style enum payload
+enum JsonValue 
+{
+    Int(i32)
+    Float(f32)
+    String(str)
+    Bool(bool)
+}
+
+// may seem redundant to have so many different forms of algebraic types, even the error unions are another form of algebraic types 
+// but each form is useful for some specific reason and i prefer to have all to more naturally represent different class of problems.

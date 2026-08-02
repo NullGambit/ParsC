@@ -1,4 +1,3 @@
-
 // within the project config file the user can define certain symbols
 // and this can also be done through the command line
 // finally it can be done through pars code (useful for quick testing and debugging)
