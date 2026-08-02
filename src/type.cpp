@@ -420,12 +420,21 @@ bool pars::Pointer::is_equal(Type const *other) const
 {
 	auto *other_ptr = dynamic_cast<const Pointer*>(other);
 
-	return
-	other_ptr != nullptr
-	&&
-	(inner->is_equal(other_ptr->inner)
-	||
-	other_ptr->inner->is_equal(&VoidType) || inner->is_equal(&VoidType));
+	if (other_ptr == nullptr)
+	{
+		return false;
+	}
+
+	auto inner_equal = check_type_equality(inner, other_ptr->inner);
+
+	return inner_equal;
+
+	// return
+	// other_ptr != nullptr
+	// &&
+	// (inner->is_equal(other_ptr->inner)
+	// ||
+	// other_ptr->inner->is_equal(&VoidType) || inner->is_equal(&VoidType));
 }
 
 std::string_view pars::Packed::get_type_name() const

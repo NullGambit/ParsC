@@ -275,6 +275,11 @@ virtual bool is_equal(Type const *other) const override							\
 			return value;
 		}
 
+		bool can_coerce_into(Type const *desired_type) const override
+		{
+			return false;
+		}
+
 		bool is_equal(Type const *other) const override;
 
 		bool is_ptr() const override
