@@ -28,6 +28,9 @@ namespace pars
 
 	struct EmitParams
 	{
+		// the target ptr this emit call should write to. useful for array and struct literals. always can be nullptr.
 		llvm::Value *target_ptr {};
+		// the predecessor of the current emit call such as a chained member access
+		llvm::Value *predecessor_ptr {};
 	};
 }

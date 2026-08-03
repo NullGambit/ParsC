@@ -241,18 +241,12 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)
 
 llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
-	auto *target_value = target->emit_ptr(ctx);
-	auto *accessor_value = accessor->emit(ctx);
+	auto *target_value = params.predecessor_ptr == nullptr ? target->emit_ptr(ctx) : params.predecessor_ptr;
 
+	// target can be an import. use this as a fallback
 	if (target_value == nullptr)
 	{
-		target_value = target->emit(ctx);
-	}
-
-	// case: import_alias.func()
-	if (target_value == nullptr)
-	{
-		return accessor_value;
+		return accessor->emit(ctx);
 	}
 
 	if (target->type->is_ptr())
@@ -260,23 +254,32 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		target_value = ctx.builder.CreateLoad(target->type->get_llvm_type(ctx.llvm_ctx), target_value);
 	}
 
-	auto *result = target->type->access_member(ctx, target_value, accessor_value, accessor->get_symbol());
+	auto *result = target->type->access_member(ctx, target_value, nullptr, accessor->get_symbol());
 
 	if (result == nullptr)
 	{
 		throw CompileError{this, fmt::format("property '{}' does not exist for type {}", accessor->get_symbol(), target->type->get_type_name())};
 	}
 
+	// TODO placing this here might not work with nested member access.
+	// as of now struct members cannot be readonly but in the future it is worth refactoring this.
 	auto member = target->type->get_member(accessor->get_symbol()).value();
 
-	if (member.access == MemberAccess::Readonly || member.access == MemberAccess::Private)
+	if (member.access == MemberAccess::Readonly)
 	{
 		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
 
 		set_metadata(ctx.llvm_ctx, result, node, "Const");
 	}
 
-	return result;
+	if (dynamic_cast<SymbolExpr*>(accessor))
+	{
+		return result;
+	}
+
+	auto *accessor_value = accessor->emit_ptr(ctx, {.predecessor_ptr = result});
+
+	return accessor_value != nullptr ? accessor_value : result;
 }
 
 std::string_view pars::MemberAccessExpr::get_symbol()
