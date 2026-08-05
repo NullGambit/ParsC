@@ -193,7 +193,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *bb = ctx.builder.GetInsertBlock();
 
-	for (auto i = 0; auto *node : nodes)
+	for (auto *node : nodes)
 	{
 		auto *value = node->emit(ctx);
 
@@ -209,15 +209,11 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 
 		ctx.builder.SetInsertPoint(bb);
 
-		auto *ret = dynamic_cast<TerminatorStmt*>(node);
-
 		// eliminate dead code so llvm doesnt complain about terminator in the middle of basic block
-		if (ret != nullptr)
+		if (dynamic_cast<TerminatorStmt*>(node))
 		{
 			break;
 		}
-
-		i++;
 	}
 
 	return bb;
@@ -255,9 +251,9 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx, EmitParams params)
 		{
 			body->emit(ctx);
 
-			if (signature.return_type->is_equal(&VoidType))
+            if (signature.return_type->is_equal(&VoidType) && ctx.builder.GetInsertBlock()->getTerminator() == nullptr)
 			{
-				ctx.builder.CreateRetVoid();
+                create_safe_void_ret(ctx);
 			}
 		}
 	}
@@ -290,9 +286,14 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx, EmitParams params)
 {
+    // if (!safe_to_terminate(ctx))
+    // {
+    //     return get_block_poison(ctx);
+    // }
+
 	if (expr == nullptr)
 	{
-		return ctx.builder.CreateRetVoid();
+        return ctx.builder.CreateRetVoid();
 	}
 
 	auto *value = expr->emit(ctx);
@@ -475,7 +476,7 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 	auto *preloop_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "preloop", fn);
 	auto *body_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "body", fn);
 	auto *update_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "update", fn);
-	auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
+    auto *merge_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "merge", fn);
 
 	ctx.loop_bbs.emplace_back(merge_bb, update_bb);
 
@@ -486,11 +487,11 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 
 	auto *cond = iterable->type->iter_emit_condition(ctx, iterable, binding_values);
 
-	ctx.builder.CreateCondBr(cond, body_bb, merge_bb);
+    ctx.builder.CreateCondBr(cond, body_bb, merge_bb);
 
 	ctx.builder.SetInsertPoint(body_bb);
 
-	body->emit(ctx);
+    body->emit(ctx);
 
 	ctx.builder.CreateBr(update_bb);
 

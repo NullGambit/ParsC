@@ -1,5 +1,8 @@
 - BUG if expecting expression but got eof will make the compiler get stuck
     even doing checks for eof seems to not work unless the file ended with a line feed
+- BUG the compiler does not handle a case of returning a value in a void function.
+    the compiler will interpret 'return expr' as a void return and as a separate expression.
+    there is no way currently to detect this without the lexer automatically inserting semicolon tokens which it does not do.
 
 - arrays:
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.

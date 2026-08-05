@@ -81,3 +81,29 @@ llvm::BranchInst * pars::create_safe_br(EmitCtx &ctx, llvm::BasicBlock *current_
 
 	return nullptr;
 }
+
+llvm::ReturnInst *pars::create_safe_void_ret(EmitCtx &ctx)
+{
+    if (safe_to_terminate(ctx))
+    {
+        return ctx.builder.CreateRetVoid();
+    }
+
+    return nullptr;
+}
+
+llvm::ReturnInst *pars::create_safe_ret(EmitCtx &ctx, llvm::Value *value)
+{
+    if (safe_to_terminate(ctx))
+    {
+        return ctx.builder.CreateRet(value);
+    }
+
+    return nullptr;
+}
+
+bool pars::safe_to_terminate(EmitCtx &ctx)
+{
+	auto *insert_block = ctx.builder.GetInsertBlock();
+    return insert_block != nullptr && insert_block->getTerminator() == nullptr;
+}

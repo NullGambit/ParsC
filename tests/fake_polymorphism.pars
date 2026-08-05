@@ -1,0 +1,24 @@
+import core.stdc.stdio
+
+struct Base
+{
+    name: str
+    score: i32
+}
+
+struct Derived
+{
+    super: Base
+}
+
+fn print_base(base: ^Base)
+{
+    printf("%s %d\n", base.name, base.score)
+}
+
+fn main()
+{
+    var derived = Derived{{name: "john", score: 100}}
+
+    print_base(cast(^Base)&derived)
+}
