@@ -16,6 +16,12 @@ namespace pars
 	struct FnDecl;
 	struct Type;
 
+	enum class ExprMutability
+	{
+		Mutable,
+		Immutable,
+	};
+
 	struct Expr : Node
 	{
 		Type *type;

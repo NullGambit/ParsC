@@ -201,7 +201,7 @@ bool pars::AliasType::is_ptr() const
 
 bool pars::AliasType::is_array() const
 {
-	return type->is_array() || has_flag(meta.flags, TypeFlags::Array);
+	return type->is_array(); //|| has_flag(meta.flags, TypeFlags::Array);
 }
 
 bool pars::AliasType::is_struct() const

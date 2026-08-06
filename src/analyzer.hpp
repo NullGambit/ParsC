@@ -50,6 +50,9 @@ namespace pars
 		void visit(IndexOpExpr* expr, VisitCtx ctx) override;
 		void visit(StructLiteral* expr, VisitCtx ctx) override;
 		void visit(SliceExpr* expr, VisitCtx ctx) override;
+		void visit(UnresolvedSymbol *type, VisitCtx ctx) override;
+		void visit(Pointer *type, VisitCtx ctx) override;
+		void visit(BaseArray *type, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 
@@ -80,5 +83,7 @@ namespace pars
 		{
 			return dynamic_cast<T*>(find_symbol(name, error_token, table_override));
 		}
+
+		Type* get_type(std::string_view name, Token &error_token);
 	};
 }

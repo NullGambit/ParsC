@@ -166,12 +166,15 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	if (stmt->is_explicitly_typed())
 	{
 		stmt->type = resolve_type(stmt->type_meta, stmt);
+
+
 	}
 
-	if (has_flag(stmt->type_meta.flags, TypeFlags::ArrayInferSize) && stmt->initializer == nullptr)
-	{
-		throw FrontendError{stmt->token, "Cannot infer size of array"};
-	}
+
+	// if (has_flag(stmt->type_meta.flags, TypeFlags::ArrayInferSize) && stmt->initializer == nullptr)
+	// {
+	// 	throw FrontendError{stmt->token, "Cannot infer size of array"};
+	// }
 
 	// var x = E
 	if (stmt->initializer != nullptr)
@@ -188,6 +191,11 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		{
 			stmt->type = stmt->initializer->type;
 		}
+	}
+
+	if (auto *array = dynamic_cast<Array*>(stmt->type); array && array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
+	{
+		throw FrontendError{stmt->token, "Cannot infer size of array"};
 	}
 
 	// var x: T = E
@@ -208,11 +216,6 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	if (stmt->initializer != nullptr)
 	{
 		stmt->type = stmt->initializer->type;
-	}
-
-	if (dynamic_cast<Pointer*>(stmt->type))
-	{
-		stmt->type_meta.flags |= TypeFlags::Pointer;
 	}
 
 	if (has_keyword_attribute(stmt->symbol, Volatile))
@@ -675,7 +678,7 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 
 void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
-	expr->type = resolve_type({expr->name}, expr);
+	expr->type = get_type(expr->name, expr->token);
 
 	auto *struct_type = dynamic_cast<Struct*>(expr->type);
 
@@ -708,6 +711,21 @@ void pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 	expr->type = slice_type;
 }
 
+void pars::Analyzer::visit(UnresolvedSymbol *type, VisitCtx ctx)
+{
+	*ctx.result = get_type(type->symbol, type->token);
+}
+
+void pars::Analyzer::visit(Pointer *type, VisitCtx ctx)
+{
+	type->inner->accept(this, {.result = (Node**)&type->inner});
+}
+
+void pars::Analyzer::visit(BaseArray *type, VisitCtx ctx)
+{
+	type->element_type->accept(this, {.result = (Node**)&type->element_type});
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);
@@ -725,45 +743,46 @@ pars::FnDecl * pars::Analyzer::get_current_fn()
 
 pars::Type* pars::Analyzer::resolve_type(TypeMeta meta, Node *node)
 {
-	auto *type = m_ctx->scope_table.find_symbol<Type>(meta.name);
-
-	if (type == nullptr)
+	if (meta.type != nullptr)
 	{
-		throw FrontendError{node->token, fmt::format("unknown type name '{}'", meta.name), nullptr};
+		meta.type->accept(this, {.result = (Node**)&meta.type});
 	}
 
-	if (has_flag(meta.flags, TypeFlags::Pointer))
-	{
-		auto *ptr = new_node<Pointer>();
-
-		ptr->inner = type;
-
-		type = ptr;
-	}
-
-	if (has_flag(meta.flags, TypeFlags::Array))
-	{
-		if (has_flag(meta.flags, TypeFlags::ArrayInferSize))
-		{
-			auto *array_type = new_node<Array>();
-
-			array_type->element_type = type;
-
-			array_type->size = meta.array_size;
-
-			type = array_type;
-		}
-		else if (meta.array_size == UNSIZED_ARRAY || !has_flag(meta.flags, TypeFlags::ArrayInferSize))
-		{
-			auto *array_type = new_node<Slice>();
-
-			array_type->element_type = type;
-
-			type = array_type;
-		}
-	}
-
-	return type;
+	return meta.type;
+	// auto *type = get_type()
+	//
+	// if (has_flag(meta.flags, TypeFlags::Pointer))
+	// {
+	// 	auto *ptr = new_node<Pointer>();
+	//
+	// 	ptr->inner = type;
+	//
+	// 	type = ptr;
+	// }
+	//
+	// if (has_flag(meta.flags, TypeFlags::Array))
+	// {
+	// 	if (has_flag(meta.flags, TypeFlags::ArrayInferSize))
+	// 	{
+	// 		auto *array_type = new_node<Array>();
+	//
+	// 		array_type->element_type = type;
+	//
+	// 		array_type->size = meta.array_size;
+	//
+	// 		type = array_type;
+	// 	}
+	// 	else if (meta.array_size == UNSIZED_ARRAY || !has_flag(meta.flags, TypeFlags::ArrayInferSize))
+	// 	{
+	// 		auto *array_type = new_node<Slice>();
+	//
+	// 		array_type->element_type = type;
+	//
+	// 		type = array_type;
+	// 	}
+	// }
+	//
+	// return type;
 }
 
 void pars::Analyzer::add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task)
@@ -839,6 +858,18 @@ void pars::Analyzer::assign_struct_indices(const Struct *struct_type, std::vecto
 		pos = cursor;
 		cursor++;
 	}
+}
+
+pars::Type * pars::Analyzer::get_type(std::string_view name, Token &error_token)
+{
+	auto *type = m_ctx->scope_table.find_symbol<Type>(name);
+
+	if (type == nullptr)
+	{
+		throw FrontendError{error_token, fmt::format("unknown type name '{}'", name), nullptr};
+	}
+
+	return type;
 }
 
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)

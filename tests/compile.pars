@@ -1,25 +1,6 @@
-import core.stdc.stdio
-
-fn sum_odd_squares(limit: i32): i32
-{
-    var sum: i32
-
-    for i in 1..=limit
-    {
-        var sqr = i ** 2
-
-        if sqr % 2 != 0
-        {
-            sum += sqr
-        }
-    }
-
-    return sum
-}
+//import core.stdc.stdio
 
 fn main()
 {
-    var result = sum_odd_squares(5)
-
-    printf("%zu\n", result)
+    var x: [3]i32 = [1, 2, 3]
 }

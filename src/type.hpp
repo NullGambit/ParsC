@@ -98,6 +98,23 @@ virtual bool is_equal(Type const *other) const override							\
 	return false;																\
 }																				\
 
+	// represents a symbol that has not been resolved yet.
+	// should not get past the frontend.
+	struct UnresolvedSymbol : Type
+	{
+		std::string_view symbol;
+
+		bool is_equal(Type const *other) const override { return false; }
+
+		llvm::Type * get_llvm_type(llvm::LLVMContext *ctx) const override { return nullptr; }
+
+		std::string_view get_type_name() const override { return "unresolved"; }
+
+		llvm::Value * get_default_value(llvm::LLVMContext *ctx) const override { return nullptr; }
+
+		ACCEPT
+	};
+
 	struct Void : Type
 	{
 		DEFAULT_TYPE_EQUAL(Void)
@@ -246,13 +263,15 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct Pointer : Integer
 	{
-		const Type *inner {};
+		Type *inner {};
+
+		ACCEPT
 
 		Pointer() :
 			Integer{64, IS_SIGNED, "pointer"}
 		{}
 
-		explicit Pointer(const Type *inner) :
+		explicit Pointer(Type *inner) :
 			Integer{64, IS_SIGNED, "pointer"},
 			inner{inner}
 		{}
@@ -309,6 +328,8 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		Type *element_type;
 
+		ACCEPT
+
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
@@ -335,9 +356,11 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
 	};
 
+	constexpr auto UNSIZED_ARRAY = UINT32_MAX;
+
 	struct Array : BaseArray
 	{
-		u32 size{};
+		u32 size = UNSIZED_ARRAY;
 
 		u32 get_size() override;
 
@@ -417,14 +440,14 @@ virtual bool is_equal(Type const *other) const override							\
 	static const Bool BoolType {1, !IS_SIGNED, "bool"};
 	static const Char CharType {8, IS_SIGNED, "char"};
 	static const Char UCharType {8, !IS_SIGNED, "uchar"};
-	static const Pointer VoidPointerType {&VoidType};
+	static const Pointer VoidPointerType {const_cast<Void*>(&VoidType)};
 
 	struct Str : Pointer
 	{
 		DEFAULT_TYPE_EQUAL(Str)
 
 		Str() :
-			Pointer{&CharType}
+			Pointer{const_cast<Char*>(&CharType)}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;

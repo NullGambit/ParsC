@@ -1,4 +1,5 @@
 #pragma once
+#include <bitset>
 #include <string_view>
 #include <cstddef>
 
@@ -6,23 +7,29 @@
 
 namespace pars
 {
-	enum class TypeFlags
-	{
-		Pointer = 1 << 0,
-		Const = 1 << 1,
-		Array = 1 << 2,
-		ArrayInferSize =  1 << 3,
-	};
-
-	PARS_FLAGIFY(TypeFlags);
-
-	constexpr auto UNSIZED_ARRAY = UINT32_MAX;
+	/*
+	 *	i32
+	 *	^i32
+	 *	^^i32
+	 *	[]i32
+	 *	[?]i32
+	 *	[3]i32
+	 *	[3]i32{"x", "y", "z"}
+	 *	[3][3]i32
+	 *	{x: i32, y: str}
+	 *	fn(i32, str): bool
+	 *	[3]fn(i32, str): bool
+	 *	const []i32
+	 *	[]const i32
+	 *	const []const i32
+	 *	^const i32
+	 *	const^i32
+	 *	const^const i32
+	 */
 
 	struct TypeMeta
 	{
-		std::string_view name;
-		TypeFlags flags {};
-		u32 array_size = UNSIZED_ARRAY;
-
+		std::bitset<32> const_set;
+		Type *type {};
 	};
 }

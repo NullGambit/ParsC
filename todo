@@ -93,7 +93,11 @@
     - digest
 
 - misc:
-    - undefined keyword that can be used when setting the initial value of a variable. this will make it not default init.
+    - currently type coercion is unreliable. perhaps implement type coercion inside the analyzer so when a node is visited
+        it will check the context type and if it is not equal to its own type it will do a coercion.
+    - undefined keyword that can be used when setting the initial value of a variable. this will make it not initialize to its default value.
+        useful for very large values that do not need default initialization.
+    - make pointers have index operators.
     - currently a lot of types have wonky sizes. implement more accurate sizes.
     - pure functions with the pure attribute. perhaps even automatic pure detection.
     - change keyword attributes to not actually be real keywords so they can be used for symbols. possibly just use structs defined inside core package.

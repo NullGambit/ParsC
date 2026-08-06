@@ -325,20 +325,18 @@ pars::VarDeclStmt* pars::AST::parse_var()
 {
 	auto *stmt = new_node<VarDeclStmt>();
 
-	if (m_lexer.peek_last(Const))
-	{
-		stmt->type_meta.flags |= TypeFlags::Const;
-	}
+	auto is_const = m_lexer.peek_last(Const);
 
 	stmt->symbol = get_symbol();
 
 	if (m_lexer.match(Colon))
 	{
-		auto old_flags = stmt->type_meta.flags;
+		stmt->type_meta = parse_type_meta();
+	}
 
-		stmt->type_meta = parse_type();
-
-		stmt->type_meta.flags |= old_flags;
+	if (is_const)
+	{
+		stmt->type_meta.const_set.set(0);
 	}
 
 	if (m_lexer.match(Equal))
@@ -362,7 +360,7 @@ pars::VarDeclStmt * pars::AST::parse_fn_param()
 
 	m_lexer.expect(Colon);
 
-	stmt->type_meta = parse_type();
+	stmt->type_meta = parse_type_meta();
 
 	if (m_lexer.match(Equal))
 	{
@@ -399,7 +397,7 @@ pars::Node* pars::AST::parse_return()
 
 	auto *stmt = new_node<ReturnStmt>();
 
-	if (fn->signature.return_type_meta.name != "void")
+	if (!fn->signature.return_type_meta.type->is_equal(&VoidType))
 	{
 		stmt->expr = expression();
 	}
@@ -516,11 +514,11 @@ pars::FnSignature pars::AST::parse_fn_signature()
 
 	if (m_lexer.match(Colon))
 	{
-		signature.return_type_meta = parse_type();
+		signature.return_type_meta = parse_type_meta();
 	}
 	else
 	{
-		signature.return_type_meta.name = "void";
+		signature.return_type_meta.type = const_cast<Void*>(&VoidType);
 	}
 
 	return signature;
@@ -596,7 +594,7 @@ pars::Struct * pars::AST::parse_struct()
 
 		m_lexer.expect(Colon);
 
-		field.type_meta = parse_type();
+		field.type_meta = parse_type_meta();
 
 		// optional comma for inline structs
 		m_lexer.match(Comma);
@@ -652,7 +650,7 @@ pars::AliasType * pars::AST::parse_alias()
 
 	stmt->is_distinct = m_lexer.match(Distinct);
 
-	stmt->meta = parse_type();
+	stmt->meta = parse_type_meta();
 
 	auto is_private = has_keyword_attribute(stmt->symbol, Private);
 
@@ -1039,46 +1037,78 @@ pars::Expr* pars::AST::expression()
 	return parse_and();
 }
 
-pars::TypeMeta pars::AST::parse_type()
+pars::TypeMeta pars::AST::parse_type_meta()
 {
 	TypeMeta meta {};
 
-	while (!m_lexer.peek(Identifier))
+	meta.type = parse_type(meta);
+
+	if (meta.type == nullptr)
 	{
-		if (m_lexer.match(Const))
+		throw FrontendError{m_lexer.peek_last(), "Expected type"};
+	}
+
+	return meta;
+}
+
+pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position)
+{
+	if (m_lexer.match(Const))
+	{
+		meta.const_set.set(position);
+	}
+
+	position += 1;
+
+	if (m_lexer.match(Identifier))
+	{
+		auto *unresolved = new_node<UnresolvedSymbol>();
+
+		unresolved->symbol = m_lexer.peek_last().lexeme;
+
+		return unresolved;
+	}
+	if (m_lexer.match(Caret))
+	{
+		auto *ptr = new_node<Pointer>();
+
+		ptr->inner = parse_type(meta, position);
+
+		return ptr;
+	}
+	if (m_lexer.match(LeftBracket))
+	{
+		BaseArray *base;
+
+		if (m_lexer.match(RightBracket))
 		{
-			meta.flags |= TypeFlags::Const;
+			base = new_node<Slice>();
 		}
-		else if (m_lexer.match(Caret))
+		else
 		{
-			meta.flags |= TypeFlags::Pointer;
-		}
-		else if (m_lexer.match(LeftBracket))
-		{
+			auto *array = new_node<Array>();
+
 			if (m_lexer.match(IntegerLiteral))
 			{
 				auto sv = m_lexer.peek_last().lexeme;
 
-				std::from_chars(sv.data(), sv.data() + sv.size(), meta.array_size);
+				std::from_chars(sv.data(), sv.data() + sv.size(), array->size);
 			}
 			else if (m_lexer.match(Question))
 			{
-				meta.flags |= TypeFlags::ArrayInferSize;
+				array->size = UNSIZED_ARRAY;
 			}
 
 			m_lexer.expect(RightBracket);
 
-			meta.flags |= TypeFlags::Array;
+			base = array;
 		}
-		else if (!m_lexer.peek(Identifier))
-		{
-			// TODO get a real token here
-			throw FrontendError{{}, "invalid token found while parsing type"};
-		}
+
+		base->element_type = parse_type(meta, position);
+
+		return base;
 	}
 
-	meta.name = m_lexer.expect(Identifier).lexeme;
-
-	return meta;
+	return nullptr;
 }
 

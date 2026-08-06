@@ -63,7 +63,8 @@ namespace pars
 		BlockStmt* parse_block();
 		AliasType* parse_alias();
 
-		TypeMeta parse_type();
+		TypeMeta parse_type_meta();
+		Type* parse_type(TypeMeta &meta, u32 position = 0);
 
 		// expr parsing stuff
 		// TODO replace with a pratt parser

@@ -3,6 +3,9 @@
 
 namespace pars
 {
+	struct BaseArray;
+	struct Pointer;
+	struct UnresolvedSymbol;
 	struct SliceExpr;
 	struct StructLiteral;
 	struct Struct;
@@ -89,6 +92,9 @@ namespace pars
 		virtual void visit(TypeExpr *stmt, VisitCtx ctx) {}
 		virtual void visit(BlockStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(AssignmentStmt *stmt, VisitCtx ctx) {}
+		virtual void visit(UnresolvedSymbol *type, VisitCtx ctx) {}
+		virtual void visit(Pointer *type, VisitCtx ctx) {}
+		virtual void visit(BaseArray *type, VisitCtx ctx) {}
 
 		void visit_nodes(const std::vector<Node*> &nodes);
 	};
