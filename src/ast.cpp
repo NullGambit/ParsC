@@ -674,7 +674,10 @@ pars::Expr* pars::AST::parse_primary()
 
 			return expr;
 		}
-		if (m_lexer.match(LeftBracket))
+
+		Expr *lhs {};
+
+		while (m_lexer.match(LeftBracket))
 		{
 			Expr *index {};
 
@@ -687,7 +690,7 @@ pars::Expr* pars::AST::parse_primary()
 			{
 				auto *slice_expr = new_node<SliceExpr>();
 
-				slice_expr->lhs = inner;
+				slice_expr->lhs = lhs != nullptr ? lhs : inner;
 				slice_expr->start = index;
 
 				if (!m_lexer.peek(RightBracket))
@@ -697,21 +700,23 @@ pars::Expr* pars::AST::parse_primary()
 
 				m_lexer.expect(RightBracket);
 
-				return slice_expr;
+				lhs = slice_expr;
 			}
+			else
+			{
+				auto *index_op = new_node<IndexOpExpr>();
 
-			auto *index_op = new_node<IndexOpExpr>();
+				index_op->lhs = lhs != nullptr ? lhs : inner;
 
-			index_op->lhs = inner;
+				index_op->index = index;
 
-			index_op->index = index;
+				m_lexer.expect(RightBracket);
 
-			m_lexer.expect(RightBracket);
-
-			return index_op;
+				lhs = index_op;
+			}
 		}
 
-		return inner;
+		return lhs != nullptr ? lhs : inner;
 	}
 
 	auto *literal = new_node<LiteralExpr>();
