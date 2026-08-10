@@ -72,12 +72,12 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		}
 	}
 
-	// if (has_flag(type_meta.flags, TypeFlags::Const))
-	// {
-	// 	auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
-	//
-	// 	set_metadata(ctx.llvm_ctx, inst, node, "Const");
-	// }
+	if (type_meta.const_set.test(0))
+	{
+		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
+
+		set_metadata(ctx.llvm_ctx, inst, node, "Const");
+	}
 
 	ctx.named_values[symbol.name] = inst;
 

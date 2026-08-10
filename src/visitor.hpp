@@ -1,4 +1,5 @@
 #pragma once
+#include <bitset>
 #include <vector>
 
 namespace pars
@@ -51,6 +52,7 @@ namespace pars
 		Node *invoker {};
 		Node **result {};
 		bool member {};
+		u8 depth {};
 		ParseCtx *parse_ctx_override {};
 	};
 

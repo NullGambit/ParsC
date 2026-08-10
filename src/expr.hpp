@@ -1,4 +1,5 @@
 #pragma once
+#include <bitset>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -9,6 +10,7 @@
 #include "visitor.hpp"
 
 #include "llvm/IR/IRBuilder.h"
+#include "util/macros.hpp"
 
 namespace pars
 {
@@ -16,14 +18,18 @@ namespace pars
 	struct FnDecl;
 	struct Type;
 
-	enum class ExprMutability
+	enum class ExprFlags : u8
 	{
-		Mutable,
-		Immutable,
+		Immutable = 1 << 0,
 	};
+
+	PARS_FLAGIFY(ExprFlags);
 
 	struct Expr : Node
 	{
+		ExprFlags flags;
+		// represents a positional constness set. directly mirrors constness on the type tree this belongs to
+		std::bitset<32> const_set;
 		Type *type;
 
 		virtual llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }

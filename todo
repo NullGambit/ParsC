@@ -1,12 +1,13 @@
-- BUG if expecting expression but got eof will make the compiler get stuck
-    even doing checks for eof seems to not work unless the file ended with a line feed
-- BUG the compiler does not handle a case of returning a value in a void function.
-    the compiler will interpret 'return expr' as a void return and as a separate expression.
-    there is no way currently to detect this without the lexer automatically inserting semicolon tokens which it does not do.
+- BUG:
+    -if expecting expression but got eof will make the compiler get stuck
+        even doing checks for eof seems to not work unless the file ended with a line feed
+    - the compiler does not handle a case of returning a value in a void function.
+        the compiler will interpret 'return expr' as a void return and as a separate expression.
+        there is no way currently to detect this without the lexer automatically inserting semicolon tokens which it does not do.
+    - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
 
 - arrays:
     - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
-    - currently deeply nested types can be parsed but the type information is lost and not used. such as '^^i32'.
     - named elements
     - named element swizzling
     - allow setting the size of a static array with any compile time constant not just integer literals.
@@ -18,11 +19,11 @@
     - name mangling
     - anonymous nested structs
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
+    - methods
+    - traits
     - reflection
     - refactor attributes to allow user defined types
-    - methods
     - null coalescing
-    - traits
     - readonly attribute
     - offsetof operator for struct fields
     - raii
@@ -64,19 +65,19 @@
     - module initializers. and per thread module initializers
 
 - standard library:
-    - string
     - list
+    - string
     - map
     - set
     - os
     - io
+    - path
     - math
     - linear algebra
     - json
     - csv
     - flag parser
     - memory
-    - path
     - fs
     - conv
     - thread
@@ -93,11 +94,23 @@
     - digest
 
 - misc:
+    - anonymous struct literals and types eg:
+
+        var my_obj =
+        {
+            a: 10,
+            s: "hello"
+        }
+
+        var my_obj: {a: i32, s: str}
+
     - currently type coercion is unreliable. perhaps implement type coercion inside the analyzer so when a node is visited
         it will check the context type and if it is not equal to its own type it will do a coercion.
     - undefined keyword that can be used when setting the initial value of a variable. this will make it not initialize to its default value.
         useful for very large values that do not need default initialization.
     - make pointers have index operators.
+    - implement warning system.
+    - implement command line interface.
     - implement arithmetic operations for nested arrays such as [4][4]f32.
     - currently a lot of types have wonky sizes. implement more accurate sizes.
     - pure functions with the pure attribute. perhaps even automatic pure detection.

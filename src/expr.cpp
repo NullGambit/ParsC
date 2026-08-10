@@ -421,7 +421,16 @@ llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		}
 		case Caret:
 		{
-			return ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
+			auto *result = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
+
+			if (has_flag(target->flags, ExprFlags::Immutable))
+			{
+				auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
+
+				set_metadata(ctx.llvm_ctx, result, node, "Const");
+			}
+
+			return result;
 		}
 		default: return nullptr;
 	}

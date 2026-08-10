@@ -88,6 +88,7 @@ void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	expr->symbol = expr->prototype->symbol.name;
 	expr->type = expr->prototype->signature.return_type;
+	expr->const_set = expr->prototype->signature.return_type_meta.const_set;
 }
 
 void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
@@ -126,7 +127,14 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 		{
 			for (auto *node : fn->body->nodes)
 			{
-				node->accept(this, ctx);
+				if (auto *expr = dynamic_cast<Expr*>(node))
+				{
+					visit_expr(nullptr, expr, ctx);
+				}
+				else
+				{
+					node->accept(this, ctx);
+				}
 			}
 		}
 
@@ -166,15 +174,7 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	if (stmt->is_explicitly_typed())
 	{
 		stmt->type = resolve_type(stmt->type_meta, stmt);
-
-
 	}
-
-
-	// if (has_flag(stmt->type_meta.flags, TypeFlags::ArrayInferSize) && stmt->initializer == nullptr)
-	// {
-	// 	throw FrontendError{stmt->token, "Cannot infer size of array"};
-	// }
 
 	// var x = E
 	if (stmt->initializer != nullptr)
@@ -190,6 +190,11 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		if (!stmt->is_explicitly_typed())
 		{
 			stmt->type = stmt->initializer->type;
+		}
+
+		if (stmt->type_meta.type == nullptr)
+		{
+			stmt->type_meta.const_set = stmt->initializer->const_set;
 		}
 	}
 
@@ -285,7 +290,14 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 
 	for (auto *node : stmt->nodes)
 	{
-		node->accept(this, ctx);
+		if (auto *expr = dynamic_cast<Expr*>(node))
+		{
+			visit_expr(nullptr, expr, ctx);
+		}
+		else
+		{
+			node->accept(this, ctx);
+		}
 	}
 
 	auto &current_flags = m_ctx->scope_table.get_current_flags();
@@ -299,8 +311,10 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 
 void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 {
-	stmt->lhs->accept(this, {});
-	stmt->rhs->accept(this, {stmt->lhs->type});
+	visit_expr(nullptr, stmt->lhs, {});
+	visit_expr(nullptr, stmt->rhs, {stmt->lhs->type});
+	// stmt->lhs->accept(this, {});
+	// stmt->rhs->accept(this, {stmt->lhs->type});
 
 	if (!stmt->lhs->type->is_equal(stmt->rhs->type) && !stmt->lhs->type->can_coerce_into(stmt->rhs->type))
 	{
@@ -427,6 +441,7 @@ void pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
 		{
+			expr->const_set = var->type_meta.const_set;
 			expr->type = var->type;
 		}
 		else if (auto *type = dynamic_cast<Type*>(symbol))
@@ -593,11 +608,13 @@ void pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 
 void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
-	expr->target->accept(this, ctx);
+	visit_expr(expr, expr->target, ctx);
+	//expr->target->accept(this, ctx);
+	expr->const_set = expr->target->const_set;
 
 	if (auto *ptr = dynamic_cast<Pointer*>(expr->target->type))
 	{
-		expr->type = const_cast<Type*>(ptr->inner);
+		expr->type = ptr->inner;
 	}
 	else
 	{
@@ -870,6 +887,25 @@ pars::Type * pars::Analyzer::get_type(std::string_view name, Token &error_token)
 	}
 
 	return type;
+}
+
+void pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
+{
+	ctx.depth = m_expr_depth++;
+
+	expr->accept(this, ctx);
+
+	if (expr->const_set.test(ctx.depth))
+	{
+		expr->flags |= ExprFlags::Immutable;
+	}
+
+	if (parent != nullptr)
+	{
+		parent->const_set = expr->const_set;
+	}
+
+	m_expr_depth--;
 }
 
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)

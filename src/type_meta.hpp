@@ -1,21 +1,13 @@
 #pragma once
-#include <bitset>
-#include <string_view>
-#include <cstddef>
 
-#include "util/macros.hpp"
+#include <bitset>
 
 namespace pars
 {
+	struct Type;
+
 	/*
-	 *	i32
-	 *	^i32
-	 *	^^i32
-	 *	[]i32
-	 *	[?]i32
-	 *	[3]i32
 	 *	[3]i32{"x", "y", "z"}
-	 *	[3][3]i32
 	 *	{x: i32, y: str}
 	 *	fn(i32, str): bool
 	 *	[3]fn(i32, str): bool
@@ -25,11 +17,15 @@ namespace pars
 	 *	^const i32
 	 *	const^i32
 	 *	const^const i32
+	 *
+	 *	var x: ^const i32 = do_stuff()
 	 */
+
+	using ConstSet = std::bitset<32>;
 
 	struct TypeMeta
 	{
-		std::bitset<32> const_set;
+		ConstSet const_set;
 		Type *type {};
 	};
 }

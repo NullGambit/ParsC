@@ -16,9 +16,9 @@ impl DataIterator : Iterator
     fn get_next() => (self.data.array[self.cursor], self.cursor ** 2)
 }
 
-impl Data : Iterable
+impl Data
 {
-    fn iter() => DataIterator{self, 0}
+    fn op_iter() => DataIterator{self, 0}
 }
 
 $test 
@@ -26,6 +26,8 @@ $test
     import std.io 
 
     var data = Data{[1, 2, 3]}
+
+    println($is_iterable(data)) // true
 
     for n, sqr, i in data 
     {

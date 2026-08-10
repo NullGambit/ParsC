@@ -3,6 +3,7 @@
 
 #include "node.hpp"
 #include "parse_ctx.hpp"
+#include "stmt.hpp"
 #include "type_meta.hpp"
 #include "visitor.hpp"
 #include "containers/hash_map.hpp"
@@ -13,9 +14,6 @@ namespace pars
 	struct ParseCtx;
 	class AST;
 
-	// resolves symbols and does type checking
-	// essentially the sanity checker
-	// while the ast is just the form checker
 	class Analyzer : public Visitor
 	{
 	public:
@@ -59,6 +57,7 @@ namespace pars
 	private:
 		ParseCtx *m_ctx;
 		std::vector<FnDecl*> m_function_stack;
+		u8 m_expr_depth {};
 
 		struct SymbolTask
 		{
@@ -85,5 +84,7 @@ namespace pars
 		}
 
 		Type* get_type(std::string_view name, Token &error_token);
+
+		void visit_expr(Expr *parent, Expr *expr, VisitCtx ctx);
 	};
 }
