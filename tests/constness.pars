@@ -1,0 +1,16 @@
+import core.stdc.stdio
+
+fn main()
+{
+    var x = 10
+
+    // constness is positional and can be placed in multiple places.
+    // 'const ^const i32' is also possible.
+    var ptr: ^const i32
+
+    ptr = &x
+
+    // ^ptr = 20 // error
+
+    printf("%d\n", ^ptr) // this is fine
+}

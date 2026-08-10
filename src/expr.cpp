@@ -423,12 +423,7 @@ llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		{
 			auto *result = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
 
-			if (has_flag(target->flags, ExprFlags::Immutable))
-			{
-				auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
-
-				set_metadata(ctx.llvm_ctx, result, node, "Const");
-			}
+			set_flag_metadata(ctx, target, result);
 
 			return result;
 		}
@@ -509,8 +504,12 @@ llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	auto *array = lhs->emit_ptr(ctx);
 	auto *index_value = index->emit(ctx);
 
-	return ctx.builder.CreateInBoundsGEP(lhs->type->get_llvm_type(ctx.llvm_ctx), array,
+	auto *result = ctx.builder.CreateInBoundsGEP(lhs->type->get_llvm_type(ctx.llvm_ctx), array,
 		{ctx.builder.getInt64(0), index_value});
+
+	set_flag_metadata(ctx, lhs, result);
+
+	return result;
 }
 
 llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)

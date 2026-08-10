@@ -1,16 +1,12 @@
 import core.stdc.stdio
 
-alias InnerImut = ^const i32
-
 fn main()
 {
-    var x = 10
+    alias ImutArray = [3]const i32
 
-    var ptr: InnerImut
+    var array: ImutArray = [1, 2, 3]
 
-    ptr = &x
+    // array[0] = 10 // error
 
-    ^ptr = 20 // error
-
-    printf("%d\n", ^ptr) // this is fine
+    printf("%d\n", array[0])
 }

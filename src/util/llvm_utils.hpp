@@ -8,6 +8,7 @@ namespace llvm
 
 namespace pars
 {
+	struct Expr;
 	struct EmitCtx;
 
 	llvm::Value *get_block_poison(EmitCtx &ctx);
@@ -25,4 +26,6 @@ namespace pars
 	llvm::BranchInst* create_safe_br(EmitCtx &ctx, llvm::BasicBlock *current_block, llvm::BasicBlock *next_block);
     llvm::ReturnInst* create_safe_void_ret(EmitCtx &ctx);
     llvm::ReturnInst* create_safe_ret(EmitCtx &ctx, llvm::Value *value);
+
+	void set_flag_metadata(EmitCtx &ctx, Expr *expr, llvm::Value *value);
 }

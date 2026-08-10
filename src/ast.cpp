@@ -375,7 +375,6 @@ pars::AssignmentStmt * pars::AST::parse_assignment(Expr *lhs)
 	auto *stmt = new_node<AssignmentStmt>();
 
 	stmt->lhs = lhs;
-	stmt->symbol = m_lexer.peek_last().lexeme;
 
 	m_lexer.advance();
 
@@ -716,7 +715,13 @@ pars::Expr* pars::AST::parse_primary()
 			}
 		}
 
-		return lhs != nullptr ? lhs : inner;
+		if (lhs != nullptr)
+		{
+			lhs->token = inner->token;
+			return lhs;
+		}
+
+		return inner;
 	}
 
 	auto *literal = new_node<LiteralExpr>();

@@ -2,6 +2,8 @@
 
 #include <llvm/IR/Constants.h>
 #include "emit_context.hpp"
+#include "expr.hpp"
+#include "macros.hpp"
 
 thread_local llvm::PoisonValue *g_block_poison = nullptr;
 
@@ -100,6 +102,16 @@ llvm::ReturnInst *pars::create_safe_ret(EmitCtx &ctx, llvm::Value *value)
     }
 
     return nullptr;
+}
+
+void pars::set_flag_metadata(EmitCtx &ctx, Expr *expr, llvm::Value *value)
+{
+	if (has_flag(expr->flags, ExprFlags::Immutable))
+	{
+		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
+
+		set_metadata(ctx.llvm_ctx, value, node, "Const");
+	}
 }
 
 bool pars::safe_to_terminate(EmitCtx &ctx)

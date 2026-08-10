@@ -247,6 +247,11 @@ namespace pars
 
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
+		std::string_view get_symbol() override
+		{
+			return lhs->get_symbol();
+		}
+
 		ACCEPT
 	};
 

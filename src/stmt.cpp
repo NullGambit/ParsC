@@ -98,16 +98,11 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *value = lhs->emit_ptr(ctx);
 
-	if (value == nullptr || !value->getType()->isPointerTy())
-	{
-		throw CompileError{this, fmt::format("{} is not mutable", symbol)};
-	}
-
 	auto *is_const_node = get_metadata(value, "Const");
 
-	if (is_const_node != nullptr)
+	if (value == nullptr || !value->getType()->isPointerTy() || is_const_node != nullptr)
 	{
-		throw CompileError{this, fmt::format("{} is not mutable", symbol)};
+		throw CompileError{lhs, fmt::format("{} is not mutable", lhs->get_symbol())};
 	}
 
 	using enum TokenType;

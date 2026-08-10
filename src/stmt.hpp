@@ -54,7 +54,6 @@ namespace pars
 	// because unlike C++ assignment cannot be used as an expression
 	struct AssignmentStmt : Stmt
 	{
-		std::string_view symbol;
 		Expr *lhs;
 		Expr *rhs;
 		TokenType op;
