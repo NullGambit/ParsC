@@ -1,20 +1,14 @@
 import core.stdc.stdio
 
-var score = 100
-
-fn get_score(): ^const i32
-{
-    return &score
-}
+alias InnerImut = ^const i32
 
 fn main()
 {
-    //var x = 10
+    var x = 10
 
-    //var ptr: ^const i32
-    var ptr = get_score()
+    var ptr: InnerImut
 
-    //ptr = get_score()
+    ptr = &x
 
     ^ptr = 20 // error
 

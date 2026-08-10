@@ -69,7 +69,7 @@ namespace pars
 
 		FnDecl* get_current_fn();
 
-		Type* resolve_type(TypeMeta meta, Node *node);
+		Type* resolve_type(TypeMeta &meta, Node *node);
 
 		void add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task);
 

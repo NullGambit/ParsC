@@ -299,6 +299,11 @@ virtual bool is_equal(Type const *other) const override							\
 			return false;
 		}
 
+		Type *get_inner() const override
+		{
+			return inner;
+		}
+
 		bool is_equal(Type const *other) const override;
 
 		bool is_ptr() const override

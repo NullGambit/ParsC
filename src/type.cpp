@@ -211,7 +211,7 @@ bool pars::AliasType::is_struct() const
 
 pars::Type * pars::AliasType::get_inner() const
 {
-	return type;
+	return type->get_inner();
 }
 
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const

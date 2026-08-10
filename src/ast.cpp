@@ -642,21 +642,21 @@ pars::BlockStmt * pars::AST::parse_block()
 
 pars::AliasType * pars::AST::parse_alias()
 {
-	auto stmt = new_node<AliasType>();
+	auto alias = new_node<AliasType>();
 
-	stmt->symbol = get_symbol();
+	alias->symbol = get_symbol();
 
 	m_lexer.expect(Equal);
 
-	stmt->is_distinct = m_lexer.match(Distinct);
+	alias->is_distinct = m_lexer.match(Distinct);
 
-	stmt->meta = parse_type_meta();
+	alias->meta = parse_type_meta();
 
-	auto is_private = has_keyword_attribute(stmt->symbol, Private);
+	auto is_private = has_keyword_attribute(alias->symbol, Private);
 
-	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt, !is_private);
+	m_ctx->scope_table.add_to_scope(alias->symbol, alias, !is_private);
 
-	return stmt;
+	return alias;
 }
 
 pars::Expr* pars::AST::parse_primary()

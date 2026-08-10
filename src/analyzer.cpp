@@ -281,7 +281,6 @@ void pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 	}
 
 	m_ctx->scope_table.get_current_flags() |= ScopeFlags::HasReturn;
-
 }
 
 void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
@@ -313,8 +312,6 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 {
 	visit_expr(nullptr, stmt->lhs, {});
 	visit_expr(nullptr, stmt->rhs, {stmt->lhs->type});
-	// stmt->lhs->accept(this, {});
-	// stmt->rhs->accept(this, {stmt->lhs->type});
 
 	if (!stmt->lhs->type->is_equal(stmt->rhs->type) && !stmt->lhs->type->can_coerce_into(stmt->rhs->type))
 	{
@@ -331,7 +328,7 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 		throw FrontendError{stmt->token, "none compile time if statements are not allowed in the global scope"};
 	}
 
-	stmt->condition->accept(this, {});
+	visit_expr(nullptr, stmt->condition, {});
 
 	if (!stmt->condition->type->is_equal(&BoolType))
 	{
@@ -370,13 +367,13 @@ void pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)
 		throw FrontendError{stmt->token, "none compile time while loops are not allowed in the global scope"};
 	}
 
-	stmt->condition->accept(this, {});
+	visit_expr(nullptr, stmt->condition, {});
 	stmt->body->accept(this, {});
 }
 
 void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 {
-	stmt->iterable->accept(this, {});
+	visit_expr(nullptr, stmt->iterable, {});
 
 	if (!stmt->iterable->type->is_iterable())
 	{
@@ -609,20 +606,32 @@ void pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->target, ctx);
-	//expr->target->accept(this, ctx);
+
 	expr->const_set = expr->target->const_set;
 
-	if (auto *ptr = dynamic_cast<Pointer*>(expr->target->type))
+	switch (expr->op)
 	{
-		expr->type = ptr->inner;
-	}
-	else
-	{
-		auto *p = new_node<Pointer>();
+		case Caret:
+		{
+			if (!expr->target->type->is_ptr())
+			{
+				throw FrontendError{expr->token, "Dereference target is not a pointer"};
+			}
 
-		p->inner = expr->target->type;
+			expr->type = expr->target->type->get_inner();
 
-		expr->type = p;
+			break;
+		}
+		case Ampersand:
+		{
+			auto *p = new_node<Pointer>();
+
+			p->inner = expr->target->type;
+
+			expr->type = p;
+
+			break;
+		}
 	}
 }
 
@@ -758,11 +767,16 @@ pars::FnDecl * pars::Analyzer::get_current_fn()
 	return m_function_stack.back();
 }
 
-pars::Type* pars::Analyzer::resolve_type(TypeMeta meta, Node *node)
+pars::Type* pars::Analyzer::resolve_type(TypeMeta &meta, Node *node)
 {
 	if (meta.type != nullptr)
 	{
 		meta.type->accept(this, {.result = (Node**)&meta.type});
+	}
+
+	if (auto *alias = dynamic_cast<AliasType*>(meta.type))
+	{
+		meta.const_set = alias->meta.const_set;
 	}
 
 	return meta.type;

@@ -389,7 +389,7 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx, EmitParams params)
 		}
 		case Caret:
 		{
-			auto *inner = dynamic_cast<Pointer*>(target->type)->inner;
+			auto *inner = target->type->get_inner();
 
 			if (inner->is_equal(&VoidType))
 			{
