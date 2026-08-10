@@ -1,10 +1,18 @@
 import core.stdc.stdio
 
+// can use any identifier to name the elements
+alias Vec3 = [3]i32{x, y, z, w}
+
+fn print_vec(vec: Vec3) => printf("%d, %d, %d\n", vec.x, vec.y, vec.z)
+
 fn main()
 {
-    alias Vec3 = [3]i32{x, y, z}
-
+    // the type here can be omitted because Vec3 is not a distinct alias
+    // and so when passed to print_vec it will be turned into an array that has those members and thus
+    // will work perfectly within the function
     var position: Vec3 = [1, 2, 3]
 
-    printf("%d, %d, %d\n", position.x, position.y, position.z)
+    var w = position.w
+
+    print_vec(position)
 }

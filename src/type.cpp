@@ -664,7 +664,14 @@ int pars::Array::get_member_index(std::string_view member) const
 		return -1;
 	}
 
-	return std::distance(members.begin(), iter);
+	auto index = std::distance(members.begin(), iter);
+
+	if (index >= size)
+	{
+		return -1;
+	}
+
+	return index;
 }
 
 llvm::Type * pars::Slice::get_llvm_type(llvm::LLVMContext *ctx) const
