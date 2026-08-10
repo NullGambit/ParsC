@@ -218,10 +218,10 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 
 	}
 
-	if (stmt->initializer != nullptr)
-	{
-		stmt->type = stmt->initializer->type;
-	}
+	// if (stmt->initializer != nullptr)
+	// {
+	// 	stmt->type = stmt->initializer->type;
+	// }
 
 	if (has_keyword_attribute(stmt->symbol, Volatile))
 	{

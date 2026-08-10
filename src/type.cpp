@@ -214,6 +214,17 @@ pars::Type * pars::AliasType::get_inner() const
 	return type->get_inner();
 }
 
+std::optional<pars::MemberInfo> pars::AliasType::get_member(std::string_view symbol) const
+{
+	return type->get_member(symbol);
+}
+
+llvm::Value * pars::AliasType::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
+	std::string_view symbol) const
+{
+	return type->access_member(ctx, ptr, accessor, symbol);
+}
+
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);
@@ -579,7 +590,28 @@ llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm
 		return target;
 	}
 
-	return nullptr;
+	auto index = get_member_index(symbol);
+
+	return op_index(ctx, target, ctx.builder.getInt32(index));
+}
+
+std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol) const
+{
+	auto maybe_member = BaseArray::get_member(symbol);
+
+	if (maybe_member.has_value())
+	{
+		return maybe_member;
+	}
+
+	auto index = get_member_index(symbol);
+
+	if (index == -1)
+	{
+		return std::nullopt;
+	}
+
+	return MemberInfo{symbol, element_type};
 }
 
 bool pars::Array::can_coerce_into(Type const *desired_type) const
@@ -618,6 +650,21 @@ llvm::Value * pars::Array::op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Valu
 	ctx.builder.CreateStore(offset_ptr, array_ptr);
 
 	return ctx.builder.CreateLoad(slice_struct, target);
+}
+
+int pars::Array::get_member_index(std::string_view member) const
+{
+	auto iter = std::ranges::find_if(members, [member](std::string_view name)
+	{
+		return name == member;
+	});
+
+	if (iter == members.end())
+	{
+		return -1;
+	}
+
+	return std::distance(members.begin(), iter);
 }
 
 llvm::Type * pars::Slice::get_llvm_type(llvm::LLVMContext *ctx) const

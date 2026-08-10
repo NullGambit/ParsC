@@ -2,11 +2,9 @@ import core.stdc.stdio
 
 fn main()
 {
-    alias ImutArray = [3]const i32
+    alias Vec3 = [3]i32{x, y, z}
 
-    var array: ImutArray = [1, 2, 3]
+    var position: Vec3 = [1, 2, 3]
 
-    // array[0] = 10 // error
-
-    printf("%d\n", array[0])
+    printf("%d, %d, %d\n", position.x, position.y, position.z)
 }

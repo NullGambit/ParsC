@@ -1093,10 +1093,13 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position)
 		if (m_lexer.match(RightBracket))
 		{
 			base = new_node<Slice>();
+			base->element_type = parse_type(meta, position);
 		}
 		else
 		{
 			auto *array = new_node<Array>();
+
+			base = array;
 
 			if (m_lexer.match(IntegerLiteral))
 			{
@@ -1111,10 +1114,23 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position)
 
 			m_lexer.expect(RightBracket);
 
-			base = array;
-		}
+			base->element_type = parse_type(meta, position);
 
-		base->element_type = parse_type(meta, position);
+			if (m_lexer.match(LeftBrace))
+			{
+				while (true)
+				{
+					array->members.emplace_back(m_lexer.expect(Identifier).lexeme);
+
+					if (!m_lexer.match(Comma))
+					{
+						break;
+					}
+				}
+
+				m_lexer.expect(RightBrace);
+			}
+		}
 
 		return base;
 	}

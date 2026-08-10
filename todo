@@ -7,11 +7,9 @@
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
 
 - arrays:
-    - implement inner and outer mutability such as 'const ^i32' and '^const i32' should be different and a combination of both should be possible.
-    - named elements
     - named element swizzling
     - allow setting the size of a static array with any compile time constant not just integer literals.
-    - convert string to be '[]const char' slice
+    - convert str to be '[]const char' slice
     - enum indexed arrays
     - type cache
 

@@ -198,6 +198,9 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_struct() const override;
 		Type *get_inner() const override;
 
+		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+
 		ACCEPT
 	};
 
@@ -365,6 +368,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct Array : BaseArray
 	{
+		std::vector<std::string_view> members;
 		u32 size = UNSIZED_ARRAY;
 
 		u32 get_size() override;
@@ -378,11 +382,14 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
 
 		bool can_coerce_into(Type const *desired_type) const override;
 		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 
 		llvm::Value *op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start, llvm::Value *end) const override;
+
+		int get_member_index(std::string_view member) const;
 	};
 
 	struct Slice : BaseArray
