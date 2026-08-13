@@ -51,6 +51,7 @@ namespace pars
 		void visit(UnresolvedSymbol *type, VisitCtx ctx) override;
 		void visit(Pointer *type, VisitCtx ctx) override;
 		void visit(BaseArray *type, VisitCtx ctx) override;
+		void visit(Array *type, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 

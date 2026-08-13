@@ -8,6 +8,19 @@ enum Result
     Invalid
 }
 
+impl Result 
+{
+    fn print_result(answer: Result)
+    {
+        match self 
+        {
+            answer == self => println("You win!")
+            answer != self => println("You lose!")
+            Invalid => println("Invalid input, try again!")
+        }
+    }
+}
+
 fn main()
 {
     loop
@@ -25,20 +38,9 @@ fn main()
         {
             'h' => Heads
             't' => Tails
-            _ => 
-            {
-                println($"invalid input '{input}' try again")
-                continue
-            }
+            _ => Invalid
         }
 
-        if answer == result
-        {
-            printf("You win!\n")
-        }
-        else
-        {
-            printf("you lose\n")
-        }
+        result.print_result(answer)
     }
 }

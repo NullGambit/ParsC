@@ -1,14 +1,8 @@
 import core.stdc.stdio
 
-alias Vec3 = [3]i32{x, y, z}
-
-fn print_vec(vec: Vec3) => printf("%d, %d, %d\n", vec.x, vec.y, vec.z)
 
 fn main()
 {
-    var position: Vec3 = [1, 2, 3]
-
-    print_vec(position)
-
-    // var other_pos = position.yxz
+   const SIZE = 4
+   var numbers: [SIZE]i32
 }

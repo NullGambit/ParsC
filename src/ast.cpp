@@ -1101,15 +1101,13 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position)
 
 			base = array;
 
-			if (m_lexer.match(IntegerLiteral))
-			{
-				auto sv = m_lexer.peek_last().lexeme;
-
-				std::from_chars(sv.data(), sv.data() + sv.size(), array->size);
-			}
-			else if (m_lexer.match(Question))
+			if (m_lexer.match(Question))
 			{
 				array->size = UNSIZED_ARRAY;
+			}
+			else
+			{
+				array->size_expr = expression();
 			}
 
 			m_lexer.expect(RightBracket);

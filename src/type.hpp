@@ -369,7 +369,11 @@ virtual bool is_equal(Type const *other) const override							\
 	struct Array : BaseArray
 	{
 		std::vector<std::string_view> members;
-		u32 size = UNSIZED_ARRAY;
+		// a temporary expression that must compile to a constant and will be assigned to size
+		Expr *size_expr {};
+		u32 size {};
+
+		ACCEPT
 
 		u32 get_size() override;
 

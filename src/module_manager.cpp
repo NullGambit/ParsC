@@ -94,7 +94,11 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	g_modules.emplace_back(module);
 	g_modules_table.emplace(potential_path, module);
 
-	auto *parse_ctx = new ParseCtx{.scope_table = {}, .source_file = maybe_source.value()};
+	auto *parse_ctx = new ParseCtx
+	{
+		.scope_table = {},
+		.source_file = maybe_source.value(),
+	};
 
 	parse_ctx->scope_table.set_file_id(parse_ctx->source_file.id);
 

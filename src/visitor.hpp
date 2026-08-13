@@ -4,6 +4,7 @@
 
 namespace pars
 {
+	struct Array;
 	struct BaseArray;
 	struct Pointer;
 	struct UnresolvedSymbol;
@@ -61,6 +62,7 @@ namespace pars
 		virtual ~Visitor() = default;
 
 		virtual void visit(BinaryExpr *expr, VisitCtx ctx) {}
+		virtual Node* produce(BinaryExpr *expr, VisitCtx ctx) { return nullptr; }
 		virtual void visit(UnaryExpr *expr, VisitCtx ctx) {}
 		virtual void visit(CallExpr *expr, VisitCtx ctx) {}
 		virtual void visit(LiteralExpr *expr, VisitCtx ctx) {}
@@ -97,6 +99,7 @@ namespace pars
 		virtual void visit(UnresolvedSymbol *type, VisitCtx ctx) {}
 		virtual void visit(Pointer *type, VisitCtx ctx) {}
 		virtual void visit(BaseArray *type, VisitCtx ctx) {}
+		virtual void visit(Array *type, VisitCtx ctx) {}
 
 		void visit_nodes(const std::vector<Node*> &nodes);
 	};

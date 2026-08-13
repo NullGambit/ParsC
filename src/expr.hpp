@@ -65,6 +65,7 @@ namespace pars
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
+		RECEIVE
 	};
 
 	struct UnaryExpr : Expr

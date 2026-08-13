@@ -29,9 +29,12 @@ namespace pars
 		virtual ~Node() = default;
 
 		virtual void accept(Visitor *visitor, VisitCtx ctx) {}
+		// same as accept but can produce a value
+		virtual Node* receive(Visitor *visitor, VisitCtx ctx) { return nullptr; }
 	};
 
 #define ACCEPT void accept(Visitor *visitor, VisitCtx ctx) override { visitor->visit(this, ctx); }
+#define RECEIVE Node* receive(Visitor *visitor, VisitCtx ctx) override { return visitor->produce(this, ctx); }
 
 	u8 *alloc_node(u32 size);
 

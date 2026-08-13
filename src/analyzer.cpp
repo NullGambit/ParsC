@@ -753,6 +753,13 @@ void pars::Analyzer::visit(BaseArray *type, VisitCtx ctx)
 	type->element_type->accept(this, {.result = (Node**)&type->element_type});
 }
 
+void pars::Analyzer::visit(Array *type, VisitCtx ctx)
+{
+	type->element_type->accept(this, {.result = (Node**)&type->element_type});
+
+	visit_expr(nullptr, type->size_expr, ctx);
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);
@@ -781,40 +788,6 @@ pars::Type* pars::Analyzer::resolve_type(TypeMeta &meta, Node *node)
 	}
 
 	return meta.type;
-	// auto *type = get_type()
-	//
-	// if (has_flag(meta.flags, TypeFlags::Pointer))
-	// {
-	// 	auto *ptr = new_node<Pointer>();
-	//
-	// 	ptr->inner = type;
-	//
-	// 	type = ptr;
-	// }
-	//
-	// if (has_flag(meta.flags, TypeFlags::Array))
-	// {
-	// 	if (has_flag(meta.flags, TypeFlags::ArrayInferSize))
-	// 	{
-	// 		auto *array_type = new_node<Array>();
-	//
-	// 		array_type->element_type = type;
-	//
-	// 		array_type->size = meta.array_size;
-	//
-	// 		type = array_type;
-	// 	}
-	// 	else if (meta.array_size == UNSIZED_ARRAY || !has_flag(meta.flags, TypeFlags::ArrayInferSize))
-	// 	{
-	// 		auto *array_type = new_node<Slice>();
-	//
-	// 		array_type->element_type = type;
-	//
-	// 		type = array_type;
-	// 	}
-	// }
-	//
-	// return type;
 }
 
 void pars::Analyzer::add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task)
