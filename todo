@@ -6,9 +6,18 @@
         there is no way currently to detect this without the lexer automatically inserting semicolon tokens which it does not do.
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
 
+design issues:
+    - currently constness is basically immutability. but const keyword should be used entirely for compile time only.
+        i can introduce a new keyword called imut to take consts job (THEYTOOKOURJOBSSS).
+        i can also use the let keyword for top level immutable vars.
+    - literals and type coercion need addressing.
+        use a better way to coerce types such as in the analyzer check if the checked type and the context type dont match
+        then try to do a coercion.
+        literals should be coerced to whatever type is is most viable in its context.
+        integer suffixes should also be added for greater ease of use.
+
 - arrays:
     - named element swizzling
-    - allow setting the size of a static array with any compile time constant not just integer literals.
     - convert str to be '[]const char' slice
     - enum indexed arrays
     - type cache
