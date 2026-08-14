@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ccc
+namespace pars
 {
 	template<class ...A>
 	struct overload : A... { using A::operator()...; };

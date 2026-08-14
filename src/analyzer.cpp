@@ -758,6 +758,22 @@ void pars::Analyzer::visit(Array *type, VisitCtx ctx)
 	type->element_type->accept(this, {.result = (Node**)&type->element_type});
 
 	visit_expr(nullptr, type->size_expr, ctx);
+
+	auto *value = type->size_expr->receive(&m_comp_eval, {});
+
+	if (auto *literal = dynamic_cast<LiteralExpr*>(value))
+	{
+		auto literal_value = literal->get_int();
+
+		if (literal_value.has_value())
+		{
+			type->size = literal_value.value();
+
+			return;
+		}
+	}
+
+	throw FrontendError{type->token, "Array size must be known at compile time"};
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
@@ -899,4 +915,5 @@ void pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)
 {
 	m_ctx = parse_ctx;
+	m_comp_eval.parse_ctx = parse_ctx;
 }

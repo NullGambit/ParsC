@@ -53,7 +53,10 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
+		std::optional<i64> get_int() const;
+
 		ACCEPT
+		RECEIVE
 	};
 
 	struct BinaryExpr : Expr
@@ -94,6 +97,7 @@ namespace pars
 		}
 
 		ACCEPT
+		RECEIVE
 	};
 
 	struct CallExpr : Expr

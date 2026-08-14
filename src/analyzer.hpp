@@ -1,6 +1,7 @@
 #pragma once
 #include <string_view>
 
+#include "comp_eval.hpp"
 #include "node.hpp"
 #include "parse_ctx.hpp"
 #include "stmt.hpp"
@@ -59,6 +60,7 @@ namespace pars
 		ParseCtx *m_ctx;
 		std::vector<FnDecl*> m_function_stack;
 		u8 m_expr_depth {};
+		CompEval m_comp_eval;
 
 		struct SymbolTask
 		{

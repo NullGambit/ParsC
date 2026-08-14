@@ -20,7 +20,7 @@ static pars::HashMap<std::string_view, llvm::GlobalVariable*> g_static_strings;
 
 llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	return std::visit(ccc::overload
+	return std::visit(overload
 	{
 		[&ctx](i32 _i32)
 		{
@@ -62,6 +62,16 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 			return VoidPointerType.get_default_value(ctx.llvm_ctx);
 		}
 	}, value);
+}
+
+std::optional<i64> pars::LiteralExpr::get_int() const
+{
+	if (value.index() == 0)
+	{
+		return std::get<i32>(value);
+	}
+
+	return std::nullopt;
 }
 
 llvm::Value * pars::BinaryExpr::emit(EmitCtx &ctx, EmitParams params)

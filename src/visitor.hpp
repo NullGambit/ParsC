@@ -66,7 +66,9 @@ namespace pars
 		virtual void visit(UnaryExpr *expr, VisitCtx ctx) {}
 		virtual void visit(CallExpr *expr, VisitCtx ctx) {}
 		virtual void visit(LiteralExpr *expr, VisitCtx ctx) {}
+		virtual Node* produce(LiteralExpr *expr, VisitCtx ctx) { return nullptr; }
 		virtual void visit(SymbolExpr *expr, VisitCtx ctx) {}
+		virtual Node* produce(SymbolExpr *expr, VisitCtx ctx) { return nullptr; }
 		virtual void visit(GroupExpr *expr, VisitCtx ctx) {}
 		virtual void visit(MemberAccessExpr *expr, VisitCtx ctx) {}
 		virtual void visit(CastExpr *expr, VisitCtx ctx) {}
@@ -81,6 +83,7 @@ namespace pars
 		virtual void visit(SliceExpr *expr, VisitCtx ctx) {}
 		virtual void visit(ImportStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
+		virtual Node* produce(VarDeclStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(IfStmt *stmt, VisitCtx ctx) {}
 		virtual void visit(CompIfStmt *stmt, VisitCtx ctx) {}
