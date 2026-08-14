@@ -1,8 +1,8 @@
-import core.stdc.stdio
+//import core.stdc.stdio
 
 
 fn main()
 {
    const SIZE = 4
-   var numbers: [SIZE]i32
+   var numbers: [SIZE]i32 = [1, 2]
 }

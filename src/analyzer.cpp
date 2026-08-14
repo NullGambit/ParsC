@@ -179,7 +179,7 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	// var x = E
 	if (stmt->initializer != nullptr)
 	{
-		stmt->initializer->accept(this, {stmt->type});
+		stmt->initializer->accept(this, {.type = stmt->type});
 
 		// var x = {}
 		if (stmt->initializer->type == nullptr)
@@ -648,40 +648,35 @@ void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		return;
 	}
 
-	auto *type = ctx.type;
+	auto *array_type = new_node<Array>();
 
-	if (type != nullptr)
-	{
-		type = type->get_inner();
-		ctx.type = type;
-	}
+	array_type->size = expr->elements.size();
 
 	for (auto *element : expr->elements)
 	{
 		visit_expr(expr, element, ctx);
 
-		if (type == nullptr)
+		if (array_type->element_type == nullptr)
 		{
-			type = element->type;
-			ctx.type = type;
+			array_type->element_type = element->type;
 		}
 
-		if (!type->is_equal(element->type))
+		if (!array_type->element_type->is_equal(element->type))
 		{
 			throw FrontendError{element->token, "array literal element types dont all match"};
 		}
 	}
 
-	auto *array_type = new_node<Array>();
-
-	array_type->size = expr->elements.size();
-	array_type->element_type = type;
-
 	expr->type = array_type;
 
-	if (ctx.type != nullptr && !type->is_equal(ctx.type))
+	if (auto *ctx_array = dynamic_cast<Array*>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
 	{
-		throw FrontendError{expr->token, "got wrong array type"};
+		if (ctx_array->size < array_type->size)
+		{
+			throw FrontendError{expr->token, "Array has too many members"};
+		}
+
+		array_type->size = ctx_array->size;
 	}
 }
 
