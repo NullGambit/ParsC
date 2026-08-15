@@ -1,8 +1,9 @@
-//import core.stdc.stdio
-
+import core.stdc.stdio
 
 fn main()
 {
    const SIZE = 4
    var numbers: [SIZE]i32 = [1, 2]
+
+   printf("%d\n", numbers[2])
 }

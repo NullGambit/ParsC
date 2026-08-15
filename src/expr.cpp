@@ -448,13 +448,13 @@ llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	auto *array_type = type->get_llvm_type(ctx.llvm_ctx);
+	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
 
 	auto should_return = false;
 
 	if (params.target_ptr == nullptr)
 	{
-		params.target_ptr = create_alloca(ctx, array_type);
+		params.target_ptr = create_alloca(ctx, llvm_type);
 		should_return = true;
 	}
 
@@ -479,14 +479,14 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 			constants.emplace_back(constant);
 		}
 
-		return llvm::ConstantArray::get((llvm::ArrayType*)array_type, constants);
+		return llvm::ConstantArray::get((llvm::ArrayType*)llvm_type, constants);
 	}
 
 	for (auto i = 0; auto *element : elements)
 	{
 		auto *element_value = element->emit(ctx);
 
-		auto *ptr = ctx.builder.CreateInBoundsGEP(array_type, params.target_ptr,
+		auto *ptr = ctx.builder.CreateInBoundsGEP(llvm_type, params.target_ptr,
 			{ctx.builder.getInt64(0), ctx.builder.getInt64(i)});
 
 		ctx.builder.CreateStore(element_value, ptr);
@@ -494,7 +494,22 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 		i++;
 	}
 
-	return should_return ? ctx.builder.CreateLoad(array_type, params.target_ptr) : nullptr;
+	auto *array_type = dynamic_cast<Array*>(type);
+
+	auto remaining = array_type->size - elements.size();
+
+	if (remaining > 0)
+	{
+		auto *remaining_type = llvm::ArrayType::get(array_type->element_type->get_llvm_type(ctx.llvm_ctx), remaining);
+		auto *zero = llvm::ConstantAggregateZero::get(remaining_type);
+
+		auto *ptr = ctx.builder.CreateInBoundsGEP(llvm_type, params.target_ptr,
+			{ctx.builder.getInt64(0), ctx.builder.getInt64(remaining)});
+
+		ctx.builder.CreateStore(zero, ptr);
+	}
+
+	return should_return ? ctx.builder.CreateLoad(llvm_type, params.target_ptr) : nullptr;
 }
 
 llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx, EmitParams params)
