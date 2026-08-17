@@ -2,7 +2,6 @@ import core.stdc.stdio
 
 fn main()
 {
-    // var numbers = i32[1, 2, 3]
-   const SIZE = 4
-   var numbers: [SIZE]i32
+    var numbers = i32[1]
+    var numbers2 = i32[1, 2, 3]
 }

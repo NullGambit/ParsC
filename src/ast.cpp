@@ -658,6 +658,27 @@ pars::AliasType * pars::AST::parse_alias()
 	return alias;
 }
 
+pars::ArrayLiteralExpr * pars::AST::parse_array_literal(std::vector<Expr*> &elements)
+{
+	auto *expr = new_node<ArrayLiteralExpr>();
+
+	expr->elements = std::move(elements);
+
+	while (true)
+	{
+		expr->elements.emplace_back(expression());
+
+		if (!m_lexer.match(Comma))
+		{
+			break;
+		}
+	}
+
+	m_lexer.expect(RightBracket);
+
+	return expr;
+}
+
 pars::Expr* pars::AST::parse_primary()
 {
 	auto *inner = parse_primary_inner();
@@ -703,6 +724,17 @@ pars::Expr* pars::AST::parse_primary()
 			}
 			else
 			{
+				if (m_lexer.match(Comma))
+				{
+					std::vector elements {index};
+
+					auto *literal = parse_array_literal(elements);
+
+					literal->type_specifier = inner;
+
+					return literal;
+				}
+
 				auto *index_op = new_node<IndexOpExpr>();
 
 				index_op->lhs = lhs != nullptr ? lhs : inner;
@@ -987,21 +1019,8 @@ pars::Expr * pars::AST::parse_primary_inner()
 	}
 	if (m_lexer.match(LeftBracket))
 	{
-		auto *expr = new_node<ArrayLiteralExpr>();
-
-		while (true)
-		{
-			expr->elements.emplace_back(expression());
-
-			if (!m_lexer.match(Comma))
-			{
-				break;
-			}
-		}
-
-		m_lexer.expect(RightBracket);
-
-		return expr;
+		std::vector<Expr*> elements;
+		return parse_array_literal(elements);
 	}
 
 	return nullptr;

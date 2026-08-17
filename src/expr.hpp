@@ -233,6 +233,7 @@ namespace pars
 
 	struct ArrayLiteralExpr : Expr
 	{
+		Expr *type_specifier {};
 		std::vector<Expr*> elements;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;

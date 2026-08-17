@@ -62,6 +62,7 @@ namespace pars
 		std::vector<std::pair<Expr*, u32>> parse_brace_list();
 		BlockStmt* parse_block();
 		AliasType* parse_alias();
+		ArrayLiteralExpr* parse_array_literal(std::vector<Expr*> &elements);
 
 		TypeMeta parse_type_meta();
 		Type* parse_type(TypeMeta &meta, u32 position = 0);

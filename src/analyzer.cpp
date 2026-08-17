@@ -703,6 +703,11 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 	array_type->size = expr->elements.size();
 
+	if (expr->type_specifier != nullptr)
+	{
+		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
+	}
+
 	for (auto i = 0; auto *element : expr->elements)
 	{
 		expr->elements[i] = visit_expr(expr, element, ctx);
@@ -737,6 +742,18 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 {
+	auto *left_symbol = find_symbol(expr->lhs->get_symbol(), expr->lhs->token);
+
+	if (dynamic_cast<Type*>(left_symbol))
+	{
+		auto *literal = new_node<ArrayLiteralExpr>();
+
+		literal->type_specifier = expr->lhs;
+		literal->elements = {expr->index};
+
+		return visit_expr(expr, literal, ctx);
+	}
+
 	expr->lhs = visit_expr(expr, expr->lhs, ctx);
 	expr->index = visit_expr(expr, expr->index, ctx);
 
