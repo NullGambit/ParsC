@@ -11,7 +11,7 @@
 
 using enum pars::TokenType;
 
-void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 {
 	ScopeTable *table_override {};
 
@@ -89,14 +89,16 @@ void pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 	expr->symbol = expr->prototype->symbol.name;
 	expr->type = expr->prototype->signature.return_type;
 	expr->const_set = expr->prototype->signature.return_type_meta.const_set;
+
+	return expr;
 }
 
-void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 {
 	// already been analyzed
 	if (fn->signature.return_type != nullptr)
 	{
-		return;
+		return fn;
 	}
 
 	m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
@@ -152,23 +154,27 @@ void pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 	}
 
 	m_function_stack.pop_back();
+
+	return fn;
 }
 
-void pars::Analyzer::visit(Struct *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(Struct *stmt, VisitCtx ctx)
 {
 	// already been resolved
 	if (!stmt->fields.empty() && stmt->fields.front().type != nullptr)
 	{
-		return;
+		return stmt;
 	}
 
 	for (auto &field : stmt->fields)
 	{
 		field.type = resolve_type(field.type_meta, stmt);
 	}
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 {
 	// var x: T
 	if (stmt->is_explicitly_typed())
@@ -234,9 +240,11 @@ void pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	}
 
 	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(ImportStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(ImportStmt *stmt, VisitCtx ctx)
 {
 	stmt->module = get_module(stmt->path);
 
@@ -261,13 +269,15 @@ void pars::Analyzer::visit(ImportStmt *stmt, VisitCtx ctx)
 
 		m_ctx->scope_table.add_to_scope(Symbol{symbol_name}, symbol, PRIVATE_SYMBOL);
 	}
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 {
 	if (stmt->expr== nullptr)
 	{
-		return;
+		return stmt;
 	}
 
 	auto *fn = get_current_fn();
@@ -281,9 +291,11 @@ void pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 	}
 
 	m_ctx->scope_table.get_current_flags() |= ScopeFlags::HasReturn;
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 {
 	auto scope = m_ctx->scope_table.new_scope();
 
@@ -306,9 +318,11 @@ void pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 		auto &data = m_ctx->scope_table.get_scope_data(m_ctx->scope_table.get_level() - 1);
 		data.flags|= ScopeFlags::HasReturn;
 	}
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 {
 	visit_expr(nullptr, stmt->lhs, {});
 	visit_expr(nullptr, stmt->rhs, {stmt->lhs->type});
@@ -319,9 +333,11 @@ void pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 			fmt::format("assignment to type of {} cannot be done with type of {}",
 				stmt->lhs->type->get_type_name(), stmt->rhs->type->get_type_name())};
 	}
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 {
 	if (m_ctx->scope_table.get_level() == 0)
 	{
@@ -353,14 +369,18 @@ void pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 			m_ctx->scope_table.get_scope_data(m_ctx->scope_table.get_level()).flags |= ScopeFlags::HasReturn;
 		}
 	}
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(CompIfStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(CompIfStmt *stmt, VisitCtx ctx)
 {
 	stmt->stmt->accept(this, ctx);
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)
 {
 	if (m_ctx->scope_table.get_level() == 0)
 	{
@@ -369,9 +389,11 @@ void pars::Analyzer::visit(WhileStmt *stmt, VisitCtx ctx)
 
 	visit_expr(nullptr, stmt->condition, {});
 	stmt->body->accept(this, {});
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 {
 	visit_expr(nullptr, stmt->iterable, {});
 
@@ -410,16 +432,20 @@ void pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 	}
 
 	stmt->body->accept(this, {});
+
+	return stmt;
 }
 
-void pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
 	alias->type = resolve_type(alias->meta, alias);
 
 	m_ctx->scope_table.add_to_scope(alias->symbol, alias, false);
+
+	return alias;
 }
 
-void pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 {
 	if (ctx.member)
 	{
@@ -449,9 +475,10 @@ void pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 		expr->symbol_node = symbol;
 	}
 
+	return expr;
 }
 
-void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->left, ctx);
 	visit_expr(expr, expr->right, ctx);
@@ -475,9 +502,11 @@ void pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 
 		expr->type = expr->left->type;
 	}
+
+	return expr;
 }
 
-void pars::Analyzer::visit(UnaryExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(UnaryExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->right, ctx);
 
@@ -489,20 +518,26 @@ void pars::Analyzer::visit(UnaryExpr *expr, VisitCtx ctx)
 	{
 		expr->type = expr->right->type;
 	}
+
+	return expr;
 }
 
-void pars::Analyzer::visit(GroupExpr* expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(GroupExpr* expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->inner, ctx);
 	expr->type = expr->inner->type;
+
+	return expr;
 }
 
-void pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->expr, ctx);
+
+	return expr;
 }
 
-void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 {
 	// my_import.func()
 	// i32.max
@@ -568,9 +603,11 @@ void pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	}
 
 	expr->type = expr->accessor->type;
+
+	return expr;
 }
 
-void pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->type_expr, ctx);
 
@@ -580,9 +617,11 @@ void pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 
 	expr->original_type = expr->target->type;
 	expr->target->type = expr->type;
+
+	return expr;
 }
 
-void pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 {
 	expr->type = ctx.type;
 
@@ -590,21 +629,27 @@ void pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 	{
 		assign_struct_indices(struct_type, expr->values);
 	}
+
+	return expr;
 }
 
-void pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->value, ctx);
 	expr->type = expr->value->type;
+
+	return expr;
 }
 
-void pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->value, ctx);
 	expr->type = expr->value->type;
+
+	return expr;
 }
 
-void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->target, ctx);
 
@@ -634,18 +679,20 @@ void pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 			break;
 		}
 	}
+
+	return expr;
 }
 
-void pars::Analyzer::visit(PackedExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(PackedExpr *expr, VisitCtx ctx)
 {
-
+	return expr;
 }
 
-void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 {
 	if (expr->elements.empty())
 	{
-		return;
+		return expr;
 	}
 
 	auto *array_type = new_node<Array>();
@@ -678,9 +725,11 @@ void pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 		array_type->size = ctx_array->size;
 	}
+
+	return expr;
 }
 
-void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->lhs, ctx);
 	visit_expr(expr, expr->index, ctx);
@@ -696,18 +745,22 @@ void pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 	}
 
 	expr->type = expr->lhs->type->get_inner();
+
+	return expr;
 }
 
-void pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
 	expr->type = get_type(expr->name, expr->token);
 
 	auto *struct_type = dynamic_cast<Struct*>(expr->type);
 
 	assign_struct_indices(struct_type, expr->initializers);
+
+	return expr;
 }
 
-void pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 {
 	visit_expr(expr, expr->lhs, ctx);
 
@@ -731,30 +784,38 @@ void pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 	slice_type->element_type = expr->lhs->type->get_inner();
 
 	expr->type = slice_type;
+
+	return expr;
 }
 
-void pars::Analyzer::visit(UnresolvedSymbol *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(UnresolvedSymbol *type, VisitCtx ctx)
 {
 	*ctx.result = get_type(type->symbol, type->token);
+
+	return type;
 }
 
-void pars::Analyzer::visit(Pointer *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(Pointer *type, VisitCtx ctx)
 {
 	type->inner->accept(this, {.result = (Node**)&type->inner});
+
+	return type;
 }
 
-void pars::Analyzer::visit(BaseArray *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(BaseArray *type, VisitCtx ctx)
 {
 	type->element_type->accept(this, {.result = (Node**)&type->element_type});
+
+	return type;
 }
 
-void pars::Analyzer::visit(Array *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 {
 	type->element_type->accept(this, {.result = (Node**)&type->element_type});
 
 	visit_expr(nullptr, type->size_expr, ctx);
 
-	auto *value = type->size_expr->receive(&m_comp_eval, {});
+	auto *value = type->size_expr->accept(&m_comp_eval, {});
 
 	if (auto *literal = dynamic_cast<LiteralExpr*>(value))
 	{
@@ -764,11 +825,13 @@ void pars::Analyzer::visit(Array *type, VisitCtx ctx)
 		{
 			type->size = literal_value.value();
 
-			return;
+			return type;
 		}
 	}
 
 	throw FrontendError{type->token, "Array size must be known at compile time"};
+
+	return type;
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
@@ -888,11 +951,11 @@ pars::Type * pars::Analyzer::get_type(std::string_view name, Token &error_token)
 	return type;
 }
 
-void pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
+pars::Expr* pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
 {
 	ctx.depth = m_expr_depth++;
 
-	expr->accept(this, ctx);
+	auto *result = expr->accept(this, ctx);
 
 	if (expr->const_set.test(ctx.depth))
 	{
@@ -905,6 +968,8 @@ void pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
 	}
 
 	m_expr_depth--;
+
+	return dynamic_cast<Expr*>(result);
 }
 
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)

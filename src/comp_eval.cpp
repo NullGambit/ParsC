@@ -7,10 +7,10 @@
 #include "util/fmt.hpp"
 #include "overload.hpp"
 
-pars::Node* pars::CompEval::produce(BinaryExpr* expr, VisitCtx ctx)
+pars::Node* pars::CompEval::visit(BinaryExpr* expr, VisitCtx ctx)
 {
-    auto *left_node = expr->left->receive(this, ctx);
-    auto *right_node = expr->right->receive(this, ctx);
+    auto *left_node = expr->left->accept(this, ctx);
+    auto *right_node = expr->right->accept(this, ctx);
 
     auto *left = dynamic_cast<LiteralExpr*>(left_node);
     auto *right = dynamic_cast<LiteralExpr*>(right_node);
@@ -25,12 +25,12 @@ pars::Node* pars::CompEval::produce(BinaryExpr* expr, VisitCtx ctx)
     return nullptr;
 }
 
-pars::Node* pars::CompEval::produce(LiteralExpr* expr, VisitCtx ctx)
+pars::Node* pars::CompEval::visit(LiteralExpr* expr, VisitCtx ctx)
 {
     return expr;
 }
 
-pars::Node* pars::CompEval::produce(SymbolExpr* expr, VisitCtx ctx)
+pars::Node* pars::CompEval::visit(SymbolExpr* expr, VisitCtx ctx)
 {
     auto *symbol = parse_ctx->scope_table.find_symbol(expr->symbol);
 
@@ -39,14 +39,14 @@ pars::Node* pars::CompEval::produce(SymbolExpr* expr, VisitCtx ctx)
         throw FrontendError{expr->token, fmt::format("symbol {} does not exist", expr->symbol)};
     }
 
-    return symbol->receive(this, ctx);
+    return symbol->accept(this, ctx);
 }
 
-pars::Node* pars::CompEval::produce(VarDeclStmt* stmt, VisitCtx ctx)
+pars::Node* pars::CompEval::visit(VarDeclStmt* stmt, VisitCtx ctx)
 {
     if (stmt->initializer)
     {
-        return stmt->initializer->receive(this, ctx);
+        return stmt->initializer->accept(this, ctx);
     }
 
     return nullptr;

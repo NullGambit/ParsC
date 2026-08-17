@@ -20,39 +20,39 @@ namespace pars
 	public:
 		explicit Analyzer(ParseCtx *parse_ctx);
 
-		void visit(CallExpr *expr, VisitCtx ctx) override;
-		void visit(FnDecl *fn, VisitCtx ctx) override;
-		void visit(Struct *stmt, VisitCtx ctx) override;
-		void visit(VarDeclStmt *stmt, VisitCtx ctx) override;
-		void visit(ImportStmt *stmt, VisitCtx ctx) override;
-		void visit(ReturnStmt *stmt, VisitCtx ctx) override;
-		void visit(BlockStmt *stmt, VisitCtx ctx) override;
-		void visit(AssignmentStmt *stmt, VisitCtx ctx) override;
-		void visit(IfStmt *stmt, VisitCtx ctx) override;
-		void visit(CompIfStmt *stmt, VisitCtx ctx) override;
-		void visit(WhileStmt *stmt, VisitCtx ctx) override;
-		void visit(ForStmt *stmt, VisitCtx ctx) override;
-		void visit(AliasType *alias, VisitCtx ctx) override;
-		void visit(SymbolExpr *expr, VisitCtx ctx) override;
-		void visit(BinaryExpr *expr, VisitCtx ctx) override;
-		void visit(UnaryExpr *expr, VisitCtx ctx) override;
-		void visit(GroupExpr* expr, VisitCtx ctx) override;
-		void visit(SizeofExpr* expr, VisitCtx ctx) override;
-		void visit(MemberAccessExpr* expr, VisitCtx ctx) override;
-		void visit(CastExpr* expr, VisitCtx ctx) override;
-		void visit(AnonInitExpr* expr, VisitCtx ctx) override;
-		void visit(NamedExpr* expr, VisitCtx ctx) override;
-		void visit(AbsExpr* expr, VisitCtx ctx) override;
-		void visit(PtrOpExpr* expr, VisitCtx ctx) override;
-		void visit(PackedExpr* expr, VisitCtx ctx) override;
-		void visit(ArrayLiteralExpr* expr, VisitCtx ctx) override;
-		void visit(IndexOpExpr* expr, VisitCtx ctx) override;
-		void visit(StructLiteral* expr, VisitCtx ctx) override;
-		void visit(SliceExpr* expr, VisitCtx ctx) override;
-		void visit(UnresolvedSymbol *type, VisitCtx ctx) override;
-		void visit(Pointer *type, VisitCtx ctx) override;
-		void visit(BaseArray *type, VisitCtx ctx) override;
-		void visit(Array *type, VisitCtx ctx) override;
+		Node* visit(CallExpr *expr, VisitCtx ctx) override;
+		Node* visit(FnDecl *fn, VisitCtx ctx) override;
+		Node* visit(Struct *stmt, VisitCtx ctx) override;
+		Node* visit(VarDeclStmt *stmt, VisitCtx ctx) override;
+		Node* visit(ImportStmt *stmt, VisitCtx ctx) override;
+		Node* visit(ReturnStmt *stmt, VisitCtx ctx) override;
+		Node* visit(BlockStmt *stmt, VisitCtx ctx) override;
+		Node* visit(AssignmentStmt *stmt, VisitCtx ctx) override;
+		Node* visit(IfStmt *stmt, VisitCtx ctx) override;
+		Node* visit(CompIfStmt *stmt, VisitCtx ctx) override;
+		Node* visit(WhileStmt *stmt, VisitCtx ctx) override;
+		Node* visit(ForStmt *stmt, VisitCtx ctx) override;
+		Node* visit(AliasType *alias, VisitCtx ctx) override;
+		Node* visit(SymbolExpr *expr, VisitCtx ctx) override;
+		Node* visit(BinaryExpr *expr, VisitCtx ctx) override;
+		Node* visit(UnaryExpr *expr, VisitCtx ctx) override;
+		Node* visit(GroupExpr* expr, VisitCtx ctx) override;
+		Node* visit(SizeofExpr* expr, VisitCtx ctx) override;
+		Node* visit(MemberAccessExpr* expr, VisitCtx ctx) override;
+		Node* visit(CastExpr* expr, VisitCtx ctx) override;
+		Node* visit(AnonInitExpr* expr, VisitCtx ctx) override;
+		Node* visit(NamedExpr* expr, VisitCtx ctx) override;
+		Node* visit(AbsExpr* expr, VisitCtx ctx) override;
+		Node* visit(PtrOpExpr* expr, VisitCtx ctx) override;
+		Node* visit(PackedExpr* expr, VisitCtx ctx) override;
+		Node* visit(ArrayLiteralExpr* expr, VisitCtx ctx) override;
+		Node* visit(IndexOpExpr* expr, VisitCtx ctx) override;
+		Node* visit(StructLiteral* expr, VisitCtx ctx) override;
+		Node* visit(SliceExpr* expr, VisitCtx ctx) override;
+		Node* visit(UnresolvedSymbol *type, VisitCtx ctx) override;
+		Node* visit(Pointer *type, VisitCtx ctx) override;
+		Node* visit(BaseArray *type, VisitCtx ctx) override;
+		Node* visit(Array *type, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 
@@ -88,6 +88,6 @@ namespace pars
 
 		Type* get_type(std::string_view name, Token &error_token);
 
-		void visit_expr(Expr *parent, Expr *expr, VisitCtx ctx);
+		Expr* visit_expr(Expr *parent, Expr *expr, VisitCtx ctx);
 	};
 }

@@ -47,7 +47,6 @@ namespace pars
 		bool is_type_inferred() const;
 
 		ACCEPT
-		RECEIVE
 	};
 
 	// represents not only assignment but op apply operators (+=, -=, etc)

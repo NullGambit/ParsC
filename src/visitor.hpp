@@ -61,48 +61,44 @@ namespace pars
 	{
 		virtual ~Visitor() = default;
 
-		virtual void visit(BinaryExpr *expr, VisitCtx ctx) {}
-		virtual Node* produce(BinaryExpr *expr, VisitCtx ctx) { return nullptr; }
-		virtual void visit(UnaryExpr *expr, VisitCtx ctx) {}
-		virtual void visit(CallExpr *expr, VisitCtx ctx) {}
-		virtual void visit(LiteralExpr *expr, VisitCtx ctx) {}
-		virtual Node* produce(LiteralExpr *expr, VisitCtx ctx) { return nullptr; }
-		virtual void visit(SymbolExpr *expr, VisitCtx ctx) {}
-		virtual Node* produce(SymbolExpr *expr, VisitCtx ctx) { return nullptr; }
-		virtual void visit(GroupExpr *expr, VisitCtx ctx) {}
-		virtual void visit(MemberAccessExpr *expr, VisitCtx ctx) {}
-		virtual void visit(CastExpr *expr, VisitCtx ctx) {}
-		virtual void visit(AnonInitExpr *expr, VisitCtx ctx) {}
-		virtual void visit(NamedExpr *expr, VisitCtx ctx) {}
-		virtual void visit(AbsExpr *expr, VisitCtx ctx) {}
-		virtual void visit(PtrOpExpr *expr, VisitCtx ctx) {}
-		virtual void visit(PackedExpr *expr, VisitCtx ctx) {}
-		virtual void visit(ArrayLiteralExpr *expr, VisitCtx ctx) {}
-		virtual void visit(IndexOpExpr *expr, VisitCtx ctx) {}
-		virtual void visit(StructLiteral *expr, VisitCtx ctx) {}
-		virtual void visit(SliceExpr *expr, VisitCtx ctx) {}
-		virtual void visit(ImportStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(VarDeclStmt *stmt, VisitCtx ctx) {}
-		virtual Node* produce(VarDeclStmt *stmt, VisitCtx ctx) { return nullptr; }
-		virtual void visit(ReturnStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(IfStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(CompIfStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(WhileStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(ForStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(BreakStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(ContinueStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(Symbol *stmt, VisitCtx ctx) {}
-		virtual void visit(FnDecl *stmt, VisitCtx ctx) {}
-		virtual void visit(Struct *stmt, VisitCtx ctx) {}
-		virtual void visit(AliasType *stmt, VisitCtx ctx) {}
-		virtual void visit(SizeofExpr *stmt, VisitCtx ctx) {}
-		virtual void visit(TypeExpr *stmt, VisitCtx ctx) {}
-		virtual void visit(BlockStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(AssignmentStmt *stmt, VisitCtx ctx) {}
-		virtual void visit(UnresolvedSymbol *type, VisitCtx ctx) {}
-		virtual void visit(Pointer *type, VisitCtx ctx) {}
-		virtual void visit(BaseArray *type, VisitCtx ctx) {}
-		virtual void visit(Array *type, VisitCtx ctx) {}
+		virtual Node* visit(BinaryExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(UnaryExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(CallExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(LiteralExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(SymbolExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(GroupExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(MemberAccessExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(CastExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(AnonInitExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(NamedExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(AbsExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(PtrOpExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(PackedExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(ArrayLiteralExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(IndexOpExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(StructLiteral *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(SliceExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(ImportStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(VarDeclStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(ReturnStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(IfStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(CompIfStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(WhileStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(ForStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(BreakStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(ContinueStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(Symbol *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(FnDecl *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(Struct *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(AliasType *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(SizeofExpr *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(TypeExpr *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(BlockStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(AssignmentStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(UnresolvedSymbol *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(Pointer *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(BaseArray *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(Array *type, VisitCtx ctx) { return nullptr; }
 
 		void visit_nodes(const std::vector<Node*> &nodes);
 	};
