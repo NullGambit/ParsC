@@ -53,6 +53,7 @@ namespace pars
 		Node* visit(Pointer *type, VisitCtx ctx) override;
 		Node* visit(BaseArray *type, VisitCtx ctx) override;
 		Node* visit(Array *type, VisitCtx ctx) override;
+		Node *visit(LiteralExpr *expr, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
 
