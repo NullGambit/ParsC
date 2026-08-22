@@ -329,7 +329,7 @@ llvm::Value * pars::NamedExpr::emit(EmitCtx &ctx, EmitParams params)
 	return value->emit(ctx);
 }
 
-llvm::Value * emit_brace_list(pars::EmitCtx &ctx, pars::EmitParams params, const pars::Type *type, const pars::BraceInitList &initializers)
+llvm::Value * emit_brace_list(pars::EmitCtx &ctx, pars::EmitParams params, const pars::Type *type, const pars::InitializerList &initializers)
 {
 	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
 
@@ -343,7 +343,7 @@ llvm::Value * emit_brace_list(pars::EmitCtx &ctx, pars::EmitParams params, const
 
 	ctx.builder.CreateStore(type->get_default_value(ctx.llvm_ctx), params.target_ptr);
 
-	for (auto i = 0; auto [initializer, pos] : initializers)
+	for (auto [initializer, pos] : initializers)
 	{
 		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
 			{ctx.builder.getInt32(0), ctx.builder.getInt32(pos)});
@@ -354,8 +354,6 @@ llvm::Value * emit_brace_list(pars::EmitCtx &ctx, pars::EmitParams params, const
 		{
 			ctx.builder.CreateStore(result, field);
 		}
-
-		i++;
 	}
 
 	return should_return ? ctx.builder.CreateLoad(llvm_type, params.target_ptr) : nullptr;
@@ -466,7 +464,7 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 
 		constants.reserve(elements.size());
 
-		for (auto *element : elements)
+		for (auto [element, _] : elements)
 		{
 			auto *value = element->emit(ctx);
 			auto *constant = llvm::dyn_cast<llvm::Constant>(value);
@@ -482,16 +480,14 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 		return llvm::ConstantArray::get((llvm::ArrayType*)llvm_type, constants);
 	}
 
-	for (auto i = 0; auto *element : elements)
+	for (auto [element, pos] : elements)
 	{
 		auto *element_value = element->emit(ctx);
 
 		auto *ptr = ctx.builder.CreateInBoundsGEP(llvm_type, params.target_ptr,
-			{ctx.builder.getInt64(0), ctx.builder.getInt64(i)});
+			{ctx.builder.getInt64(0), ctx.builder.getInt64(pos)});
 
 		ctx.builder.CreateStore(element_value, ptr);
-
-		i++;
 	}
 
 	auto *array_type = dynamic_cast<Array*>(type);

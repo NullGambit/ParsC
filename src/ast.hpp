@@ -59,10 +59,10 @@ namespace pars
 		FnSignature parse_fn_signature();
 		FnDecl* parse_fn();
 		Struct* parse_struct();
-		std::vector<std::pair<Expr*, u32>> parse_brace_list();
+		InitializerList parse_brace_list();
 		BlockStmt* parse_block();
 		AliasType* parse_alias();
-		ArrayLiteralExpr* parse_array_literal(std::vector<Expr*> &elements);
+		ArrayLiteralExpr* parse_array_literal(InitializerList &elements);
 
 		TypeMeta parse_type_meta();
 		Type* parse_type(TypeMeta &meta, u32 position = 0);

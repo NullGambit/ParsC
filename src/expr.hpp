@@ -191,12 +191,21 @@ namespace pars
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 	};
 
-	using BraceInitList = std::vector<std::pair<Expr*, u32>>;
+	struct InitializerElement
+	{
+		Expr *expr {};
+		u32 index = UINT32_MAX;
+	};
+
+	// represents a list of expressions for initializers such as structs, arrays, tuples.
+	// is in a format that is useful for reordering when using named initializers.
+	// the second of the pair will later on be set to its correct order to be used in code gen.
+	using InitializerList = std::vector<InitializerElement>;
 
 	// represents any brace initialized value. also used for default value initializations
 	struct AnonInitExpr : Expr
 	{
-		BraceInitList values;
+		InitializerList values;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -234,7 +243,7 @@ namespace pars
 	struct ArrayLiteralExpr : Expr
 	{
 		Expr *type_specifier {};
-		std::vector<Expr*> elements;
+		InitializerList elements;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -261,7 +270,7 @@ namespace pars
 	struct StructLiteral : Expr
 	{
 		std::string_view name;
-		BraceInitList initializers;
+		InitializerList initializers;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 

@@ -339,7 +339,7 @@ var portion = numbers[1:2]
 
 a slice does not own its memory it just has a view to some other memory. it is great as a lightweight view of memory and should often be the preferred form of accepting arrays.
 
-an array is explicitly typed with an empty square brackets:
+a slice is explicitly typed with empty square brackets:
 
 ```go
 var my_slice: []i32
@@ -521,7 +521,7 @@ pars has a very simple and logical module system.
 
 a folder is a package and each file in that folder is a module.
 
-imagine you have a root folder that hs a subfolder called foo and within foo you have a file called greeter.pars
+imagine you have a root folder that has a subfolder called foo and within foo you have a file called greeter.pars
 
 /foo/greeter.pars
 ```py
@@ -578,6 +578,21 @@ fn main()
     gr()
 }
 ```
+
+a module can be imported at any scope and its imported symbols will only be accessible within that scope
+
+```py
+fn main()
+{
+    import foo.greeter
+
+    greet()
+}
+```
+
+in the above code greet can only be called inside of main.
+
+this is useful for avoiding naming collisions.
 
 #### Multiplatform imports
 

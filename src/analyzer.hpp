@@ -79,8 +79,6 @@ namespace pars
 
 		Node* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr);
 
-		void assign_struct_indices(const Struct *struct_type, std::vector<std::pair<Expr*, u32>> &initializers);
-
 		template<IsNode T>
 		T* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr)
 		{

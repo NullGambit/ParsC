@@ -1,7 +1,26 @@
 import core.stdc.stdio
 
+struct User
+{
+    name: str
+    score: i32
+}
+
+alias Vec2 = [2]i32{x, y}
+
+fn print_vec2(v: Vec2) => printf("[x: %d, y: %d]\n", v.x, v.y)
+
 fn main()
 {
-    var numbers = i32[1]
-    var numbers2 = i32[1, 2, 3]
+    var user = User{name: "john", score: 100}
+
+    printf("%s %d\n", user.name, user.score)
+
+    var pos = Vec2[y: 20, x: 10]
+    var pos2 = Vec2[10, 20]
+    var array = [1, 2]
+
+    print_vec2(pos)
+    print_vec2(pos2)
+    print_vec2(array)
 }

@@ -625,18 +625,6 @@ pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 	return expr;
 }
 
-pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
-{
-	expr->type = ctx.type;
-
-	if (auto *struct_type = dynamic_cast<Struct*>(expr->type))
-	{
-		assign_struct_indices(struct_type, expr->values);
-	}
-
-	return expr;
-}
-
 pars::Node* pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
 {
 	expr->value = visit_expr(expr, expr->value, ctx);
@@ -692,6 +680,75 @@ pars::Node* pars::Analyzer::visit(PackedExpr *expr, VisitCtx ctx)
 	return expr;
 }
 
+namespace pars
+{
+	template<class Fields, class FindFn, class GetTypeFN>
+	void assign_named_indices
+	(
+		const Fields &fields,
+		FindFn find_fn, GetTypeFN get_type_fn,
+		Analyzer *analyzer,
+		InitializerList &initializers
+	)
+	{
+		u32 cursor = 0;
+
+		for (u32 i = 0; i < fields.size(); i++)
+		{
+			if (i >= initializers.size())
+			{
+				break;
+			}
+
+			auto &[initializer, pos] = initializers[i];
+
+			if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
+			{
+				auto it = std::ranges::find_if(fields, [&](const auto &element) { return find_fn(element, named_expr); });
+
+				pos = std::distance(fields.begin(), it);
+				cursor = pos;
+			}
+			else
+			{
+				pos = i;
+			}
+
+			auto &field = fields[cursor];
+			auto *expected_type = get_type_fn(field);
+
+			initializer->accept(analyzer, {.type = expected_type});
+
+			if (!expected_type->is_equal(initializer->type))
+			{
+				throw FrontendError{initializer->token,
+					fmt::format("cannot initialize object at position {} of type {} with type {}",
+						i,
+						expected_type->get_type_name(),
+						initializer->type->get_type_name())};
+			}
+
+			pos = cursor;
+			cursor++;
+		}
+	}
+
+	void assign_struct_indices(Struct *type, Analyzer *analyzer, InitializerList &initializers)
+	{
+		auto find_fn = [](const StructField &field, NamedExpr *named_expr)
+		{
+			// TODO perhaps implementing a string interning system within the compiler to speed up this comparison
+			// or see if llvm has one i can already use
+			// or use hashes
+			return named_expr->name == field.symbol.name;
+		};
+
+		auto get_type_fn = [](const StructField &field) { return field.type; };
+
+		assign_named_indices(type->fields, find_fn, get_type_fn, analyzer, initializers);
+	}
+}
+
 pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 {
 	if (expr->elements.empty())
@@ -701,6 +758,32 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 	auto *array_type = new_node<Array>();
 
+	if (expr->type_specifier != nullptr)
+	{
+		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
+
+		if (auto *alias = dynamic_cast<AliasType*>(array_type->element_type))
+		{
+			array_type = dynamic_cast<Array*>(alias->type);
+		}
+	}
+
+	expr->type = array_type;
+
+	if (!array_type->members.empty())
+	{
+		auto find_fn = [](const std::string_view &name, NamedExpr *named_expr)
+		{
+			return named_expr->name == name;
+		};
+
+		auto get_type_fn = [array_type](const std::string_view &name) { return array_type->element_type; };
+
+		assign_named_indices(array_type->members, find_fn, get_type_fn, this, expr->elements);
+
+		return expr;
+	}
+
 	array_type->size = expr->elements.size();
 
 	if (expr->type_specifier != nullptr)
@@ -708,9 +791,9 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 	}
 
-	for (auto i = 0; auto *element : expr->elements)
+	for (auto i = 0; auto [element, _] : expr->elements)
 	{
-		expr->elements[i] = visit_expr(expr, element, ctx);
+		expr->elements[i].expr = visit_expr(expr, element, ctx);
 
 		if (array_type->element_type == nullptr)
 		{
@@ -725,7 +808,6 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		i += 1;
 	}
 
-	expr->type = array_type;
 
 	if (auto *ctx_array = dynamic_cast<Array*>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
 	{
@@ -749,7 +831,7 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 		auto *literal = new_node<ArrayLiteralExpr>();
 
 		literal->type_specifier = expr->lhs;
-		literal->elements = {expr->index};
+		literal->elements = InitializerList{InitializerElement{expr->index}};
 
 		return visit_expr(expr, literal, ctx);
 	}
@@ -772,13 +854,27 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 	return expr;
 }
 
+
+
 pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
 	expr->type = get_type(expr->name, expr->token);
 
 	auto *struct_type = dynamic_cast<Struct*>(expr->type);
 
-	assign_struct_indices(struct_type, expr->initializers);
+	assign_struct_indices(struct_type, this, expr->initializers);
+
+	return expr;
+}
+
+pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
+{
+	expr->type = ctx.type;
+
+	if (auto *struct_type = dynamic_cast<Struct*>(expr->type))
+	{
+		assign_struct_indices(struct_type, this, expr->values);
+	}
 
 	return expr;
 }
@@ -913,56 +1009,6 @@ pars::Node* pars::Analyzer::find_symbol(std::string_view name, Token &error_toke
 	}
 
 	return symbol;
-}
-
-void pars::Analyzer::assign_struct_indices(const Struct *struct_type, std::vector<std::pair<Expr *, u32>> &initializers)
-{
-	auto cursor = 0;
-
-	for (auto i = 0; i < struct_type->fields.size(); i++)
-	{
-		if (i >= initializers.size())
-		{
-			break;
-		}
-
-		auto &[initializer, pos] = initializers[i];
-
-		if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
-		{
-			auto it = std::ranges::find_if(struct_type->fields, [&](const StructField &field)
-			{
-				// TODO perhaps implementing a string interning system within the compiler to speed up this comparison
-				// or see if llvm has one i can already use
-				// or use hashes
-				return named_expr->name == field.symbol.name;
-			});
-
-			pos = std::distance(struct_type->fields.begin(), it);
-			cursor = pos;
-		}
-		else
-		{
-			pos = i;
-		}
-
-		auto &field = struct_type->fields[cursor];
-		auto *expected_type = field.type;
-
-		initializer->accept(this, {.type = expected_type});
-
-		if (!expected_type->is_equal(initializer->type))
-		{
-			throw FrontendError{initializer->token,
-				fmt::format("cannot initialize struct field {} of type {} with type {}",
-					field.symbol.name,
-					expected_type->get_type_name(),
-					initializer->type->get_type_name())};
-		}
-
-		pos = cursor;
-		cursor++;
-	}
 }
 
 pars::Type * pars::Analyzer::get_type(std::string_view name, Token &error_token)

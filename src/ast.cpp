@@ -606,13 +606,13 @@ pars::Struct * pars::AST::parse_struct()
 	return stmt;
 }
 
-std::vector<std::pair<pars::Expr *, u32>> pars::AST::parse_brace_list()
+pars::InitializerList pars::AST::parse_brace_list()
 {
-	std::vector<std::pair<Expr *, u32>> out;
+	InitializerList out;
 
 	while (!m_lexer.peek(RightBrace))
 	{
-		out.emplace_back(expression(), UINT32_MAX);
+		out.emplace_back(expression());
 
 		if (!m_lexer.match(Comma))
 		{
@@ -658,20 +658,24 @@ pars::AliasType * pars::AST::parse_alias()
 	return alias;
 }
 
-pars::ArrayLiteralExpr * pars::AST::parse_array_literal(std::vector<Expr*> &elements)
+pars::ArrayLiteralExpr * pars::AST::parse_array_literal(InitializerList &elements)
 {
 	auto *expr = new_node<ArrayLiteralExpr>();
 
 	expr->elements = std::move(elements);
 
+	auto index = 0U;
+
 	while (true)
 	{
-		expr->elements.emplace_back(expression());
+		expr->elements.emplace_back(expression(), index);
 
 		if (!m_lexer.match(Comma))
 		{
 			break;
 		}
+
+		index++;
 	}
 
 	m_lexer.expect(RightBracket);
@@ -726,7 +730,7 @@ pars::Expr* pars::AST::parse_primary()
 			{
 				if (m_lexer.match(Comma))
 				{
-					std::vector elements {index};
+					InitializerList elements {InitializerElement{index}};
 
 					auto *literal = parse_array_literal(elements);
 
@@ -1019,7 +1023,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 	}
 	if (m_lexer.match(LeftBracket))
 	{
-		std::vector<Expr*> elements;
+		InitializerList elements;
 		return parse_array_literal(elements);
 	}
 
