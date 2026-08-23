@@ -14,15 +14,15 @@ var g_user = User{"john", 100}
 
 fn main()
 {
-   //var user = User{name: "john", score: 100}
+   var user = User{name: "john", score: 100}
 
-   //printf("%s %d\n", user.name, user.score)
+   printf("%s %d\n", user.name, user.score)
 
-   //var pos = Vec2[y: 20, x: 10]
-   //var pos2 = Vec2[10, 20]
-   //var array = [1, 2]
+   var pos = Vec2[y: 20, x: 10]
+   var pos2 = Vec2[10, 20]
+   var array = [1, 2]
 
-   //print_vec2(pos)
-   //print_vec2(pos2)
-   //print_vec2(array)
+   print_vec2(pos)
+   print_vec2(pos2)
+   print_vec2(array)
 }
