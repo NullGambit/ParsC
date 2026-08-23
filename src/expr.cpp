@@ -333,6 +333,31 @@ llvm::Value * emit_brace_list(pars::EmitCtx &ctx, pars::EmitParams params, const
 {
 	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
 
+	auto *block = ctx.builder.GetInsertBlock();
+
+	if (block == nullptr)
+	{
+		std::vector<llvm::Constant*> constants;
+
+		constants.reserve(initializers.size());
+
+		for (auto [element, _] : initializers)
+		{
+			auto *value = element->emit(ctx);
+
+			auto *constant = llvm::dyn_cast<llvm::Constant>(value);
+
+			// if (constant == nullptr)
+			// {
+			// 	throw pars::CompileError{type, "All global array elements must be known at compile time"};
+			// }
+
+			constants.emplace_back(constant);
+		}
+
+		return type->get_aggregate_constant(ctx, constants);
+	}
+
 	auto should_return = false;
 
 	if (params.target_ptr == nullptr)

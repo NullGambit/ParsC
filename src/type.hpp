@@ -36,6 +36,12 @@ namespace pars
 		virtual bool is_primitive() const { return false; }
 
 		virtual llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const = 0;
+
+		virtual llvm::Constant* get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
+		{
+			return nullptr;
+		}
+
 		virtual std::string_view get_type_name() const = 0;
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) const = 0;
@@ -379,6 +385,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
+		llvm::Constant* get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const override;
+
 		std::string_view get_type_name() const override;
 
 		bool is_equal(Type const *other) const override;
@@ -424,6 +432,8 @@ virtual bool is_equal(Type const *other) const override							\
 		u32 get_size() override;
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		llvm::Constant* get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const override;
 
 		std::string_view get_type_name() const override;
 

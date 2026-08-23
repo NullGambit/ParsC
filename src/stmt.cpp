@@ -223,6 +223,8 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx, EmitParams params)
 		arg.setName(signature.parameters[i++]->symbol.name);
 	}
 
+	auto *original_bb = ctx.builder.GetInsertBlock();
+
 	if (!has_flag(flags, FnFlags::Extern))
 	{
 		auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
@@ -252,6 +254,8 @@ llvm::Value* pars::FnDecl::emit(EmitCtx &ctx, EmitParams params)
 			}
 		}
 	}
+
+	ctx.builder.SetInsertPoint(original_bb);
 
 	std::string error_str;
 	llvm::raw_string_ostream error_stream(error_str);

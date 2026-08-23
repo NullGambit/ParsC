@@ -526,6 +526,11 @@ llvm::Type * pars::Array::get_llvm_type(llvm::LLVMContext *ctx) const
 	return llvm::ArrayType::get(element_type->get_llvm_type(ctx), size);
 }
 
+llvm::Constant* pars::Array::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
+{
+	return llvm::ConstantArray::get((llvm::ArrayType*)get_llvm_type(ctx.llvm_ctx), init_list);
+}
+
 std::string_view pars::Array::get_type_name() const
 {
 	return "array";
@@ -747,6 +752,11 @@ llvm::Type * pars::Struct::get_llvm_type(llvm::LLVMContext *ctx) const
 	}
 
 	return type;
+}
+
+llvm::Constant* pars::Struct::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
+{
+	return llvm::ConstantStruct::get((llvm::StructType*)get_llvm_type(ctx.llvm_ctx), init_list);
 }
 
 std::string_view pars::Struct::get_type_name() const
