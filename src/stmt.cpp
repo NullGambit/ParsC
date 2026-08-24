@@ -21,6 +21,20 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 {
+	if (has_flag(flags, VarFlags::Const))
+	{
+		auto *result = initializer->emit(ctx);
+
+		if (llvm::dyn_cast<llvm::Constant>(result) == nullptr)
+		{
+			throw CompileError{this, "initializer is not a constant value"};
+		}
+
+		ctx.named_values[symbol.name] = result;
+
+		return result;
+	}
+
 	llvm::Value *inst {};
 
 	auto *var_type = type->get_llvm_type(ctx.llvm_ctx);

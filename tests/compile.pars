@@ -8,9 +8,7 @@ struct User
 
 fn main()
 {
-    var array: imut([3]i32) = [1, 2, 3]
+    const x = 10
 
-    // both will fail
-    array = [1, 2, 3]
-    array[0] = 10
+    printf("%d", x)
 }

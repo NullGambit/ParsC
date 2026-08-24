@@ -248,6 +248,21 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		stmt->flags |= VarFlags::Global;
 	}
 
+	if (has_flag(stmt->flags, VarFlags::Const))
+	{
+		if (stmt->initializer == nullptr)
+		{
+			throw FrontendError{stmt->token, "const must have an initializer"};
+		}
+
+		stmt->initializer = dynamic_cast<Expr*>(stmt->initializer->accept(&m_comp_eval, ctx));
+
+		if (stmt->initializer == nullptr)
+		{
+			throw FrontendError{stmt->token, "const must have an initializer known at compile time"};
+		}
+	}
+
 	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
 
 	return stmt;

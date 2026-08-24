@@ -111,7 +111,7 @@ pars::Node* pars::AST::declaration()
 	{
 		return parse_struct();
 	}
-	if (m_lexer.match(Var) || m_lexer.match(Let))
+	if (m_lexer.match(Var) || m_lexer.match(Let) || m_lexer.match(Const))
 	{
 		return parse_var();
 	}
@@ -324,6 +324,11 @@ pars::ForStmt * pars::AST::parse_for()
 pars::VarDeclStmt* pars::AST::parse_var()
 {
 	auto *stmt = new_node<VarDeclStmt>();
+
+	if (m_lexer.peek_last(Const))
+	{
+		stmt->flags |= VarFlags::Const;
+	}
 
 	auto is_let = m_lexer.peek_last(Let);
 
