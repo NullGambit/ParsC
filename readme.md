@@ -140,7 +140,7 @@ the above is perfectly valid pars code even through we used let. because let is 
 var numbers: imut [3]i32
 ```
 
-the immutability is defined at the top level.
+the immutability is defined at the top level. i am aware that an m is missing from the imut keyword but i dont care about spelling correctly as much as making the keywords terse.
 
 in order to make the elements immutable one can do:
 
@@ -149,6 +149,18 @@ let numbers: [?]imut i32 = [1, 2, 3]
 ```
 
 this gives the user a great deal of control of what is and isnt immutable. this positional immutability can be applied anywhere in the type tree.
+
+mutability can be grouped using parenthesis.
+
+```go
+var array: imut([3]i32) = [1, 2, 3]
+
+// both will fail
+array = [1, 2, 3]
+array[0] = 10
+```
+
+in the above code no part of the array will be mutable. in the future this might become the default behavior of let.
 
 #### const
 a const variable is a compile time variable that only exists in the compilers memory.

@@ -65,7 +65,7 @@ namespace pars
 		ArrayLiteralExpr* parse_array_literal(InitializerList &elements);
 
 		TypeMeta parse_type_meta();
-		Type* parse_type(TypeMeta &meta, u32 position = 0);
+		Type* parse_type(TypeMeta &meta, u32 position = 0, bool imut_override = false);
 
 		// expr parsing stuff
 		// TODO replace with a pratt parser

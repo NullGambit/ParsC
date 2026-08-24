@@ -6,10 +6,11 @@ struct User
     score: i32
 }
 
-
 fn main()
 {
-    let x = 10
+    var array: imut([3]i32) = [1, 2, 3]
 
-    x = 10
+    // both will fail
+    array = [1, 2, 3]
+    array[0] = 10
 }

@@ -1084,11 +1084,20 @@ pars::TypeMeta pars::AST::parse_type_meta()
 	return meta;
 }
 
-pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position)
+pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_override)
 {
-	if (m_lexer.match(Const))
+	if (m_lexer.match(Imut) || imut_override)
 	{
 		meta.mut_set.set(position);
+
+		if (m_lexer.match(LeftParen))
+		{
+			auto *type = parse_type(meta, position + 1, true);
+
+			m_lexer.match(RightParen);
+
+			return type;
+		}
 	}
 
 	position += 1;
