@@ -1,0 +1,8 @@
+import core.stdc.stdio
+
+fn main()
+{
+    const x = [1, 2 + 5, 3]
+
+    printf("%d", x[1])
+}

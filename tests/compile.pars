@@ -8,7 +8,5 @@ struct User
 
 fn main()
 {
-    const x = [1, 2 + 5, 3]
-
-    printf("%d", x[1])
+    var user = User{name: "john", score: 100}
 }

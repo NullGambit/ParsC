@@ -667,13 +667,13 @@ pars::ArrayLiteralExpr * pars::AST::parse_array_literal(InitializerList &element
 {
 	auto *expr = new_node<ArrayLiteralExpr>();
 
-	expr->elements = std::move(elements);
+	expr->initializers = std::move(elements);
 
 	auto index = 0U;
 
 	while (true)
 	{
-		expr->elements.emplace_back(expression(), index);
+		expr->initializers.emplace_back(expression(), index);
 
 		if (!m_lexer.match(Comma))
 		{

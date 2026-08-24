@@ -477,18 +477,50 @@ llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx, EmitParams params)
 	return Expr::emit(ctx);
 }
 
-llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
+llvm::Value * pars::AggregateExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	return emit_initializers(ctx, params, this, elements);
+	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
+
+	auto *block = ctx.builder.GetInsertBlock();
+
+	if (block == nullptr)
+	{
+		return emit_constant(ctx, params);
+	}
+
+	auto should_return = false;
+
+	if (params.target_ptr == nullptr)
+	{
+		params.target_ptr = create_alloca(ctx, llvm_type);
+		should_return = true;
+	}
+
+	ctx.builder.CreateStore(type->get_default_value(ctx.llvm_ctx), params.target_ptr);
+
+	for (auto [initializer, pos] : initializers)
+	{
+		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
+			{ctx.builder.getInt32(0), ctx.builder.getInt32(pos)});
+
+		auto *result = initializer->emit(ctx, {.target_ptr = field});
+
+		if (result != nullptr)
+		{
+			ctx.builder.CreateStore(result, field);
+		}
+	}
+
+	return should_return ? ctx.builder.CreateLoad(llvm_type, params.target_ptr) : nullptr;
 }
 
-llvm::Constant * pars::ArrayLiteralExpr::emit_constant(EmitCtx &ctx, EmitParams params)
+llvm::Constant * pars::AggregateExpr::emit_constant(EmitCtx &ctx, EmitParams params)
 {
 	std::vector<llvm::Constant*> constants;
 
-	constants.reserve(elements.size());
+	constants.reserve(initializers.size());
 
-	for (auto [element, _] : elements)
+	for (auto [element, _] : initializers)
 	{
 		auto *value = element->emit(ctx);
 
@@ -535,11 +567,6 @@ llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	set_flag_metadata(ctx, lhs, result);
 
 	return result;
-}
-
-llvm::Value * pars::StructLiteral::emit(EmitCtx &ctx, EmitParams params)
-{
-	return emit_initializers(ctx, params, this, initializers);
 }
 
 llvm::Value * pars::SliceExpr::emit(EmitCtx &ctx, EmitParams params)

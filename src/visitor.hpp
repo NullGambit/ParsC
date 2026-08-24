@@ -4,6 +4,7 @@
 
 namespace pars
 {
+	struct AggregateExpr;
 	struct Array;
 	struct BaseArray;
 	struct Pointer;
@@ -78,6 +79,7 @@ namespace pars
 		virtual Node* visit(IndexOpExpr *expr, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(StructLiteral *expr, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(SliceExpr *expr, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(AggregateExpr *expr, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(ImportStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(VarDeclStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(ReturnStmt *stmt, VisitCtx ctx) { return nullptr; }

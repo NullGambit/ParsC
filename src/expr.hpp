@@ -242,13 +242,19 @@ namespace pars
 		ACCEPT
 	};
 
-	struct ArrayLiteralExpr : Expr
+	struct AggregateExpr : Expr
 	{
-		Expr *type_specifier {};
-		InitializerList elements;
+		InitializerList initializers;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;
+
+		ACCEPT
+	};
+
+	struct ArrayLiteralExpr : AggregateExpr
+	{
+		Expr *type_specifier {};
 
 		ACCEPT
 	};
@@ -270,12 +276,9 @@ namespace pars
 		ACCEPT
 	};
 
-	struct StructLiteral : Expr
+	struct StructLiteral : AggregateExpr
 	{
 		std::string_view name;
-		InitializerList initializers;
-
-		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
 	};

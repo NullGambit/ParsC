@@ -773,7 +773,7 @@ namespace pars
 
 pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 {
-	if (expr->elements.empty())
+	if (expr->initializers.empty())
 	{
 		return expr;
 	}
@@ -801,21 +801,21 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 		auto get_type_fn = [array_type](const std::string_view &name) { return array_type->element_type; };
 
-		assign_named_indices(array_type->members, find_fn, get_type_fn, this, expr->elements);
+		assign_named_indices(array_type->members, find_fn, get_type_fn, this, expr->initializers);
 
 		return expr;
 	}
 
-	array_type->size = expr->elements.size();
+	array_type->size = expr->initializers.size();
 
 	if (expr->type_specifier != nullptr)
 	{
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 	}
 
-	for (auto i = 0; auto [element, _] : expr->elements)
+	for (auto i = 0; auto [element, _] : expr->initializers)
 	{
-		expr->elements[i].expr = visit_expr(expr, element, ctx);
+		expr->initializers[i].expr = visit_expr(expr, element, ctx);
 
 		if (array_type->element_type == nullptr)
 		{
@@ -853,7 +853,7 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 		auto *literal = new_node<ArrayLiteralExpr>();
 
 		literal->type_specifier = expr->lhs;
-		literal->elements = InitializerList{InitializerElement{expr->index}};
+		literal->initializers = InitializerList{InitializerElement{expr->index}};
 
 		return visit_expr(expr, literal, ctx);
 	}
