@@ -12,5 +12,6 @@ namespace pars
         Node* visit(LiteralExpr* expr, VisitCtx ctx) override;
         Node* visit(SymbolExpr* expr, VisitCtx ctx) override;
         Node* visit(VarDeclStmt* stmt, VisitCtx ctx) override;
+        Node *visit(FnDecl *stmt, VisitCtx ctx) override;
     };
 }

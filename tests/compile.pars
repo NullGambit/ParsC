@@ -8,7 +8,7 @@ struct User
 
 fn main()
 {
-    const x = 10
+    const x = 10 + 5
 
     printf("%d", x)
 }
