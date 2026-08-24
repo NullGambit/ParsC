@@ -88,6 +88,8 @@ namespace pars
         Const,
         Inout,
         Var,
+        Let,
+        Imut,
         AlignOf,
         TypeOf,
         Alias,

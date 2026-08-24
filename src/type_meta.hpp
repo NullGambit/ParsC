@@ -16,7 +16,7 @@ namespace pars
 
 	struct TypeMeta
 	{
-		ConstSet const_set;
+		ConstSet mut_set;
 		Type *type {};
 	};
 }

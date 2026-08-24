@@ -28,8 +28,8 @@ namespace pars
 	struct Expr : Node
 	{
 		ExprFlags flags;
-		// represents a positional constness set. directly mirrors constness on the type tree this belongs to
-		std::bitset<32> const_set;
+		// represents a positional mutability set. directly mirrors mutability on the type tree this belongs to
+		std::bitset<32> mut_set;
 		Type *type;
 
 		virtual llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }

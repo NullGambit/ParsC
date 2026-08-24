@@ -72,7 +72,7 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		}
 	}
 
-	if (type_meta.const_set.test(0))
+	if (type_meta.mut_set.test(0))
 	{
 		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
 

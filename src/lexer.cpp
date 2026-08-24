@@ -33,6 +33,8 @@ namespace pars
         {"private", TokenType::Private},
         {"inout", TokenType::Inout},
         {"var", TokenType::Var},
+        {"let", TokenType::Let},
+        {"imut", TokenType::Imut},
         {"extern", TokenType::Extern},
         {"alignof", TokenType::AlignOf},
         {"alias", TokenType::Alias},

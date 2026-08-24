@@ -88,7 +88,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	expr->symbol = expr->prototype->symbol.name;
 	expr->type = expr->prototype->signature.return_type;
-	expr->const_set = expr->prototype->signature.return_type_meta.const_set;
+	expr->mut_set = expr->prototype->signature.return_type_meta.mut_set;
 
 	return expr;
 }
@@ -202,7 +202,14 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 
 		if (stmt->type_meta.type == nullptr)
 		{
-			stmt->type_meta.const_set = stmt->initializer->const_set;
+			auto top_level_mut = stmt->type_meta.mut_set.test(0);
+
+			stmt->type_meta.mut_set = stmt->initializer->mut_set;
+
+			if (top_level_mut)
+			{
+				stmt->type_meta.mut_set.set(0);
+			}
 		}
 	}
 
@@ -468,7 +475,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
 		{
-			expr->const_set = var->type_meta.const_set;
+			expr->mut_set = var->type_meta.mut_set;
 			expr->type = var->type;
 		}
 		else if (auto *type = dynamic_cast<Type*>(symbol))
@@ -645,7 +652,7 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
 	expr->target = visit_expr(expr, expr->target, ctx);
 
-	expr->const_set = expr->target->const_set;
+	expr->mut_set = expr->target->mut_set;
 
 	switch (expr->op)
 	{
@@ -980,7 +987,7 @@ pars::Type* pars::Analyzer::resolve_type(TypeMeta &meta, Node *node)
 
 	if (auto *alias = dynamic_cast<AliasType*>(meta.type))
 	{
-		meta.const_set = alias->meta.const_set;
+		meta.mut_set = alias->meta.mut_set;
 	}
 
 	return meta.type;
@@ -1029,14 +1036,14 @@ pars::Expr* pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
 
 	auto *result = expr->accept(this, ctx);
 
-	if (expr->const_set.test(ctx.depth))
+	if (expr->mut_set.test(ctx.depth))
 	{
 		expr->flags |= ExprFlags::Immutable;
 	}
 
 	if (parent != nullptr)
 	{
-		parent->const_set = expr->const_set;
+		parent->mut_set = expr->mut_set;
 	}
 
 	m_expr_depth--;

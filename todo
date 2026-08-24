@@ -22,9 +22,7 @@ warnings to add:
 
 - arrays:
     - named element swizzling
-    - zero initialize excess members.
-    - named element named initialization. ie [x: 10, y: 20] and this should also allow out of order like structs.
-    - convert str to be '[]const char' slice
+    - convert str to be '[]imut char' slice
     - enum indexed arrays
     - type cache
 

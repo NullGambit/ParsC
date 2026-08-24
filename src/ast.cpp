@@ -111,7 +111,7 @@ pars::Node* pars::AST::declaration()
 	{
 		return parse_struct();
 	}
-	if (m_lexer.match(Var) || m_lexer.match(Const))
+	if (m_lexer.match(Var) || m_lexer.match(Let))
 	{
 		return parse_var();
 	}
@@ -325,7 +325,7 @@ pars::VarDeclStmt* pars::AST::parse_var()
 {
 	auto *stmt = new_node<VarDeclStmt>();
 
-	auto is_const = m_lexer.peek_last(Const);
+	auto is_let = m_lexer.peek_last(Let);
 
 	stmt->symbol = get_symbol();
 
@@ -334,9 +334,9 @@ pars::VarDeclStmt* pars::AST::parse_var()
 		stmt->type_meta = parse_type_meta();
 	}
 
-	if (is_const)
+	if (is_let)
 	{
-		stmt->type_meta.const_set.set(0);
+		stmt->type_meta.mut_set.set(0);
 	}
 
 	if (m_lexer.match(Equal))
@@ -1088,7 +1088,7 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position)
 {
 	if (m_lexer.match(Const))
 	{
-		meta.const_set.set(position);
+		meta.mut_set.set(position);
 	}
 
 	position += 1;
