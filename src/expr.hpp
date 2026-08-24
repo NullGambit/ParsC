@@ -33,8 +33,10 @@ namespace pars
 		Type *type;
 
 		virtual llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }
+		virtual llvm::Constant* emit_constant(EmitCtx &ctx, EmitParams params = {});
 
 		virtual std::string_view get_symbol() { return {}; }
+
 	};
 
 	using LiteralExprValue = std::variant
@@ -246,6 +248,7 @@ namespace pars
 		InitializerList elements;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
+		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;
 
 		ACCEPT
 	};

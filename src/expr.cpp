@@ -18,6 +18,11 @@
 
 static pars::HashMap<std::string_view, llvm::GlobalVariable*> g_static_strings;
 
+llvm::Constant * pars::Expr::emit_constant(EmitCtx &ctx, EmitParams params)
+{
+	return llvm::dyn_cast<llvm::Constant>(emit(ctx, params));
+}
+
 llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return std::visit(overload
@@ -477,9 +482,39 @@ llvm::Value * pars::ArrayLiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 	return emit_initializers(ctx, params, this, elements);
 }
 
+llvm::Constant * pars::ArrayLiteralExpr::emit_constant(EmitCtx &ctx, EmitParams params)
+{
+	std::vector<llvm::Constant*> constants;
+
+	constants.reserve(elements.size());
+
+	for (auto [element, _] : elements)
+	{
+		auto *value = element->emit(ctx);
+
+		auto *constant = llvm::dyn_cast<llvm::Constant>(value);
+
+		if (constant == nullptr)
+		{
+			throw CompileError{this, "All global array elements must be known at compile time"};
+		}
+
+		constants.emplace_back(constant);
+	}
+
+	return type->get_aggregate_constant(ctx, constants);
+}
+
 llvm::Value * pars::IndexOpExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	auto *result = lhs->type->op_index(ctx, lhs->emit_ptr(ctx), index->emit(ctx));
+	auto *lhs_ptr = lhs->emit_ptr(ctx);
+
+	if (auto *const_array = llvm::dyn_cast<llvm::ConstantDataArray>(lhs_ptr))
+	{
+		return const_array->getAggregateElement(llvm::dyn_cast<llvm::ConstantInt>(index->emit(ctx)));
+	}
+
+	auto *result = lhs->type->op_index(ctx, lhs_ptr, index->emit(ctx));
 
 	if (result == nullptr)
 	{

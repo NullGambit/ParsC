@@ -23,9 +23,9 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 {
 	if (has_flag(flags, VarFlags::Const))
 	{
-		auto *result = initializer->emit(ctx);
+		auto *result = initializer->emit_constant(ctx);
 
-		if (llvm::dyn_cast<llvm::Constant>(result) == nullptr)
+		if (result == nullptr)
 		{
 			throw CompileError{this, "initializer is not a constant value"};
 		}

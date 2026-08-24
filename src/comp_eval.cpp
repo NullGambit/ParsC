@@ -127,3 +127,18 @@ pars::Node * pars::CompEval::visit(FnDecl *stmt, VisitCtx ctx)
 
     return Visitor::visit(stmt, ctx);
 }
+
+pars::Node * pars::CompEval::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
+{
+   for (auto &element : expr->elements)
+   {
+       element.expr = dynamic_cast<Expr*>(element.expr->accept(this, ctx));
+
+       if (element.expr == nullptr)
+       {
+           return nullptr;
+       }
+   }
+
+   return expr;
+}
