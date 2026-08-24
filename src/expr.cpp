@@ -446,7 +446,7 @@ llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 	if (!value->getType()->isPointerTy())
 	{
-		throw CompileError{this, "target is not a pointer"};
+		throw CompileError{this, fmt::format("Cannot take address of {}", target->get_symbol())};
 	}
 
 	switch (op)
