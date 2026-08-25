@@ -8,5 +8,7 @@ struct User
 
 fn main()
 {
-    var user = User{name: "john", score: 100}
+    const user = User{name: "john", score: 100}
+
+    var x = user.score
 }

@@ -795,6 +795,11 @@ llvm::Value * pars::Struct::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::
 		return nullptr;
 	}
 
+	if (auto *const_aggregate = llvm::dyn_cast<llvm::ConstantAggregate>(ptr))
+	{
+		return const_aggregate->getAggregateElement(index);
+	}
+
 	return ctx.builder.CreateGEP(get_llvm_type(ctx.llvm_ctx), ptr, {ctx.builder.getInt32(0), ctx.builder.getInt32(index)});
 }
 

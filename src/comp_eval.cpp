@@ -74,6 +74,11 @@ pars::Node* pars::CompEval::visit(LiteralExpr* expr, VisitCtx ctx)
     return expr;
 }
 
+pars::Node * pars::CompEval::visit(NamedExpr *expr, VisitCtx ctx)
+{
+    return expr->value;
+}
+
 pars::Node* pars::CompEval::visit(SymbolExpr* expr, VisitCtx ctx)
 {
     auto *symbol = parse_ctx->scope_table.find_symbol(expr->symbol);
@@ -128,17 +133,30 @@ pars::Node * pars::CompEval::visit(FnDecl *stmt, VisitCtx ctx)
     return Visitor::visit(stmt, ctx);
 }
 
+namespace pars
+{
+    Expr* eval_aggregate(AggregateExpr *expr, VisitCtx ctx, CompEval *eval)
+    {
+        for (auto &element : expr->initializers)
+        {
+            element.expr = dynamic_cast<Expr*>(element.expr->accept(eval, ctx));
+
+            if (element.expr == nullptr)
+            {
+                return nullptr;
+            }
+        }
+
+        return expr;
+    }
+}
+
 pars::Node * pars::CompEval::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 {
-   for (auto &element : expr->initializers)
-   {
-       element.expr = dynamic_cast<Expr*>(element.expr->accept(this, ctx));
+    return eval_aggregate(expr, ctx, this);
+}
 
-       if (element.expr == nullptr)
-       {
-           return nullptr;
-       }
-   }
-
-   return expr;
+pars::Node * pars::CompEval::visit(StructLiteral *expr, VisitCtx ctx)
+{
+    return eval_aggregate(expr, ctx, this);
 }
