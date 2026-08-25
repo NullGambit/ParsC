@@ -625,10 +625,11 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		expr->accessor->type = maybe_member.value().type;
 		ctx.member = true;
 
-		visit_expr(expr, expr->accessor, ctx);
+		expr->accessor = visit_expr(expr, expr->accessor, ctx);
 	}
 
 	expr->type = expr->accessor->type;
+	expr->mut_set = expr->target->mut_set;
 
 	return expr;
 }

@@ -256,6 +256,11 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)
 
 llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
+	if (has_flag(flags, ExprFlags::Immutable))
+	{
+		throw CompileError{this, fmt::format("{} is immutable", target->get_symbol())};
+	}
+
 	auto *target_value = params.predecessor_ptr == nullptr ? target->emit_ptr(ctx) : params.predecessor_ptr;
 
 	// target can be an import. use this as a fallback

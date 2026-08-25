@@ -8,7 +8,7 @@ struct User
 
 fn main()
 {
-    const user = User{name: "john", score: 100}
+    let user = User{name: "john", score: 100}
 
-    var x = user.score
+    user.score = 100
 }
