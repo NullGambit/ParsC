@@ -50,6 +50,7 @@ namespace pars
 		virtual bool is_ptr() const { return false; }
 		virtual bool is_array() const { return false; }
 		virtual bool is_struct() const { return false; }
+		virtual bool is_fn_ptr() const { return false; }
 
 		virtual llvm::Value* access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const { return nullptr; }
 		virtual std::optional<MemberInfo> get_member(std::string_view symbol) const { return {}; }
@@ -202,6 +203,7 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_ptr() const override;
 		bool is_array() const override;
 		bool is_struct() const override;
+		bool is_fn_ptr() const override;
 		Type *get_inner() const override;
 
 		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
@@ -517,4 +519,26 @@ virtual bool is_equal(Type const *other) const override							\
 	};
 
 	static const RangeType Range {};
+
+	struct FnPtrType : Type
+	{
+		std::vector<TypeMeta> params;
+		TypeMeta return_type_meta;
+
+		llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		std::string_view get_type_name() const override { return "fn_ptr"; }
+
+		llvm::Value * get_default_value(llvm::LLVMContext *ctx) const override;
+
+		bool is_equal(Type const *other) const override;
+
+		bool is_fn_ptr() const override
+		{
+			return true;
+		}
+
+		ACCEPT
+	};
+
 }

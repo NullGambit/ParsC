@@ -1,14 +1,14 @@
-import core.stdc.stdio
+//import core.stdc.stdio
 
-struct User
-{
-    name: str
-    score: i32
-}
+fn add(a: i32, b: i32) => a + b
 
 fn main()
 {
-    let user = User{name: "john", score: 100}
+    var adder_fn: fn(i32, i32): i32
 
-    user.score = 100
+    adder_fn = &add
+
+    //var result = adder_fn(10, 20)
+
+    //printf("%d\n", result)
 }

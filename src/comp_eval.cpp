@@ -11,7 +11,7 @@ namespace pars
 {
     struct ConstantReturnStmt : Node
     {
-        LiteralExprValue value;
+        LiteralExpr *value;
     };
 }
 
@@ -130,7 +130,22 @@ pars::Node * pars::CompEval::visit(FnDecl *stmt, VisitCtx ctx)
         return nullptr;
     }
 
-    return Visitor::visit(stmt, ctx);
+    if (stmt->body->nodes.size() == 1)
+    {
+        return stmt->body->nodes.front()->accept(this, ctx);
+    }
+
+    for (auto *node : stmt->body->nodes)
+    {
+        auto *result = node->accept(this, ctx);
+
+        if (auto *ret = dynamic_cast<ConstantReturnStmt*>(result))
+        {
+            return ret->value;
+        }
+    }
+
+    return nullptr;
 }
 
 namespace pars
@@ -159,4 +174,25 @@ pars::Node * pars::CompEval::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 pars::Node * pars::CompEval::visit(StructLiteral *expr, VisitCtx ctx)
 {
     return eval_aggregate(expr, ctx, this);
+}
+
+pars::Node * pars::CompEval::visit(CallExpr *expr, VisitCtx ctx)
+{
+    return Visitor::visit(expr, ctx);
+}
+
+pars::Node * pars::CompEval::visit(ReturnStmt *stmt, VisitCtx ctx)
+{
+    auto *literal = dynamic_cast<LiteralExpr*>(stmt->expr->accept(this, ctx));
+
+    if (literal == nullptr)
+    {
+        return literal;
+    }
+
+    auto *ret = new_node<ConstantReturnStmt>();
+
+    ret->value = literal;
+
+    return ret;
 }

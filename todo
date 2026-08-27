@@ -7,9 +7,6 @@
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
 
 design issues:
-    - currently constness is basically immutability. but const keyword should be used entirely for compile time only.
-        i can introduce a new keyword called imut to take consts job (THEYTOOKOURJOBSSS).
-        i can also use the let keyword for top level immutable vars.
     - literals and type coercion need addressing.
         use a better way to coerce types such as in the analyzer check if the checked type and the context type dont match
         then try to do a coercion.

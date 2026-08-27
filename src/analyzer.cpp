@@ -979,6 +979,18 @@ pars::Node * pars::Analyzer::visit(LiteralExpr *expr, VisitCtx ctx)
 	return expr;
 }
 
+pars::Node * pars::Analyzer::visit(FnPtrType *type, VisitCtx ctx)
+{
+	for (auto &meta : type->params)
+	{
+		meta.type = resolve_type(meta, type);
+	}
+
+	type->return_type_meta.type = resolve_type(type->return_type_meta, type);
+
+	return type;
+}
+
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 {
 	visit_nodes(nodes);

@@ -4,6 +4,7 @@
 
 namespace pars
 {
+	struct FnPtrType;
 	struct AggregateExpr;
 	struct Array;
 	struct BaseArray;
@@ -101,6 +102,7 @@ namespace pars
 		virtual Node* visit(Pointer *type, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(BaseArray *type, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(Array *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(FnPtrType *type, VisitCtx ctx) { return nullptr; }
 
 		void visit_nodes(const std::vector<Node*> &nodes);
 	};

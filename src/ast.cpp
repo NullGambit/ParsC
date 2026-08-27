@@ -1169,6 +1169,39 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overr
 
 		return base;
 	}
+	if (m_lexer.match(Fn))
+	{
+		m_lexer.expect(LeftParen);
+
+		auto *fn_ptr = new_node<FnPtrType>();
+
+		while (true)
+		{
+			TypeMeta param_meta;
+
+			param_meta.type = parse_type(param_meta);
+
+			fn_ptr->params.emplace_back(param_meta);
+
+			if (!m_lexer.match(Comma))
+			{
+				break;
+			}
+		}
+
+		m_lexer.match(RightParen);
+
+		if (m_lexer.match(Colon))
+		{
+			TypeMeta return_meta;
+
+			return_meta.type = parse_type(return_meta);
+
+			fn_ptr->return_type_meta = return_meta;
+		}
+
+		return fn_ptr;
+	}
 
 	return nullptr;
 }
