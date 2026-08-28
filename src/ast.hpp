@@ -51,12 +51,12 @@ namespace pars
 		WhileStmt* parse_loop();
 		ForStmt* parse_for();
 		VarDeclStmt* parse_var();
-		VarDeclStmt* parse_fn_param();
+		VarDeclStmt* parse_fn_param(bool parse_name = true);
 		AssignmentStmt* parse_assignment(Expr *lhs);
 		Node* parse_return();
 		void parse_attributes();
 		Symbol get_symbol();
-		FnSignature parse_fn_signature();
+		FnSignature parse_fn_signature(bool parse_names = true);
 		FnType* parse_fn();
 		Struct* parse_struct();
 		InitializerList parse_brace_list();

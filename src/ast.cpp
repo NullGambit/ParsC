@@ -357,13 +357,15 @@ pars::VarDeclStmt* pars::AST::parse_var()
 	return stmt;
 }
 
-pars::VarDeclStmt * pars::AST::parse_fn_param()
+pars::VarDeclStmt * pars::AST::parse_fn_param(bool parse_name)
 {
 	auto *stmt = new_node<VarDeclStmt>();
 
-	stmt->symbol = get_symbol();
-
-	m_lexer.expect(Colon);
+	if (parse_name)
+	{
+		stmt->symbol = get_symbol();
+		m_lexer.expect(Colon);
+	}
 
 	stmt->type_meta = parse_type_meta();
 
@@ -475,7 +477,7 @@ pars::Symbol pars::AST::get_symbol()
 	return symbol;
 }
 
-pars::FnSignature pars::AST::parse_fn_signature()
+pars::FnSignature pars::AST::parse_fn_signature(bool parse_names)
 {
 	FnSignature signature;
 
@@ -491,7 +493,7 @@ pars::FnSignature pars::AST::parse_fn_signature()
 			break;
 		}
 
-		auto *param = parse_fn_param();
+		auto *param = parse_fn_param(parse_names);
 
 		if (param->initializer != nullptr)
 		{
@@ -1172,36 +1174,11 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overr
 	}
 	if (m_lexer.match(Fn))
 	{
-		m_lexer.expect(LeftParen);
+		auto *fn = new_node<FnType>();
 
-		auto *fn_ptr = new_node<FnPtrType>();
+		fn->signature = parse_fn_signature(/*parse_names=*/false);
 
-		while (true)
-		{
-			auto *param = new_node<VarDeclStmt>();
-
-			param->type_meta.type = parse_type(param->type_meta);
-
-			fn_ptr->parameters.emplace_back(param);
-
-			if (!m_lexer.match(Comma))
-			{
-				break;
-			}
-		}
-
-		m_lexer.match(RightParen);
-
-		if (m_lexer.match(Colon))
-		{
-			TypeMeta return_meta;
-
-			return_meta.type = parse_type(return_meta);
-
-			fn_ptr->return_type_meta = return_meta;
-		}
-
-		return fn_ptr;
+		return fn;
 	}
 
 	return nullptr;

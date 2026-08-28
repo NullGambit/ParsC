@@ -157,7 +157,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 			&&
 			!has_flag(flags, ScopeFlags::HasReturn)
 			&&
-			!has_flag(fn->flags, FnFlags::Extern))
+			fn->body != nullptr)
 		{
 			throw FrontendError{fn->token, "Not all paths return a value"};
 		}
@@ -989,18 +989,6 @@ pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 pars::Node * pars::Analyzer::visit(LiteralExpr *expr, VisitCtx ctx)
 {
 	return expr;
-}
-
-pars::Node * pars::Analyzer::visit(FnPtrType *type, VisitCtx ctx)
-{
-	for (auto &meta : type->parameters)
-	{
-		meta->type = resolve_type(meta->type_meta, type);
-	}
-
-	type->return_type_meta.type = resolve_type(type->return_type_meta, type);
-
-	return type;
 }
 
 void pars::Analyzer::analyze(const std::vector<Node *> &nodes)

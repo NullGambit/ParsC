@@ -880,53 +880,6 @@ llvm::Value * pars::RangeType::iter_emit_update(EmitCtx &ctx, Expr *iterable, st
 	return ctx.builder.CreateStore(inc, vars[0]);
 }
 
-llvm::Type * pars::FnPtrType::get_llvm_type(llvm::LLVMContext *ctx) const
-{
-	thread_local std::vector<llvm::Type*> llvm_type_cache;
-
-	llvm_type_cache.clear();
-
-	for (auto *param : parameters)
-	{
-		llvm_type_cache.emplace_back(param->type->get_llvm_type(ctx));
-	}
-
-	auto *fn_type = llvm::FunctionType::get(return_type_meta.type->get_llvm_type(ctx), llvm_type_cache, false);
-
-	return llvm::PointerType::get(fn_type, 0);
-}
-
-llvm::Value * pars::FnPtrType::get_default_value(llvm::LLVMContext *ctx) const
-{
-	return llvm::ConstantPointerNull::get((llvm::PointerType*)get_llvm_type(ctx));
-}
-
-bool pars::FnPtrType::is_equal(Type const *other) const
-{
-	auto other_fn_ptr = dynamic_cast<FnPtrType const*>(other);
-
-	if (other_fn_ptr == nullptr
-		|| other_fn_ptr->parameters.size() != parameters.size()
-		|| !return_type_meta.type->is_equal(other_fn_ptr->return_type_meta.type))
-	{
-		return false;
-	}
-
-	for (auto i = 0; auto *param : parameters)
-	{
-		auto *other_param = other_fn_ptr->parameters[i];
-
-		if (!param->type->is_equal(other_param->type) || other_param->type_meta.mut_set != param->type_meta.mut_set)
-		{
-			return false;
-		}
-
-		i++;
-	}
-
-	return true;
-}
-
 llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags) const
 {
 	if (auto *fn = ctx.module->getFunction(name))
@@ -1033,19 +986,71 @@ llvm::Value* pars::FnType::emit(EmitCtx &ctx, EmitParams params)
 	return fn;
 }
 
+llvm::Value * pars::FnType::get_default_value(llvm::LLVMContext *ctx) const
+{
+	return llvm::ConstantPointerNull::get((llvm::PointerType*)get_llvm_type(ctx));
+}
+
+llvm::FunctionType * pars::FnType::get_fn_llvm_type(llvm::LLVMContext *ctx) const
+{
+	thread_local std::vector<llvm::Type*> llvm_type_cache;
+
+	llvm_type_cache.clear();
+
+	for (auto *param : signature.parameters)
+	{
+		llvm_type_cache.emplace_back(param->type->get_llvm_type(ctx));
+	}
+
+	return llvm::FunctionType::get(signature.return_type_meta.type->get_llvm_type(ctx), llvm_type_cache, false);
+}
+
 llvm::Type * pars::FnType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return nullptr;
+	return llvm::PointerType::get(get_fn_llvm_type(ctx), 0);
 }
 
 llvm::Value * pars::FnType::op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value *> args) const
 {
-	auto *fn = ctx.module->getFunction(symbol.name);
-
-	if (fn == nullptr)
+	if (callable == nullptr)
 	{
-		fn = signature.emit(ctx, symbol.name, flags);
+		auto *fn = ctx.module->getFunction(symbol.name);
+
+		if (fn == nullptr)
+		{
+			fn = signature.emit(ctx, symbol.name, flags);
+		}
+
+		return ctx.builder.CreateCall(fn, args);
 	}
 
-	return ctx.builder.CreateCall(fn, args);
+	auto *fn_type = get_fn_llvm_type(ctx.llvm_ctx);
+
+	return ctx.builder.CreateCall(fn_type, callable, args);
+}
+
+bool pars::FnType::is_equal(Type const *other) const
+{
+	auto other_fn = dynamic_cast<FnType const*>(other);
+
+	if (other_fn == nullptr
+		|| other_fn->signature.parameters.size() != signature.parameters.size()
+		|| !signature.return_type_meta.type->is_equal(other_fn->signature.return_type_meta.type))
+	{
+		return false;
+	}
+
+	for (auto i = 0; auto *param : signature.parameters)
+	{
+		auto *other_param = other_fn->signature.parameters[i];
+
+		if (!param->type->is_equal(other_param->type) || other_param->type_meta.mut_set != param->type_meta.mut_set)
+		{
+			return false;
+		}
+
+		i++;
+	}
+
+	return true;
 }

@@ -229,7 +229,9 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 		argv.emplace_back(value);
 	}
 
-	return callable->type->op_call(ctx, nullptr, argv);
+	auto *callable_value = callable->emit(ctx);
+
+	return callable->type->op_call(ctx, callable_value, argv);
 }
 
 llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx, EmitParams params)

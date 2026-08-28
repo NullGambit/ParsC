@@ -535,38 +535,6 @@ virtual bool is_equal(Type const *other) const override							\
 
 	static const RangeType Range {};
 
-	struct FnPtrType : Type
-	{
-		// TODO possibly turn this into a span
-		std::vector<VarDeclStmt*> parameters;
-		TypeMeta return_type_meta;
-
-		llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const override;
-
-		std::string_view get_type_name() const override { return "fn_ptr"; }
-
-		llvm::Value * get_default_value(llvm::LLVMContext *ctx) const override;
-
-		bool is_equal(Type const *other) const override;
-
-		bool is_fn_ptr() const override
-		{
-			return true;
-		}
-
-		bool is_callable() const override
-		{
-			return true;
-		}
-
-		std::optional<CallInfo> get_call_info() override
-		{
-			return CallInfo{parameters, return_type_meta};
-		}
-
-		ACCEPT
-	};
-
 	enum class FnFlags : u8
 	{
 		Extern = 1 << 0,
@@ -608,10 +576,9 @@ virtual bool is_equal(Type const *other) const override							\
 			return symbol.name;
 		}
 
-		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override
-		{
-			return nullptr;
-		}
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
+
+		llvm::FunctionType* get_fn_llvm_type(llvm::LLVMContext *ctx) const;
 
 		std::optional<CallInfo> get_call_info() override
 		{
@@ -628,9 +595,11 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value *> args) const override;
 
-		bool is_equal(Type const *other) const override
+		bool is_equal(Type const *other) const override;
+
+		bool is_fn_ptr() const override
 		{
-			return false;
+			return true;
 		}
 
 		ACCEPT
