@@ -20,16 +20,23 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 		table_override = &ctx.parse_ctx_override->scope_table;
 	}
 
-	expr->prototype = find_symbol<FnDecl>(expr->symbol, expr->token, table_override);
+	expr->callable->accept(this, ctx);
 
-	expr->prototype->accept(this, {});
+	auto maybe_call_info = expr->callable->type->get_call_info();
 
-	if (!expr->prototype->signature.is_variadic &&
-		(expr->arguments.size() < expr->prototype->signature.callable_arity ||
-		expr->arguments.size() > expr->prototype->signature.parameters.size()))
+	if (!maybe_call_info.has_value())
+	{
+		throw FrontendError{expr->token, fmt::format("{} is not callable", expr->callable->get_symbol())};
+	}
+
+	auto call_info = maybe_call_info.value();
+
+	if (!call_info.is_variadic &&
+		(expr->arguments.size() < call_info.callable_arity ||
+		expr->arguments.size() > call_info.parameters.size()))
 	{
 		throw FrontendError{expr->token, fmt::format("expected {} argument but got {}",
-			expr->prototype->signature.callable_arity, expr->arguments.size())};
+			call_info.callable_arity, expr->arguments.size())};
 	}
 
 	auto index = 0;
@@ -42,9 +49,9 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 	{
 		Type *ctx_type = nullptr;
 
-		if (index < expr->prototype->signature.parameters.size())
+		if (index < call_info.parameters.size())
 		{
-			ctx_type = expr->prototype->signature.parameters[index++]->type;
+			ctx_type = call_info.parameters[index++]->type;
 		}
 
 		arg = visit_expr(expr, arg, {ctx_type});
@@ -52,7 +59,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 		if (auto *named_param = dynamic_cast<NamedExpr*>(arg))
 		{
 			// this would not scale well but for the average number of function arguments it should still be fairly fast
-			for (auto i = 0; auto *param : expr->prototype->signature.parameters)
+			for (auto i = 0; auto *param : call_info.parameters)
 			{
 				if (param->symbol.name == named_param->name)
 				{
@@ -76,24 +83,23 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 		expr->arguments[position] = named_expr;
 	}
 
-	for (auto i = index; i < expr->prototype->signature.parameters.size(); i++)
+	for (auto i = index; i < call_info.parameters.size(); i++)
 	{
-		auto *param = expr->prototype->signature.parameters[i];
+		auto *param = call_info.parameters[i];
 
 		if (param->initializer != nullptr)
 		{
-			param->initializer = visit_expr(expr, param->initializer, {expr->prototype->signature.parameters[i]->type});
+			param->initializer = visit_expr(expr, param->initializer, {call_info.parameters[i]->type});
 		}
 	}
 
-	expr->symbol = expr->prototype->symbol.name;
-	expr->type = expr->prototype->signature.return_type;
-	expr->mut_set = expr->prototype->signature.return_type_meta.mut_set;
+	expr->type = call_info.return_meta.type;
+	expr->mut_set = call_info.return_meta.mut_set;
 
 	return expr;
 }
 
-pars::Node* pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 {
 	// already been analyzed
 	if (fn->signature.return_type != nullptr)
@@ -120,10 +126,12 @@ pars::Node* pars::Analyzer::visit(FnDecl *fn, VisitCtx ctx)
 		expr->accept(this, {fn->signature.return_type});
 
 		fn->signature.return_type = expr->type;
+		fn->signature.return_type_meta.type = expr->type;
 	}
 	else
 	{
 		fn->signature.return_type = resolve_type(fn->signature.return_type_meta, fn);
+		fn->signature.return_type_meta.type = fn->signature.return_type;
 
 		if (fn->body != nullptr)
 		{
@@ -492,6 +500,10 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 		{
 			expr->mut_set = var->type_meta.mut_set;
 			expr->type = var->type;
+		}
+		else if (auto *fn = dynamic_cast<FnType*>(symbol))
+		{
+			expr->type = fn;
 		}
 		else if (auto *type = dynamic_cast<Type*>(symbol))
 		{
@@ -981,9 +993,9 @@ pars::Node * pars::Analyzer::visit(LiteralExpr *expr, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(FnPtrType *type, VisitCtx ctx)
 {
-	for (auto &meta : type->params)
+	for (auto &meta : type->parameters)
 	{
-		meta.type = resolve_type(meta, type);
+		meta->type = resolve_type(meta->type_meta, type);
 	}
 
 	type->return_type_meta.type = resolve_type(type->return_type_meta, type);
@@ -996,7 +1008,7 @@ void pars::Analyzer::analyze(const std::vector<Node *> &nodes)
 	visit_nodes(nodes);
 }
 
-pars::FnDecl * pars::Analyzer::get_current_fn()
+pars::FnType * pars::Analyzer::get_current_fn()
 {
 	if (m_function_stack.empty())
 	{

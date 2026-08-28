@@ -7,9 +7,13 @@
 
 #include <cmath>
 #include <numeric>
+#include <llvm/IR/Verifier.h>
 
+#include "compile_error.hpp"
 #include "emit_context.hpp"
 #include "expr.hpp"
+#include "stmt.hpp"
+#include "util/llvm_utils.hpp"
 
 llvm::Value * pars::Type::get_property(llvm::LLVMContext *ctx, std::string_view name)
 {
@@ -882,9 +886,9 @@ llvm::Type * pars::FnPtrType::get_llvm_type(llvm::LLVMContext *ctx) const
 
 	llvm_type_cache.clear();
 
-	for (auto [_, type] : params)
+	for (auto *param : parameters)
 	{
-		llvm_type_cache.emplace_back(type->get_llvm_type(ctx));
+		llvm_type_cache.emplace_back(param->type->get_llvm_type(ctx));
 	}
 
 	auto *fn_type = llvm::FunctionType::get(return_type_meta.type->get_llvm_type(ctx), llvm_type_cache, false);
@@ -902,17 +906,17 @@ bool pars::FnPtrType::is_equal(Type const *other) const
 	auto other_fn_ptr = dynamic_cast<FnPtrType const*>(other);
 
 	if (other_fn_ptr == nullptr
-		|| other_fn_ptr->params.size() != params.size()
+		|| other_fn_ptr->parameters.size() != parameters.size()
 		|| !return_type_meta.type->is_equal(other_fn_ptr->return_type_meta.type))
 	{
 		return false;
 	}
 
-	for (auto i = 0; auto [mut_set, type] : params)
+	for (auto i = 0; auto *param : parameters)
 	{
-		auto [other_mut_set, other_type] = other_fn_ptr->params[i];
+		auto *other_param = other_fn_ptr->parameters[i];
 
-		if (!type->is_equal(other_type) || other_mut_set != mut_set)
+		if (!param->type->is_equal(other_param->type) || other_param->type_meta.mut_set != param->type_meta.mut_set)
 		{
 			return false;
 		}
@@ -923,3 +927,125 @@ bool pars::FnPtrType::is_equal(Type const *other) const
 	return true;
 }
 
+llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags) const
+{
+	if (auto *fn = ctx.module->getFunction(name))
+	{
+		return fn;
+	}
+
+	std::vector<llvm::Type*> param_types;
+
+	param_types.reserve(parameters.size());
+
+	auto *llvm_ctx = ctx.llvm_ctx;
+
+	for (auto *param : parameters)
+	{
+		param_types.emplace_back(param->type->get_llvm_type(llvm_ctx));
+	}
+
+	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, is_variadic);
+
+	auto linkage = llvm::Function::InternalLinkage;
+
+	if (has_flag(flags, FnFlags::Extern) || !has_flag(flags, FnFlags::Private))
+	{
+		linkage = llvm::Function::ExternalLinkage;
+	}
+
+	auto *fn = llvm::Function::Create(ft, linkage, name, ctx.module);
+
+	if (has_flag(flags, FnFlags::Inline))
+	{
+		fn->addFnAttr(llvm::Attribute::AlwaysInline);
+	}
+
+	return fn;
+}
+
+llvm::Value* pars::FnType::emit(EmitCtx &ctx, EmitParams params)
+{
+	auto *fn = signature.emit(ctx, symbol.name, flags);
+
+	for (auto i = 0; auto &arg : fn->args())
+	{
+		arg.setName(signature.parameters[i++]->symbol.name);
+	}
+
+	auto *original_bb = ctx.builder.GetInsertBlock();
+
+	if (!has_flag(flags, FnFlags::Extern))
+	{
+		auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
+
+		ctx.builder.SetInsertPoint(bb);
+
+		for (auto i = 0; auto &arg : fn->args())
+		{
+			auto *param = signature.parameters[i];
+
+			param->init(ctx, &arg);
+
+			i++;
+		}
+
+		if (has_flag(flags, FnFlags::ArrowFn))
+		{
+			ctx.builder.CreateRet(body->nodes.front()->emit(ctx));
+		}
+		else
+		{
+			body->emit(ctx);
+
+			if (signature.return_type->is_equal(&VoidType) && ctx.builder.GetInsertBlock()->getTerminator() == nullptr)
+			{
+				create_safe_void_ret(ctx);
+			}
+		}
+	}
+
+	ctx.builder.SetInsertPoint(original_bb);
+
+	std::string error_str;
+	llvm::raw_string_ostream error_stream(error_str);
+
+	// TODO when im confident my code gen isnt dogshit anymore remove verification from release builds
+	auto has_error = llvm::verifyFunction(*fn, &error_stream);
+
+	if (has_error)
+	{
+		// print error to the bottom of the module ir
+		// otherwise easy to miss verification errors
+		std::string module_str;
+		llvm::raw_string_ostream module_stream(module_str);
+
+		ctx.module->print(module_stream, nullptr);
+
+		module_str += error_str;
+
+		error_stream.flush();
+		fn->eraseFromParent();
+
+		throw CompileError{this, std::move(module_str)};
+	}
+
+	return fn;
+}
+
+llvm::Type * pars::FnType::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	return nullptr;
+}
+
+llvm::Value * pars::FnType::op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value *> args) const
+{
+	auto *fn = ctx.module->getFunction(symbol.name);
+
+	if (fn == nullptr)
+	{
+		fn = signature.emit(ctx, symbol.name, flags);
+	}
+
+	return ctx.builder.CreateCall(fn, args);
+}

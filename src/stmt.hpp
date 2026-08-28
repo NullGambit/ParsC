@@ -64,43 +64,9 @@ namespace pars
 		ACCEPT
 	};
 
-	enum class FnFlags : u8
-	{
-		Extern = 1 << 0,
-		Inline = 1 << 1,
-		Private = 1 << 2,
-		ArrowFn = 1 << 3,
-	};
-
-	PARS_FLAGIFY(FnFlags);
-
-	struct FnSignature
-	{
-		std::vector<VarDeclStmt*> parameters;
-		// the amount of non default parameters
-		u32 callable_arity {};
-		bool is_variadic {};
-		Type *return_type {};
-		TypeMeta return_type_meta;
-
-		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags);
-	};
-
 	struct BlockStmt : Stmt
 	{
 		std::vector<Node*> nodes;
-
-		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
-
-		ACCEPT
-	};
-
-	struct FnDecl : Stmt
-	{
-		Symbol symbol;
-		FnSignature signature;
-		BlockStmt *body;
-		FnFlags flags {};
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 

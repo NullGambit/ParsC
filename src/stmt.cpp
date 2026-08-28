@@ -161,43 +161,6 @@ llvm::Value* pars::AssignmentStmt::emit(EmitCtx &ctx, EmitParams params)
 	return ctx.builder.CreateStore(new_value, value);
 }
 
-llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, FnFlags flags)
-{
-	if (auto *fn = ctx.module->getFunction(name))
-	{
-		return fn;
-	}
-
-	std::vector<llvm::Type*> param_types;
-
-	param_types.reserve(parameters.size());
-
-	auto *llvm_ctx = ctx.llvm_ctx;
-
-	for (auto *param : parameters)
-	{
-		param_types.emplace_back(param->type->get_llvm_type(llvm_ctx));
-	}
-
-	auto *ft = llvm::FunctionType::get(return_type->get_llvm_type(llvm_ctx), param_types, is_variadic);
-
-	auto linkage = llvm::Function::InternalLinkage;
-
-	if (has_flag(flags, FnFlags::Extern) || !has_flag(flags, FnFlags::Private))
-	{
-		linkage = llvm::Function::ExternalLinkage;
-	}
-
-	auto *fn = llvm::Function::Create(ft, linkage, name, ctx.module);
-
-	if (has_flag(flags, FnFlags::Inline))
-	{
-		fn->addFnAttr(llvm::Attribute::AlwaysInline);
-	}
-
-	return fn;
-}
-
 llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *bb = ctx.builder.GetInsertBlock();
@@ -226,75 +189,6 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 	}
 
 	return bb;
-}
-
-llvm::Value* pars::FnDecl::emit(EmitCtx &ctx, EmitParams params)
-{
-	auto *fn = signature.emit(ctx, symbol.name, flags);
-
-	for (auto i = 0; auto &arg : fn->args())
-	{
-		arg.setName(signature.parameters[i++]->symbol.name);
-	}
-
-	auto *original_bb = ctx.builder.GetInsertBlock();
-
-	if (!has_flag(flags, FnFlags::Extern))
-	{
-		auto *bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "entry", fn);
-
-		ctx.builder.SetInsertPoint(bb);
-
-		for (auto i = 0; auto &arg : fn->args())
-		{
-			auto *param = signature.parameters[i];
-
-			param->init(ctx, &arg);
-
-			i++;
-		}
-
-		if (has_flag(flags, FnFlags::ArrowFn))
-		{
-			ctx.builder.CreateRet(body->nodes.front()->emit(ctx));
-		}
-		else
-		{
-			body->emit(ctx);
-
-            if (signature.return_type->is_equal(&VoidType) && ctx.builder.GetInsertBlock()->getTerminator() == nullptr)
-			{
-                create_safe_void_ret(ctx);
-			}
-		}
-	}
-
-	ctx.builder.SetInsertPoint(original_bb);
-
-	std::string error_str;
-	llvm::raw_string_ostream error_stream(error_str);
-
-	// TODO when im confident my code gen isnt dogshit anymore remove verification from release builds
-	auto has_error = llvm::verifyFunction(*fn, &error_stream);
-
-	if (has_error)
-	{
-		// print error to the bottom of the module ir
-		// otherwise easy to miss verification errors
-		std::string module_str;
-		llvm::raw_string_ostream module_stream(module_str);
-
-		ctx.module->print(module_stream, nullptr);
-
-		module_str += error_str;
-
-		error_stream.flush();
-		fn->eraseFromParent();
-
-		throw CompileError{this, std::move(module_str)};
-	}
-
-	return fn;
 }
 
 llvm::Value* pars::ReturnStmt::emit(EmitCtx &ctx, EmitParams params)

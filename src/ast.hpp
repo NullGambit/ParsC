@@ -35,7 +35,7 @@ namespace pars
 		Lexer m_lexer {};
 		std::vector<Node*> m_nodes;
 
-		std::vector<FnDecl*> m_function_stack;
+		std::vector<FnType*> m_function_stack;
 
 		std::vector<TokenType> m_pending_attributes;
 		std::vector<TokenType> m_module_attributes;
@@ -57,7 +57,7 @@ namespace pars
 		void parse_attributes();
 		Symbol get_symbol();
 		FnSignature parse_fn_signature();
-		FnDecl* parse_fn();
+		FnType* parse_fn();
 		Struct* parse_struct();
 		InitializerList parse_brace_list();
 		BlockStmt* parse_block();
@@ -82,7 +82,7 @@ namespace pars
 		Expr* parse_primary_inner();
 		Expr* parse_primary();
 
-		FnDecl* get_current_fn();
+		FnType* get_current_fn();
 
 		bool followed_by_body();
 

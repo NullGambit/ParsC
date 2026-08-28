@@ -123,7 +123,7 @@ pars::Node* pars::CompEval::visit(VarDeclStmt* stmt, VisitCtx ctx)
  *  const result2 = double(result1)
 */
 
-pars::Node * pars::CompEval::visit(FnDecl *stmt, VisitCtx ctx)
+pars::Node * pars::CompEval::visit(FnType *stmt, VisitCtx ctx)
 {
     if (stmt->signature.return_type->is_equal(&VoidType))
     {

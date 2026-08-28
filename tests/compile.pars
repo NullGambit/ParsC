@@ -4,10 +4,9 @@ fn add(a: i32, b: i32) => a + b
 
 fn main()
 {
-    var adder_fn: fn(i32, i32): i32
-
-    adder_fn = &add
-
+    var result = add(10, 20)
+    //var adder_fn: fn(i32, i32): i32
+    //adder_fn = add
     //var result = adder_fn(10, 20)
 
     //printf("%d\n", result)

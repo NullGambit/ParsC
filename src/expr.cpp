@@ -136,6 +136,14 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 
 	if (value == nullptr)
 	{
+		auto *fn = ctx.module->getFunction(symbol);
+
+		// TODO stack allocate if no target ptr
+		if (fn != nullptr && params.target_ptr != nullptr)
+		{
+			ctx.builder.CreateStore(fn, params.target_ptr);
+		}
+
 		return nullptr;
 	}
 
@@ -154,16 +162,14 @@ llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	auto *fn = ctx.module->getFunction(symbol);
+	// at this point it will always have a value
+	auto call_info = callable->type->get_call_info().value();
 
-	if (fn == nullptr)
-	{
-		fn = prototype->signature.emit(ctx, symbol, prototype->flags);
-	}
+	thread_local std::vector<llvm::Value*> argv;
 
-	std::vector<llvm::Value*> argv;
+	argv.reserve(call_info.parameters.size());
 
-	argv.reserve(fn->arg_size());
+	argv.clear();
 
 	u32 index {};
 
@@ -171,9 +177,9 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 	{
 		Type *desired_type {};
 
-		if (index < prototype->signature.parameters.size())
+		if (index < call_info.parameters.size())
 		{
-			desired_type = prototype->signature.parameters[index]->type;
+			desired_type = call_info.parameters[index]->type;
 
 			if (!is_assignable_from(arg->type, desired_type))
 			{
@@ -215,15 +221,15 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 	}
 
 	// default params
-	for (auto i = index; i < prototype->signature.parameters.size(); i++)
+	for (auto i = index; i < call_info.parameters.size(); i++)
 	{
-		auto *param = prototype->signature.parameters[index];
+		auto *param = call_info.parameters[index];
 		auto *value = ctx.builder.CreateLoad(param->type->get_llvm_type(ctx.llvm_ctx), param->emit(ctx));
 
 		argv.emplace_back(value);
 	}
 
-	return ctx.builder.CreateCall(fn, argv);
+	return callable->type->op_call(ctx, nullptr, argv);
 }
 
 llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx, EmitParams params)

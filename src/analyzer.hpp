@@ -21,7 +21,7 @@ namespace pars
 		explicit Analyzer(ParseCtx *parse_ctx);
 
 		Node* visit(CallExpr *expr, VisitCtx ctx) override;
-		Node* visit(FnDecl *fn, VisitCtx ctx) override;
+		Node* visit(FnType *fn, VisitCtx ctx) override;
 		Node* visit(Struct *stmt, VisitCtx ctx) override;
 		Node* visit(VarDeclStmt *stmt, VisitCtx ctx) override;
 		Node* visit(ImportStmt *stmt, VisitCtx ctx) override;
@@ -60,7 +60,7 @@ namespace pars
 
 	private:
 		ParseCtx *m_ctx;
-		std::vector<FnDecl*> m_function_stack;
+		std::vector<FnType*> m_function_stack;
 		u8 m_expr_depth {};
 		CompEval m_comp_eval;
 
@@ -72,7 +72,7 @@ namespace pars
 
 		HashMap<std::string_view, SymbolTask> m_symbol_tasks;
 
-		FnDecl* get_current_fn();
+		FnType* get_current_fn();
 
 		Type* resolve_type(TypeMeta &meta, Node *node);
 

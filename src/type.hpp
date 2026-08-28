@@ -5,6 +5,7 @@
 #include "node.hpp"
 #include "symbol.hpp"
 #include "type_meta.hpp"
+#include "util/macros.hpp"
 
 namespace llvm
 {
@@ -30,6 +31,14 @@ namespace pars
 		MemberAccess access;
 	};
 
+	struct CallInfo
+	{
+		std::span<VarDeclStmt*> parameters;
+		TypeMeta return_meta;
+		bool is_variadic {};
+		u32 callable_arity {};
+	};
+
 	struct Type : Node
 	{
 		virtual bool is_equal(Type const *other) const = 0;
@@ -51,9 +60,11 @@ namespace pars
 		virtual bool is_array() const { return false; }
 		virtual bool is_struct() const { return false; }
 		virtual bool is_fn_ptr() const { return false; }
+		virtual bool is_callable() const { return false; }
 
 		virtual llvm::Value* access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const { return nullptr; }
 		virtual std::optional<MemberInfo> get_member(std::string_view symbol) const { return {}; }
+		virtual std::optional<CallInfo> get_call_info() { return {}; }
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
 		virtual llvm::Value* op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const { return nullptr; }
@@ -63,6 +74,8 @@ namespace pars
 		virtual llvm::Value* op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const { return nullptr; }
 		virtual llvm::Value* op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const { return nullptr; }
 		virtual llvm::Value* op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start, llvm::Value *end) const { return nullptr; }
+		// llvm doesnt seem to like std::span
+		virtual llvm::Value* op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value*> args) const { return nullptr; }
 		virtual bool can_coerce_into(Type const *desired_type) const { return false; }
 
 		virtual bool is_iterable() const { return false; }
@@ -89,6 +102,8 @@ namespace pars
 
 		return nullptr;
 	}
+
+
 
 #define DEFAULT_TYPE_EQUAL(T) bool is_equal(Type const *other) const override { return types_match<T>(this, other); }
 
@@ -522,7 +537,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct FnPtrType : Type
 	{
-		std::vector<TypeMeta> params;
+		// TODO possibly turn this into a span
+		std::vector<VarDeclStmt*> parameters;
 		TypeMeta return_type_meta;
 
 		llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -538,7 +554,96 @@ virtual bool is_equal(Type const *other) const override							\
 			return true;
 		}
 
+		bool is_callable() const override
+		{
+			return true;
+		}
+
+		std::optional<CallInfo> get_call_info() override
+		{
+			return CallInfo{parameters, return_type_meta};
+		}
+
 		ACCEPT
 	};
 
+	enum class FnFlags : u8
+	{
+		Extern = 1 << 0,
+		Inline = 1 << 1,
+		Private = 1 << 2,
+		ArrowFn = 1 << 3,
+	};
+
+	PARS_FLAGIFY(FnFlags);
+
+	struct FnSignature
+	{
+		std::vector<VarDeclStmt*> parameters;
+		// the amount of non default parameters
+		u32 callable_arity {};
+		bool is_variadic {};
+		Type *return_type {};
+		TypeMeta return_type_meta;
+
+		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags) const;
+	};
+
+	struct FnType : Type
+	{
+		Symbol symbol;
+		FnSignature signature;
+		BlockStmt *body;
+		FnFlags flags {};
+
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
+
+		bool is_callable() const override
+		{
+			return true;
+		}
+
+		std::string_view get_type_name() const override
+		{
+			return symbol.name;
+		}
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override
+		{
+			return nullptr;
+		}
+
+		std::optional<CallInfo> get_call_info() override
+		{
+			return CallInfo
+			{
+				signature.parameters,
+				signature.return_type_meta,
+				signature.is_variadic,
+				signature.callable_arity
+			};
+		}
+
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		llvm::Value *op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value *> args) const override;
+
+		bool is_equal(Type const *other) const override
+		{
+			return false;
+		}
+
+		ACCEPT
+	};
+
+	template<class T>
+	T* produce_type(Type *type)
+	{
+		if (auto *alias = dynamic_cast<AliasType*>(type))
+		{
+			return (T*)alias->type;
+		}
+
+		return (T*)type;
+	}
 }

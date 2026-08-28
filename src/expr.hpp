@@ -15,7 +15,7 @@
 namespace pars
 {
 	struct Module;
-	struct FnDecl;
+	struct FnType;
 	struct Type;
 
 	enum class ExprFlags : u8
@@ -101,15 +101,14 @@ namespace pars
 
 	struct CallExpr : Expr
 	{
-		FnDecl *prototype;
-		std::string_view symbol;
+		Expr *callable;
 		std::vector<Expr*> arguments;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_symbol() override
 		{
-			return symbol;
+			return callable->get_symbol();
 		}
 
 		ACCEPT

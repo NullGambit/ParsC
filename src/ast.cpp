@@ -528,9 +528,9 @@ pars::FnSignature pars::AST::parse_fn_signature()
 	return signature;
 }
 
-pars::FnDecl* pars::AST::parse_fn()
+pars::FnType* pars::AST::parse_fn()
 {
-	auto *fn = new_node<FnDecl>();
+	auto *fn = new_node<FnType>();
 
 	fn->symbol = get_symbol();
 
@@ -703,6 +703,17 @@ pars::Expr* pars::AST::parse_primary()
 
 			return expr;
 		}
+		if (m_lexer.match(LeftParen))
+		{
+			auto *expr = new_node<CallExpr>();
+
+			expr->callable = inner;
+			expr->arguments = collect_call_arguments();
+
+			m_lexer.expect(RightParen);
+
+			return expr;
+		}
 
 		Expr *lhs {};
 
@@ -755,6 +766,7 @@ pars::Expr* pars::AST::parse_primary()
 				lhs = index_op;
 			}
 		}
+
 
 		if (lhs != nullptr)
 		{
@@ -812,7 +824,7 @@ pars::Expr* pars::AST::parse_primary()
 	return literal;
 }
 
-pars::FnDecl* pars::AST::get_current_fn()
+pars::FnType* pars::AST::get_current_fn()
 {
 	if (m_function_stack.empty())
 	{
@@ -870,30 +882,30 @@ pars::Expr * pars::AST::parse_range()
 
 pars::Expr * pars::AST::parse_primary_inner()
 {
-	if (m_lexer.match(Dollar))
-	{
-		auto identifier = m_lexer.expect(Identifier).lexeme;
-
-		auto iter = m_builtin_functions.find(identifier);
-
-		if (iter != m_builtin_functions.end())
-		{
-			if (m_lexer.match(LeftParen))
-			{
-				CallExpr expr;
-
-				expr.symbol = identifier;
-
-				expr.arguments = collect_call_arguments();
-
-				m_lexer.expect(RightParen);
-
-				return iter->second(expr.arguments);
-			}
-		}
-
-		return nullptr;
-	}
+	// if (m_lexer.match(Dollar))
+	// {
+	// 	auto identifier = m_lexer.expect(Identifier).lexeme;
+	//
+	// 	auto iter = m_builtin_functions.find(identifier);
+	//
+	// 	if (iter != m_builtin_functions.end())
+	// 	{
+	// 		if (m_lexer.match(LeftParen))
+	// 		{
+	// 			CallExpr expr;
+	//
+	// 			expr.symbol = identifier;
+	//
+	// 			expr.arguments = collect_call_arguments();
+	//
+	// 			m_lexer.expect(RightParen);
+	//
+	// 			return iter->second(expr.arguments);
+	// 		}
+	// 	}
+	//
+	// 	return nullptr;
+	// }
 
 	if (m_lexer.match(LeftParen))
 	{
@@ -922,18 +934,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 			return expr;
 		}
-		if (m_lexer.match(LeftParen))
-		{
-			auto *expr = new_node<CallExpr>();
 
-			expr->symbol = identifier;
-
-			expr->arguments = collect_call_arguments();
-
-			m_lexer.expect(RightParen);
-
-			return expr;
-		}
 		// insanely hacky and terrible way to disambiguate this expression.
 		// this is to fix ambiguity with a statement such as
 		// if is_true {}
@@ -1177,11 +1178,11 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overr
 
 		while (true)
 		{
-			TypeMeta param_meta;
+			auto *param = new_node<VarDeclStmt>();
 
-			param_meta.type = parse_type(param_meta);
+			param->type_meta.type = parse_type(param->type_meta);
 
-			fn_ptr->params.emplace_back(param_meta);
+			fn_ptr->parameters.emplace_back(param);
 
 			if (!m_lexer.match(Comma))
 			{

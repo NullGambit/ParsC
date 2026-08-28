@@ -116,6 +116,16 @@ warnings to add:
         it will check the context type and if it is not equal to its own type it will do a coercion.
     - undefined keyword that can be used when setting the initial value of a variable. this will make it not initialize to its default value.
         useful for very large values that do not need default initialization.
+    - allow a method to be taken as a function pointer if the type of the desired function pointer has the methods type as the first parameter
+        example:
+            var fn_ptr: fn(user: User, value: i32)
+
+            fn_ptr = User::set_value
+
+            fn_ptr(my_user, 100)
+
+        in this case the method degrades to a normal function so it can be taken as a function pointer
+
     - make pointers have index operators.
     - implement warning system.
     - implement command line interface.

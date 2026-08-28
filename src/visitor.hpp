@@ -35,7 +35,7 @@ namespace pars
 	struct TypeExpr;
 	struct SizeofExpr;
 	struct AliasType;
-	struct FnDecl;
+	struct FnType;
 	struct Symbol;
 	struct GroupExpr;
 	struct ReturnStmt;
@@ -91,7 +91,7 @@ namespace pars
 		virtual Node* visit(BreakStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(ContinueStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(Symbol *stmt, VisitCtx ctx) { return nullptr; }
-		virtual Node* visit(FnDecl *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(FnType *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(Struct *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(AliasType *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(SizeofExpr *stmt, VisitCtx ctx) { return nullptr; }
