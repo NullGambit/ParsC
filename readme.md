@@ -624,6 +624,33 @@ fn secret_function()
 
 now secret_function cannot be exported from this module.
 
+## Function pointers
+
+a function pointer allows you to store the address of a function.
+
+```go
+import core.stdc.stdio
+
+fn add(a: i32, b: i32) => a + b
+
+fn main()
+{
+    var adder_fn: fn(i32, i32): i32
+
+    adder_fn = add
+
+    var result = adder_fn(10, 20)
+
+    printf("result: %d\n", result)
+}
+```
+
+anywhere a type can be used a function signature without any symbols can be defined
+
+and any function can be assigned to an object that matches its signature.
+
+this can then be called like the original function.
+
 ## Builtin types
 
 all builtin types have the default value of 0 or nil in case of pointers. to get the init value of any type one can use the init type property:

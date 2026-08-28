@@ -1,0 +1,14 @@
+import core.stdc.stdio
+
+fn add(a: i32, b: i32) => a + b
+
+fn main()
+{
+    var adder_fn: fn(i32, i32): i32
+
+    adder_fn = add
+
+    var result = adder_fn(10, 20)
+
+    printf("result: %d\n", result)
+}
