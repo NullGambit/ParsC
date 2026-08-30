@@ -701,17 +701,7 @@ pars::Expr* pars::AST::parse_primary()
 
 			return expr;
 		}
-		if (m_lexer.match(LeftParen))
-		{
-			auto *expr = new_node<CallExpr>();
 
-			expr->callable = inner;
-			expr->arguments = collect_call_arguments();
-
-			m_lexer.expect(RightParen);
-
-			return expr;
-		}
 
 		Expr *lhs {};
 
@@ -763,6 +753,18 @@ pars::Expr* pars::AST::parse_primary()
 
 				lhs = index_op;
 			}
+		}
+
+		if (m_lexer.match(LeftParen))
+		{
+			auto *expr = new_node<CallExpr>();
+
+			expr->callable = lhs != nullptr ? lhs : inner;
+			expr->arguments = collect_call_arguments();
+
+			m_lexer.expect(RightParen);
+
+			return expr;
 		}
 
 
