@@ -165,11 +165,9 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	// at this point it will always have a value
 	auto call_info = callable->type->get_call_info().value();
 
-	thread_local std::vector<llvm::Value*> argv;
+	std::vector<llvm::Value*> argv;
 
 	argv.reserve(call_info.parameters.size());
-
-	argv.clear();
 
 	u32 index {};
 
