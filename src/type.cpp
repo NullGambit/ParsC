@@ -150,7 +150,8 @@ bool pars::AliasType::is_equal(Type const *other) const
 
 		return false;
 	}
-	return true;
+
+	return type->is_equal(other);
 }
 
 llvm::Value * pars::AliasType::op_abs(EmitCtx &ctx, llvm::Value *value) const
@@ -188,6 +189,11 @@ llvm::Value * pars::AliasType::op_index(EmitCtx &ctx, llvm::Value *target, llvm:
 	return type->op_index(ctx, target, index);
 }
 
+llvm::Value * pars::AliasType::op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value *> args) const
+{
+	return type->op_call(ctx, callable, args);
+}
+
 u32 pars::AliasType::get_size()
 {
 	return type->get_size();
@@ -196,6 +202,11 @@ u32 pars::AliasType::get_size()
 llvm::Value * pars::AliasType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return type->get_default_value(ctx);
+}
+
+std::optional<pars::CallInfo> pars::AliasType::get_call_info()
+{
+	return type->get_call_info();
 }
 
 bool pars::AliasType::is_ptr() const
@@ -213,14 +224,14 @@ bool pars::AliasType::is_struct() const
 	return type->is_struct();
 }
 
-bool pars::AliasType::is_fn_ptr() const
-{
-	return type->is_fn_ptr();
-}
-
 pars::Type * pars::AliasType::get_inner() const
 {
 	return type->get_inner();
+}
+
+bool pars::AliasType::is_callable() const
+{
+	return type->is_callable();
 }
 
 std::optional<pars::MemberInfo> pars::AliasType::get_member(std::string_view symbol) const
@@ -1033,9 +1044,14 @@ bool pars::FnType::is_equal(Type const *other) const
 {
 	auto other_fn = dynamic_cast<FnType const*>(other);
 
+	auto ret_match = [&]()
+	{
+		return signature.return_type_meta.type->is_equal(other_fn->signature.return_type_meta.type);
+	};
+
 	if (other_fn == nullptr
 		|| other_fn->signature.parameters.size() != signature.parameters.size()
-		|| !signature.return_type_meta.type->is_equal(other_fn->signature.return_type_meta.type))
+		|| !ret_match())
 	{
 		return false;
 	}
@@ -1052,5 +1068,5 @@ bool pars::FnType::is_equal(Type const *other) const
 		i++;
 	}
 
-	return true;
+	return ret_match();
 }
