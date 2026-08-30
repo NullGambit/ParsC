@@ -175,6 +175,10 @@ the above shows a common use case for const variables as it is somewhat like C d
 
 you cannot take the address of consts.
 
+#### let or const?
+
+if a variable does not need to ever be reassigned then let should be chosen otherwise var. 
+
 ## Aliases
 
 an alias is a way to give a new name to an existing type or create a unique version of it.
@@ -639,7 +643,7 @@ fn main()
 
     adder_fn = add
 
-    var result = adder_fn(10, 20)
+    let result = adder_fn(10, 20)
 
     printf("result: %d\n", result)
 }
@@ -650,6 +654,64 @@ anywhere a type can be used a function signature without any symbols can be defi
 and any function can be assigned to an object that matches its signature.
 
 this can then be called like the original function.
+
+a common use case for function pointers is to produce different behaviour without OOP features
+
+```go
+import core.stdc.stdio
+
+fn add(a: i32, b: i32) => a + b
+fn sub(a: i32, b: i32) => a - b
+fn mul(a: i32, b: i32) => a * b
+fn div(a: i32, b: i32) => a / b
+
+fn main()
+{
+    let operations = [add, sub, mul, div]
+
+    let a = 10
+    let b = 25
+
+    for op in operations
+    {
+        let result = op(a, b)
+
+        printf("result: %d\n", result)
+    }
+}
+```
+
+this example can become even more robust with the use of structs
+
+```go
+import core.stdc.stdio
+
+fn add(a: i32, b: i32) => a + b
+fn sub(a: i32, b: i32) => a - b
+fn mul(a: i32, b: i32) => a * b
+fn div(a: i32, b: i32) => a / b
+
+struct Operation
+{
+    symbol: char
+    exec: fn(i32, i32): i32
+}
+
+fn main()
+{
+    let operations = Operation[{'+', add}, {'-', sub}, {'*', mul}, {'/', div}]
+
+    let a = 10
+    let b = 25
+
+    for op in operations
+    {
+        let result = op.exec(a, b)
+
+        printf("a %c b = %d\n", op.symbol, result)
+    }
+}
+```
 
 ## Builtin types
 

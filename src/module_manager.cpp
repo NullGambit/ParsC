@@ -1,6 +1,8 @@
 #include "module_manager.hpp"
 
+#include <fstream>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Support/FileSystem.h>
 
 #include "containers/hash_map.hpp"
 #include "module.hpp"
@@ -119,6 +121,13 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	}
 
 	ctx.module->print(llvm::outs(), nullptr);
+
+	std::error_code EC;
+	auto out_name = path.filename().replace_extension(".ir");
+
+	llvm::raw_fd_ostream fs(out_name.c_str(), EC, llvm::sys::fs::OpenFlags::OF_Text);
+
+	ctx.module->print(fs, nullptr);
 
 	std::string error_str;
 	llvm::raw_string_ostream error_stream(error_str);

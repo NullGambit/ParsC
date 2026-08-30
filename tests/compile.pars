@@ -1,14 +1,43 @@
 import core.stdc.stdio
 
 fn add(a: i32, b: i32) => a + b
+fn sub(a: i32, b: i32) => a - b
+fn mul(a: i32, b: i32) => a * b
+fn div(a: i32, b: i32) => a / b
+
+struct Operation
+{
+    symbol: char
+    exec: fn(i32, i32): i32
+}
+
+fn iter_op()
+{
+    let operations = Operation[{'+', add}, {'-', sub}, {'*', mul}, {'/', div}]
+
+    let a = 10
+    let b = 25
+
+    for op in operations
+    {
+        let result = op.exec(a, b)
+
+        printf("a %c b = %d\n", op.symbol, result)
+    }
+}
+
+fn iter_chars()
+{
+    let chars = ['a', 'b', 'c']
+
+    for c in chars
+    {
+        printf("%c\n", c)
+    }
+}
 
 fn main()
 {
-    var adder_fn: fn(i32, i32): i32
-
-    adder_fn = add
-
-    var result = adder_fn(10, 20)
-
-    printf("result: %d\n", result)
+    iter_op()
+    iter_chars()
 }

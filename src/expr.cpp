@@ -160,7 +160,7 @@ llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	return ctx.named_values[symbol];
 }
 
-llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
+llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
 	// at this point it will always have a value
 	auto call_info = callable->type->get_call_info().value();
@@ -197,25 +197,25 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 			}
 		}
 
-		llvm::Value *value {};
+		// llvm::Value *value {};
+		//
+		// if (desired_type != nullptr && arg->type->can_coerce_into(desired_type))
+		// {
+		// 	auto *to_be = arg->emit_ptr(ctx);
+		//
+		// 	if (to_be == nullptr)
+		// 	{
+		// 		to_be = arg->emit(ctx);;
+		// 	}
+		//
+		// 	value = arg->type->op_coerce(ctx, to_be, desired_type);
+		// }
+		// else
+		// {
+		// 	value = arg->emit(ctx);
+		// }
 
-		if (desired_type != nullptr && arg->type->can_coerce_into(desired_type))
-		{
-			auto *to_be = arg->emit_ptr(ctx);
-
-			if (to_be == nullptr)
-			{
-				to_be = arg->emit(ctx);;
-			}
-
-			value = arg->type->op_coerce(ctx, to_be, desired_type);
-		}
-		else
-		{
-			value = arg->emit(ctx);
-		}
-
-		argv.emplace_back(value);
+		argv.emplace_back(arg->emit(ctx));
 
 		index++;
 	}
@@ -229,9 +229,24 @@ llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 		argv.emplace_back(value);
 	}
 
-	auto *callable_value = callable->emit(ctx);
+	llvm::Value *callable_ptr {};
 
-	return callable->type->op_call(ctx, callable_value, argv);
+	// possibly being called from a member access
+	if (params.predecessor_ptr != nullptr)
+	{
+		callable_ptr = ctx.builder.CreateLoad(callable->type->get_llvm_type(ctx.llvm_ctx), params.predecessor_ptr);
+	}
+	else
+	{
+		callable_ptr = callable->emit(ctx);
+	}
+
+	return callable->type->op_call(ctx, callable_ptr, argv);
+}
+
+llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
+{
+	return emit_ptr(ctx, params);
 }
 
 llvm::Value * pars::GroupExpr::emit(EmitCtx &ctx, EmitParams params)

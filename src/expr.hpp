@@ -104,6 +104,7 @@ namespace pars
 		Expr *callable;
 		std::vector<Expr*> arguments;
 
+		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_symbol() override

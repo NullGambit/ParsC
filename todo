@@ -46,7 +46,6 @@ warnings to add:
     - iota members
 
 - other core features:
-    - function pointers
     - generics
     - context system
     - errors
@@ -127,6 +126,7 @@ warnings to add:
         in this case the method degrades to a normal function so it can be taken as a function pointer
 
     - make pointers have index operators.
+    - implement destructuring of all aggregate types.
     - implement warning system.
     - implement command line interface.
     - implement arithmetic operations for nested arrays such as [4][4]f32.

@@ -20,6 +20,9 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 		table_override = &ctx.parse_ctx_override->scope_table;
 	}
 
+	// set type from the expr in case of being called from a member access
+	expr->callable->type = expr->type;
+
 	expr->callable->accept(this, ctx);
 
 	auto maybe_call_info = expr->callable->type->get_call_info();
@@ -826,9 +829,11 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 	}
 
-	for (auto i = 0; auto [element, _] : expr->initializers)
+	ctx.type = array_type->element_type;
+
+	for (auto i = 0; auto &[element, pos] : expr->initializers)
 	{
-		expr->initializers[i].expr = visit_expr(expr, element, ctx);
+		element = visit_expr(expr, element, ctx);
 
 		if (array_type->element_type == nullptr)
 		{
@@ -840,6 +845,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 			throw FrontendError{element->token, "array literal element types dont all match"};
 		}
 
+		pos = i;
 		i += 1;
 	}
 

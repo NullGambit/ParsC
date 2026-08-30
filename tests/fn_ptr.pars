@@ -8,7 +8,7 @@ fn main()
 
     adder_fn = add
 
-    var result = adder_fn(10, 20)
+    let result = adder_fn(10, 20)
 
     printf("result: %d\n", result)
 }

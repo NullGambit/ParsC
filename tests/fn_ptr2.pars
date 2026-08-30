@@ -1,0 +1,21 @@
+import core.stdc.stdio
+
+fn add(a: i32, b: i32) => a + b
+fn sub(a: i32, b: i32) => a - b
+fn mul(a: i32, b: i32) => a * b
+fn div(a: i32, b: i32) => a / b
+
+fn main()
+{
+    var operations = [add, sub, mul, div]
+
+    let a = 10
+    let b = 25
+
+    for op in operations
+    {
+        let result = op(a, b)
+
+        printf("result: %d\n", result)
+    }
+}
