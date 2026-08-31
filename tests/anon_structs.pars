@@ -2,7 +2,10 @@ import core.stdc.stdio
 
 fn main()
 {
-    var user = {name: "john", score: 100}
+    var user: {name: str, score: i32}
+
+    user.score = 100
+    user.name = "john"
 
     printf("%s %d\n", user.name, user.score)
 }

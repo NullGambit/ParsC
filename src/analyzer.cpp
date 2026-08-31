@@ -895,8 +895,6 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 	return expr;
 }
 
-
-
 pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
 	expr->type = get_type(expr->name, expr->token);
@@ -910,6 +908,38 @@ pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 {
+	if (ctx.type == nullptr)
+	{
+		auto *type = new_node<Struct>();
+
+		expr->type = type;
+
+		for (auto i = 0; auto &[expr, pos] : expr->values)
+		{
+			if (auto *named = dynamic_cast<NamedExpr*>(expr))
+			{
+				named->value->accept(this, ctx);
+
+				type->fields.emplace_back(
+					StructField
+					{
+						{named->name},
+						{},
+						named->value->type
+					});
+			}
+			else
+			{
+				throw FrontendError{expr->token, "anon struct can only contain named fields"};
+			}
+
+			pos = i;
+			i++;
+		}
+
+		return expr;
+	}
+
 	expr->type = ctx.type;
 
 	if (auto *struct_type = dynamic_cast<Struct*>(expr->type))
