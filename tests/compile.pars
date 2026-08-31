@@ -1,20 +1,14 @@
 import core.stdc.stdio
 
-fn add(a: i32, b: i32) => a + b
-fn sub(a: i32, b: i32) => a - b
-fn mul(a: i32, b: i32) => a * b
-fn div(a: i32, b: i32) => a / b
-
-fn test(a: i32, b: i32): i32
-{
-    return 0
-}
-
 fn main()
 {
-    let operations = [add, sub, mul, div]
+    var user: {name: str, score: i32}
+    var user2: {name: str, score: i32}
 
-    let result = operations[0](10, 20)
+    user.score = 100
+    user.name = "john"
 
-    printf("%d\n", result)
+    user2 = user
+
+    printf("%s %d\n", user2.name, user2.score)
 }

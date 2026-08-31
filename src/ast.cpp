@@ -576,21 +576,24 @@ pars::FnType* pars::AST::parse_fn()
 	return fn;
 }
 
-pars::Struct * pars::AST::parse_struct()
+pars::Struct * pars::AST::parse_struct(bool skip_signature)
 {
 	auto *stmt = new_node<Struct>();
 
-	stmt->symbol = get_symbol();
-
-	m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
-
-	// fieldless struct
-	if (!m_lexer.peek(LeftBrace))
+	if (!skip_signature)
 	{
-		return stmt;
-	}
+		stmt->symbol = get_symbol();
 
-	m_lexer.expect(LeftBrace);
+		m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
+
+		// fieldless struct
+		if (!m_lexer.peek(LeftBrace))
+		{
+			return stmt;
+		}
+
+		m_lexer.expect(LeftBrace);
+	}
 
 	while (!m_lexer.peek(RightBrace))
 	{
@@ -1177,6 +1180,10 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overr
 		fn->signature = parse_fn_signature(/*parse_names=*/false);
 
 		return fn;
+	}
+	if (m_lexer.match(LeftBrace))
+	{
+		return parse_struct(/*skip_signature=*/true);
 	}
 
 	return nullptr;

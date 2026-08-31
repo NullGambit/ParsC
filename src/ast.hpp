@@ -58,7 +58,7 @@ namespace pars
 		Symbol get_symbol();
 		FnSignature parse_fn_signature(bool parse_names = true);
 		FnType* parse_fn();
-		Struct* parse_struct();
+		Struct* parse_struct(bool skip_signature = false);
 		InitializerList parse_brace_list();
 		BlockStmt* parse_block();
 		AliasType* parse_alias();

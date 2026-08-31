@@ -8,9 +8,6 @@ namespace pars
 
 	/*
 	 *	{x: i32, y: str}
-	 *	fn(i32, str): bool
-	 *	[3]fn(i32, str): bool
-	 *	fn_ptrs[0](10, "hello)
 	 */
 
 	using ConstSet = std::bitset<32>;

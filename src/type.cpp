@@ -13,6 +13,7 @@
 #include "emit_context.hpp"
 #include "expr.hpp"
 #include "stmt.hpp"
+#include "util/fmt.hpp"
 #include "util/llvm_utils.hpp"
 
 llvm::Value * pars::Type::get_property(llvm::LLVMContext *ctx, std::string_view name)
@@ -791,6 +792,27 @@ llvm::Value * pars::Struct::get_default_value(llvm::LLVMContext *ctx) const
 
 bool pars::Struct::is_equal(Type const *other) const
 {
+	auto *other_struct = dynamic_cast<Struct const*>(other);
+
+	// do structural equality matching of either one is anon
+	if (other_struct && symbol.name.empty() || other_struct->symbol.name.empty())
+	{
+		auto len = std::min(fields.size(), other_struct->fields.size());
+
+		for (auto i = 0; i < len; i++)
+		{
+			auto &this_field = fields[i];
+			auto &other_field = other_struct->fields[i];
+
+			if (this_field.symbol.name != other_struct->symbol.name && !this_field.type->is_equal(other_field.type))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	return this == other;
 }
 
