@@ -1045,7 +1045,7 @@ llvm::Type * pars::FnType::get_llvm_type(llvm::LLVMContext *ctx) const
 
 llvm::Value * pars::FnType::op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value *> args) const
 {
-	if (callable == nullptr && !symbol.name.empty())
+	if (callable == nullptr || !symbol.name.empty())
 	{
 		auto *fn = ctx.module->getFunction(symbol.name);
 
