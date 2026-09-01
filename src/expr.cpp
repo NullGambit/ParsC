@@ -144,7 +144,7 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 			ctx.builder.CreateStore(fn, params.target_ptr);
 		}
 
-		return nullptr;
+		return fn;
 	}
 
 	if (value->getType()->isPointerTy())
