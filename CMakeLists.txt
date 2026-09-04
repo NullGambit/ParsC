@@ -85,6 +85,7 @@ add_executable(ParsC src/main.cpp
         src/util/defer.hpp
         src/comp_eval.cpp
         src/comp_eval.hpp
+        src/mangle.hpp
 )
 
 set(LLVM_STATIC ON)

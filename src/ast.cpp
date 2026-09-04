@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "frontend_error.hpp"
+#include "mangle.hpp"
 #include "module.hpp"
 #include "module_manager.hpp"
 #include "parse_ctx.hpp"
@@ -540,14 +541,27 @@ pars::FnType* pars::AST::parse_fn()
 	{
 		fn->flags |= FnFlags::Extern;
 	}
+
 	if (has_keyword_attribute(fn->symbol, Private))
 	{
 		fn->flags |= FnFlags::Private;
 	}
 
-	m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
-
 	fn->signature = parse_fn_signature();
+
+	if (!has_flag(fn->flags, FnFlags::Extern) && fn->symbol.name != "main")
+	{
+		mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
+		{
+			return param->type_meta.type;
+		});
+	}
+
+	auto symbol = fn->symbol;
+
+	symbol.name = fn->get_fn_name();
+
+	m_ctx->scope_table.add_to_scope(symbol, fn, !has_flag(fn->flags, FnFlags::Private));
 
 	m_function_stack.emplace_back(fn);
 

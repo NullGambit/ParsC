@@ -26,3 +26,8 @@ u8* pars::Arena::write(const u8 *bytes, u64 size)
 
 	return current_mem;
 }
+
+void pars::Arena::write(std::string_view sv)
+{
+	write(reinterpret_cast<const u8*>(sv.data()), sv.size());
+}

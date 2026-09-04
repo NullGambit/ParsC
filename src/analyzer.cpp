@@ -5,6 +5,7 @@
 #include "parse_ctx.hpp"
 #include "ast.hpp"
 #include "frontend_error.hpp"
+#include "mangle.hpp"
 #include "module.hpp"
 #include "module_manager.hpp"
 #include "util/fmt.hpp"
@@ -22,6 +23,13 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	// set type from the expr in case of being called from a member access
 	expr->callable->type = expr->type;
+
+	for (auto *arg : expr->arguments)
+	{
+		visit_expr(expr, arg, ctx);
+	}
+
+	ctx.invoker = expr;
 
 	expr->callable->accept(this, ctx);
 
@@ -110,14 +118,18 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		return fn;
 	}
 
-	m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
-
 	auto scope = m_ctx->scope_table.new_scope();
 
 	for (auto *param : fn->signature.parameters)
 	{
 		param->accept(this, {});
 	}
+
+	auto scoped_symbol = fn->symbol;
+
+	scoped_symbol.name = fn->get_fn_name();
+
+	m_ctx->scope_table.add_to_scope(scoped_symbol, fn, !has_flag(fn->flags, FnFlags::Private));
 
 	m_function_stack.emplace_back(fn);
 
@@ -497,23 +509,48 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	}
 	else
 	{
-		auto *symbol = find_symbol(expr->symbol, expr->token);
+		thread_local std::string mangle_buff;
 
-		if (auto *var = dynamic_cast<VarDeclStmt*>(symbol))
+		mangle_buff.clear();
+
+		if (auto *call = dynamic_cast<CallExpr*>(ctx.invoker))
+		{
+			mangle(expr->symbol, call->arguments, mangle_buff, [](Expr *arg)
+			{
+				return arg->type;
+			});
+
+			auto *fn = m_ctx->scope_table.find_symbol<FnType>(mangle_buff);
+
+			if (fn != nullptr)
+			{
+				expr->type = fn;
+
+				return expr;
+			}
+		}
+
+		auto *sym_node = find_symbol(expr->symbol, expr->token);
+
+		if (auto *var = dynamic_cast<VarDeclStmt*>(sym_node))
 		{
 			expr->mut_set = var->type_meta.mut_set;
 			expr->type = var->type;
 		}
-		else if (auto *fn = dynamic_cast<FnType*>(symbol))
+		else if (auto *fn = dynamic_cast<FnType*>(sym_node))
 		{
 			expr->type = fn;
 		}
-		else if (auto *type = dynamic_cast<Type*>(symbol))
+		else if (auto *type = dynamic_cast<Type*>(sym_node))
 		{
 			expr->type = type;
 		}
+		else
+		{
+			throw FrontendError{expr->token, fmt::format("could not resolve the type of symbol {}", expr->symbol)};
+		}
 
-		expr->symbol_node = symbol;
+		expr->symbol_node = sym_node;
 	}
 
 	return expr;

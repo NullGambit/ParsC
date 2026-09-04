@@ -952,7 +952,7 @@ llvm::Function * pars::FnSignature::emit(EmitCtx &ctx, std::string_view name, Fn
 
 llvm::Value* pars::FnType::emit(EmitCtx &ctx, EmitParams params)
 {
-	auto *fn = signature.emit(ctx, symbol.name, flags);
+	auto *fn = signature.emit(ctx, get_fn_name(), flags);
 
 	for (auto i = 0; auto &arg : fn->args())
 	{
@@ -1019,6 +1019,16 @@ llvm::Value* pars::FnType::emit(EmitCtx &ctx, EmitParams params)
 	return fn;
 }
 
+std::string_view pars::FnType::get_fn_name() const
+{
+	if (mangled_name.empty())
+	{
+		return symbol.name;
+	}
+
+	return mangled_name;
+}
+
 llvm::Value * pars::FnType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::ConstantPointerNull::get((llvm::PointerType*)get_llvm_type(ctx));
@@ -1047,11 +1057,13 @@ llvm::Value * pars::FnType::op_call(EmitCtx &ctx, llvm::Value *callable, llvm::A
 {
 	if (callable == nullptr || !symbol.name.empty())
 	{
-		auto *fn = ctx.module->getFunction(symbol.name);
+		auto name = get_fn_name();
+
+		auto *fn = ctx.module->getFunction(name);
 
 		if (fn == nullptr)
 		{
-			fn = signature.emit(ctx, symbol.name, flags);
+			fn = signature.emit(ctx, name, flags);
 		}
 
 		return ctx.builder.CreateCall(fn, args);

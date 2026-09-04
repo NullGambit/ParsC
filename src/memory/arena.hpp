@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 
 namespace pars
 {
@@ -12,5 +13,6 @@ namespace pars
 		void free();
 
 		u8* write(const u8 *bytes, u64 size);
+		void write(std::string_view sv);
 	};
 }

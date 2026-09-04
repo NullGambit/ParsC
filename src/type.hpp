@@ -129,7 +129,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type * get_llvm_type(llvm::LLVMContext *ctx) const override { return nullptr; }
 
-		std::string_view get_type_name() const override { return "unresolved"; }
+		std::string_view get_type_name() const override { return symbol; }
 
 		llvm::Value * get_default_value(llvm::LLVMContext *ctx) const override { return nullptr; }
 
@@ -546,9 +546,12 @@ virtual bool is_equal(Type const *other) const override							\
 
 	PARS_FLAGIFY(FnFlags);
 
+	using FnParams = std::vector<VarDeclStmt*>;
+	struct FnType;
+
 	struct FnSignature
 	{
-		std::vector<VarDeclStmt*> parameters;
+		FnParams parameters;
 		// the amount of non default parameters
 		u32 callable_arity {};
 		bool is_variadic {};
@@ -561,11 +564,14 @@ virtual bool is_equal(Type const *other) const override							\
 	struct FnType : Type
 	{
 		Symbol symbol;
+		std::string mangled_name;
 		FnSignature signature;
 		BlockStmt *body;
 		FnFlags flags {};
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
+
+		std::string_view get_fn_name() const;
 
 		bool is_callable() const override
 		{

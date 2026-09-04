@@ -125,21 +125,6 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name) const
 {
 	std::span<GlobalSymbol> symbols;
 
-	// if name starts with lowercase than perfect chance this is a builtin primitive type
-	// therefore must be a global symbol
-	if (!name.empty() && std::islower(name[0]))
-	{
-		symbols = find_global_symbol(name);
-
-		for (auto &symbol : symbols)
-		{
-			if (symbol.availability == GlobalSymbolAvailability::Always)
-			{
-				return symbol.node;
-			}
-		}
-	}
-
 	auto *node = find_local_symbol(name);
 
 	if (node != nullptr)
@@ -147,7 +132,6 @@ pars::Node* pars::ScopeTable::find_symbol(std::string_view name) const
 		return node;
 	}
 
-	// TODO: allow for parameterized up to down or down to up scope checking
 	for (auto i = 0; i <= m_level; i++)
 	{
 		auto &data = m_table[i];
