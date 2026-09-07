@@ -550,14 +550,6 @@ pars::FnType* pars::AST::parse_fn()
 
 	fn->signature = parse_fn_signature();
 
-	if (!has_flag(fn->flags, FnFlags::Extern) && fn->symbol.name != "main")
-	{
-		mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
-		{
-			return param->type_meta.type;
-		});
-	}
-
 	fn->collection = m_ctx->scope_table.get_or_add_symbol<FnCollection>(fn->symbol, !has_flag(fn->flags, FnFlags::Private));
 
 	// TODO change to a hash set or map and throw an error in case of duplicates

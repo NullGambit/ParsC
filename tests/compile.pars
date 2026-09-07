@@ -5,11 +5,6 @@ fn print(value: i32)
     printf("%d\n", value)
 }
 
-fn print(value: i32)
-{
-    printf("%d\n", value)
-}
-
 fn print(value: str)
 {
     printf("%s\n", value)

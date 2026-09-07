@@ -32,7 +32,6 @@
     - type cache
 
 - structs:
-    - anonymous nested structs
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
     - methods
     - traits

@@ -128,6 +128,14 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		param->accept(this, {});
 	}
 
+	if (!has_flag(fn->flags, FnFlags::Extern) && fn->symbol.name != "main")
+	{
+		mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
+		{
+			return param->type_meta.type;
+		});
+	}
+
 	if (fn->collection->fn_is_duplicate(fn))
 	{
 		throw FrontendError{fn->token, "Function is a duplicate"};
