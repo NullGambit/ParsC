@@ -795,7 +795,7 @@ bool pars::Struct::is_equal(Type const *other) const
 	auto *other_struct = dynamic_cast<Struct const*>(other);
 
 	// do structural equality matching of either one is anon
-	if (other_struct && symbol.name.empty() || other_struct->symbol.name.empty())
+	if (other_struct != nullptr && symbol.name.empty() || other_struct->symbol.name.empty())
 	{
 		auto len = std::min(fields.size(), other_struct->fields.size());
 

@@ -57,6 +57,8 @@ namespace pars
 
 		void analyze(const std::vector<Node*> &nodes);
 
+		Expr* visit_expr(Expr *parent, Expr *expr, VisitCtx ctx);
+
 	private:
 		ParseCtx *m_ctx;
 		std::vector<FnType*> m_function_stack;
@@ -86,7 +88,5 @@ namespace pars
 		}
 
 		Type* get_type(std::string_view name, Token &error_token);
-
-		Expr* visit_expr(Expr *parent, Expr *expr, VisitCtx ctx);
 	};
 }

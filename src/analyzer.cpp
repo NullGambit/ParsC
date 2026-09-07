@@ -4,6 +4,7 @@
 
 #include "parse_ctx.hpp"
 #include "ast.hpp"
+#include "fn_collection.hpp"
 #include "frontend_error.hpp"
 #include "mangle.hpp"
 #include "module.hpp"
@@ -24,9 +25,9 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 	// set type from the expr in case of being called from a member access
 	expr->callable->type = expr->type;
 
-	for (auto *arg : expr->arguments)
+	for (auto &arg : expr->arguments)
 	{
-		visit_expr(expr, arg, ctx);
+		arg = visit_expr(expr, arg, ctx);
 	}
 
 	ctx.invoker = expr;
@@ -56,16 +57,13 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	named_replace_list.clear();
 
-	for (auto *arg : expr->arguments)
+	for (auto &arg : expr->arguments)
 	{
-		Type *ctx_type = nullptr;
-
-		if (index < call_info.parameters.size())
+		if (index < call_info.parameters.size() && arg->type == nullptr)
 		{
-			ctx_type = call_info.parameters[index++]->type;
+			auto *ctx_type = call_info.parameters[index++]->type;
+			arg = visit_expr(expr, arg, {ctx_type});
 		}
-
-		arg = visit_expr(expr, arg, {ctx_type});
 
 		if (auto *named_param = dynamic_cast<NamedExpr*>(arg))
 		{
@@ -509,27 +507,6 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	}
 	else
 	{
-		thread_local std::string mangle_buff;
-
-		mangle_buff.clear();
-
-		if (auto *call = dynamic_cast<CallExpr*>(ctx.invoker))
-		{
-			mangle(expr->symbol, call->arguments, mangle_buff, [](Expr *arg)
-			{
-				return arg->type;
-			});
-
-			auto *fn = m_ctx->scope_table.find_symbol<FnType>(mangle_buff);
-
-			if (fn != nullptr)
-			{
-				expr->type = fn;
-
-				return expr;
-			}
-		}
-
 		auto *sym_node = find_symbol(expr->symbol, expr->token);
 
 		if (auto *var = dynamic_cast<VarDeclStmt*>(sym_node))
@@ -537,9 +514,12 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 			expr->mut_set = var->type_meta.mut_set;
 			expr->type = var->type;
 		}
-		else if (auto *fn = dynamic_cast<FnType*>(sym_node))
+		else if (auto *collection = dynamic_cast<FnCollection*>(sym_node))
 		{
-			expr->type = fn;
+			auto *call = dynamic_cast<CallExpr*>(ctx.invoker);
+			auto args = call != nullptr ? call->arguments : std::span<Expr*>{};
+
+			expr->type = collection->get_fn(args, this);
 		}
 		else if (auto *type = dynamic_cast<Type*>(sym_node))
 		{
@@ -945,7 +925,7 @@ pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 {
-	if (ctx.type == nullptr)
+	if (ctx.type == nullptr && !expr->values.empty())
 	{
 		auto *type = new_node<Struct>();
 

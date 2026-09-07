@@ -71,7 +71,33 @@ namespace pars
 
 		void add_import(u32 file_id);
 
+		Scope* get_scope(u16 level);
+
 		void add_to_scope(Symbol symbol, Node *node, bool is_public = true, u16 level = UINT16_MAX);
+
+		template<IsNode T>
+		T* get_or_add_symbol(Symbol symbol, bool is_public = true, u16 level = UINT16_MAX)
+		{
+			auto *scope = get_scope(level);
+
+			auto iter = scope->find(symbol.name);
+
+			T *node {};
+
+			if (iter == scope->end())
+			{
+				node = new_node<T>();
+
+				add_to_scope(symbol, node, is_public, level);
+			}
+			else
+			{
+				node = (T*)iter->second;
+			}
+
+			return node;
+		}
+
 		Node* find_symbol(std::string_view name) const;
 		Node* find_local_symbol(std::string_view name) const;
 		bool has_symbol(std::string_view name);

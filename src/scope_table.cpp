@@ -82,13 +82,8 @@ void pars::ScopeTable::add_import(u32 file_id)
 	data.imports.emplace_back(file_id);
 }
 
-void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public, u16 level)
+pars::ScopeTable::Scope * pars::ScopeTable::get_scope(u16 level)
 {
-	if (m_level > m_locked_level && m_locked_level != UNLOCKED_LEVEL)
-	{
-		return;
-	}
-
 	Scope *scope;
 
 	if (level != UINT16_MAX)
@@ -107,6 +102,18 @@ void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public, u
 	{
 		scope = &get_scope();
 	}
+
+	return scope;
+}
+
+void pars::ScopeTable::add_to_scope(Symbol symbol, Node *node, bool is_public, u16 level)
+{
+	if (m_level > m_locked_level && m_locked_level != UNLOCKED_LEVEL)
+	{
+		return;
+	}
+
+	auto *scope = get_scope(level);
 
 	scope->emplace(symbol.name, node);
 

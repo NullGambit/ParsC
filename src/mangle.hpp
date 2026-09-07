@@ -10,8 +10,6 @@ namespace pars
 	{
 		buffer += "?";
 
-		//TODO add module name
-
 		buffer += symbol;
 
 		for (auto &param : params)

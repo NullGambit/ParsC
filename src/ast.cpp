@@ -3,6 +3,7 @@
 #include <charconv>
 #include <filesystem>
 
+#include "fn_collection.hpp"
 #include "frontend_error.hpp"
 #include "mangle.hpp"
 #include "module.hpp"
@@ -557,11 +558,10 @@ pars::FnType* pars::AST::parse_fn()
 		});
 	}
 
-	auto symbol = fn->symbol;
+	auto *collection = m_ctx->scope_table.get_or_add_symbol<FnCollection>(fn->symbol, !has_flag(fn->flags, FnFlags::Private));
 
-	symbol.name = fn->get_fn_name();
-
-	m_ctx->scope_table.add_to_scope(symbol, fn, !has_flag(fn->flags, FnFlags::Private));
+	// TODO change to a hash set or map and throw an error in case of duplicates
+	collection->functions.emplace_back(fn);
 
 	m_function_stack.emplace_back(fn);
 

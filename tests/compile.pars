@@ -1,8 +1,8 @@
 import core.stdc.stdio
 
-fn print(value: i32)
+fn print(value: i32, other: i32)
 {
-    printf("%d\n", value)
+    printf("%d %d\n", value, other)
 }
 
 fn print(value: str)
@@ -10,25 +10,8 @@ fn print(value: str)
     printf("%s\n", value)
 }
 
-fn print(value: bool)
-{
-    var s: str
-
-    if value
-    {
-        s = "true"
-    }
-    else
-    {
-        s = "false"
-    }
-
-    printf("%s\n", s)
-}
-
 fn main()
 {
-    print(10)
+    print(10, {})
     print("hello")
-    print(false)
 }

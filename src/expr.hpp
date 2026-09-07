@@ -37,6 +37,7 @@ namespace pars
 
 		virtual std::string_view get_symbol() { return {}; }
 
+		virtual bool is_ctx_sensitive() { return false; }
 	};
 
 	using LiteralExprValue = std::variant
@@ -211,6 +212,11 @@ namespace pars
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
+		bool is_ctx_sensitive() override
+		{
+			return true;
+		}
+
 		ACCEPT
 	};
 
@@ -255,6 +261,11 @@ namespace pars
 	struct ArrayLiteralExpr : AggregateExpr
 	{
 		Expr *type_specifier {};
+
+		bool is_ctx_sensitive() override
+		{
+			return type_specifier == nullptr && initializers.empty();
+		}
 
 		ACCEPT
 	};

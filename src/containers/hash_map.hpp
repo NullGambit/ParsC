@@ -1,7 +1,7 @@
 #pragma once
 #include <ankerl/unordered_dense.h>
 
-#define ENABLE_TRANSPARENT_HASH ccc::string_hash, std::equal_to<>
+#define ENABLE_TRANSPARENT_HASH pars::string_hash, std::equal_to<>
 
 namespace pars
 {
