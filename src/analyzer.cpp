@@ -34,6 +34,11 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	expr->callable->accept(this, ctx);
 
+	if (expr->callable->type == nullptr)
+	{
+		throw FrontendError{expr->token, "could not resolve function overload"};
+	}
+
 	auto maybe_call_info = expr->callable->type->get_call_info();
 
 	if (!maybe_call_info.has_value())

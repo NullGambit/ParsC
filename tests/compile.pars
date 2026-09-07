@@ -2,7 +2,7 @@ import core.stdc.stdio
 
 fn print(value: i32, other: i32)
 {
-    printf("%d %d\n", value, other)
+    printf("%d %d\n", value)
 }
 
 fn print(value: str)

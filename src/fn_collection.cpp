@@ -19,6 +19,7 @@ pars::FnType * pars::FnCollection::get_fn(std::span<Expr *> args, Analyzer *anal
 		}
 
 		auto all_match = true;
+		auto ambigious_args = 0;
 
 		for (auto i = 0; auto &arg : args)
 		{
@@ -32,6 +33,7 @@ pars::FnType * pars::FnCollection::get_fn(std::span<Expr *> args, Analyzer *anal
 			if (arg->type == nullptr && arg->is_ctx_sensitive())
 			{
 				arg = analyzer->visit_expr(nullptr, arg, {.type = param->type});
+				ambigious_args++;
 			}
 
 			if (arg->type == nullptr || !arg->type->is_equal(param->type))
@@ -41,6 +43,11 @@ pars::FnType * pars::FnCollection::get_fn(std::span<Expr *> args, Analyzer *anal
 			}
 
 			i++;
+		}
+
+		if (ambigious_args == fn->signature.parameters.size())
+		{
+			return nullptr;
 		}
 
 		if (all_match)
