@@ -15,6 +15,7 @@ namespace llvm
 
 namespace pars
 {
+	struct FnCollection;
 	constexpr auto IS_SIGNED = true;
 
 	enum class MemberAccess
@@ -568,6 +569,7 @@ virtual bool is_equal(Type const *other) const override							\
 		FnSignature signature;
 		BlockStmt *body;
 		FnFlags flags {};
+		FnCollection *collection;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 

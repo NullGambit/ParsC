@@ -128,11 +128,12 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		param->accept(this, {});
 	}
 
-	auto scoped_symbol = fn->symbol;
+	if (fn->collection->fn_is_duplicate(fn))
+	{
+		throw FrontendError{fn->token, "Function is a duplicate"};
+	}
 
-	scoped_symbol.name = fn->get_fn_name();
-
-	m_ctx->scope_table.add_to_scope(scoped_symbol, fn, !has_flag(fn->flags, FnFlags::Private));
+	m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
 
 	m_function_stack.emplace_back(fn);
 

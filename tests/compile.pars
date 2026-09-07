@@ -1,8 +1,13 @@
 import core.stdc.stdio
 
-fn print(value: i32, other: i32)
+fn print(value: i32)
 {
-    printf("%d %d\n", value)
+    printf("%d\n", value)
+}
+
+fn print(value: i32)
+{
+    printf("%d\n", value)
 }
 
 fn print(value: str)
@@ -12,6 +17,6 @@ fn print(value: str)
 
 fn main()
 {
-    print(10, {})
+    print(10)
     print("hello")
 }

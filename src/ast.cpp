@@ -558,10 +558,10 @@ pars::FnType* pars::AST::parse_fn()
 		});
 	}
 
-	auto *collection = m_ctx->scope_table.get_or_add_symbol<FnCollection>(fn->symbol, !has_flag(fn->flags, FnFlags::Private));
+	fn->collection = m_ctx->scope_table.get_or_add_symbol<FnCollection>(fn->symbol, !has_flag(fn->flags, FnFlags::Private));
 
 	// TODO change to a hash set or map and throw an error in case of duplicates
-	collection->functions.emplace_back(fn);
+	fn->collection->functions.emplace_back(fn);
 
 	m_function_stack.emplace_back(fn);
 

@@ -58,3 +58,43 @@ pars::FnType * pars::FnCollection::get_fn(std::span<Expr *> args, Analyzer *anal
 
 	return nullptr;
 }
+
+bool pars::FnCollection::fn_is_duplicate(FnType *in_fn)
+{
+	if (functions.empty())
+	{
+		return false;
+	}
+
+	auto matches = 0;
+
+	for (auto *fn : functions)
+	{
+		if (fn->signature.parameters.size() != in_fn->signature.parameters.size())
+		{
+			return false;
+		}
+
+		auto all_match = [&]()
+		{
+			for (auto i = 0; auto *param : fn->signature.parameters)
+			{
+				auto *other_param = in_fn->signature.parameters[i];
+
+				if (!other_param->type->is_equal(param->type))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		};
+
+		if (all_match())
+		{
+			matches++;
+		}
+	}
+
+	return matches > 1;
+}

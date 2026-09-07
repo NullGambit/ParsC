@@ -15,5 +15,7 @@ namespace pars
 		std::vector<FnType*> functions;
 
 		FnType* get_fn(std::span<Expr*> args, Analyzer *analyzer);
+
+		bool fn_is_duplicate(FnType *in_fn);
 	};
 }
