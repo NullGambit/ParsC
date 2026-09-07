@@ -44,6 +44,7 @@ fn main()
       - [other primitives](#other-primitives)
   - [Function pointers](#function-pointers)
   - [Type casting](#type-casting)
+  - [Function overloading](#function-overloading)
   - [Building pars](#building-pars)
   - [Technical details](#technical-details)
 
@@ -756,6 +757,32 @@ var c: char = cast(char)10
 ```
 
 any expression can be used withing the brackets for cast and the type of the result of that expression will be used.
+
+## Function overloading
+
+functions can share the same name as long as their parameters are different
+
+```rs
+import core.stdc.stdio
+
+fn print(value: i32)
+{
+    printf("%d\n", value)
+}
+
+fn print(value: str)
+{
+    printf("%s\n", value)
+}
+
+fn main()
+{
+    print(10)
+    print("hello")
+}
+```
+
+here the compiler will pick the correct function based on the arguments provided. the arguments must not be ambiguous.
 
 
 ## Building pars
