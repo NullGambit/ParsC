@@ -4,6 +4,7 @@
 
 namespace pars
 {
+	struct ImplStmt;
 	struct FnPtrType;
 	struct AggregateExpr;
 	struct Array;
@@ -98,6 +99,7 @@ namespace pars
 		virtual Node* visit(TypeExpr *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(BlockStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(AssignmentStmt *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(ImplStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(UnresolvedSymbol *type, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(Pointer *type, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(BaseArray *type, VisitCtx ctx) { return nullptr; }

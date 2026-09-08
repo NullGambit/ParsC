@@ -56,9 +56,10 @@ namespace pars
 		Node* parse_return();
 		void parse_attributes();
 		Symbol get_symbol();
-		FnSignature parse_fn_signature(bool parse_names = true);
-		FnType* parse_fn();
+		FnSignature parse_fn_signature(bool parse_names = true, std::span<VarDeclStmt*> added_methods = {});
+		FnType* parse_fn(std::span<VarDeclStmt*> added_methods = {});
 		Struct* parse_struct(bool skip_signature = false);
+		ImplStmt* parse_impl();
 		InitializerList parse_brace_list();
 		BlockStmt* parse_block();
 		AliasType* parse_alias();
@@ -85,6 +86,8 @@ namespace pars
 		FnType* get_current_fn();
 
 		bool followed_by_body();
+
+		void collect_attributes();
 
 		template<IsNode T>
 		T* new_node()

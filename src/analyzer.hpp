@@ -32,6 +32,7 @@ namespace pars
 		Node* visit(CompIfStmt *stmt, VisitCtx ctx) override;
 		Node* visit(WhileStmt *stmt, VisitCtx ctx) override;
 		Node* visit(ForStmt *stmt, VisitCtx ctx) override;
+		Node* visit(ImplStmt *stmt, VisitCtx ctx) override;
 		Node* visit(AliasType *alias, VisitCtx ctx) override;
 		Node* visit(SymbolExpr *expr, VisitCtx ctx) override;
 		Node* visit(BinaryExpr *expr, VisitCtx ctx) override;

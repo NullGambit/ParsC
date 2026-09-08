@@ -16,6 +16,7 @@ namespace pars
     static HashMap<std::string_view, TokenType> g_keywords
     {
         {"struct", TokenType::Struct},
+        {"impl", TokenType::Impl},
         {"trait", TokenType::Trait},
         {"union", TokenType::Union},
         {"static", TokenType::Static},

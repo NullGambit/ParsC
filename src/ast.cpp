@@ -100,10 +100,7 @@ u32 pars::AST::get_file_id() const
 
 pars::Node* pars::AST::declaration()
 {
-	if (m_lexer.match(At))
-	{
-		parse_attributes();
-	}
+	collect_attributes();
 
 	if (m_lexer.match(Fn))
 	{
@@ -112,6 +109,10 @@ pars::Node* pars::AST::declaration()
 	if (m_lexer.match(TokenType::Struct))
 	{
 		return parse_struct();
+	}
+	if (m_lexer.match(Impl))
+	{
+		return parse_impl();
 	}
 	if (m_lexer.match(Var) || m_lexer.match(Let) || m_lexer.match(Const))
 	{
@@ -479,11 +480,13 @@ pars::Symbol pars::AST::get_symbol()
 	return symbol;
 }
 
-pars::FnSignature pars::AST::parse_fn_signature(bool parse_names)
+pars::FnSignature pars::AST::parse_fn_signature(bool parse_names, std::span<VarDeclStmt*> added_methods)
 {
 	FnSignature signature;
 
 	m_lexer.expect(LeftParen);
+
+	signature.parameters.insert(signature.parameters.begin(), added_methods.begin(), added_methods.end());
 
 	auto saw_default_param = false;
 
@@ -532,7 +535,7 @@ pars::FnSignature pars::AST::parse_fn_signature(bool parse_names)
 	return signature;
 }
 
-pars::FnType* pars::AST::parse_fn()
+pars::FnType* pars::AST::parse_fn(std::span<VarDeclStmt*> added_methods)
 {
 	auto *fn = new_node<FnType>();
 
@@ -548,7 +551,7 @@ pars::FnType* pars::AST::parse_fn()
 		fn->flags |= FnFlags::Private;
 	}
 
-	fn->signature = parse_fn_signature();
+	fn->signature = parse_fn_signature(true, added_methods);
 
 	fn->collection = m_ctx->scope_table.get_or_add_symbol<FnCollection>(fn->symbol, !has_flag(fn->flags, FnFlags::Private));
 
@@ -615,6 +618,34 @@ pars::Struct * pars::AST::parse_struct(bool skip_signature)
 		m_lexer.match(Comma);
 
 		stmt->fields.emplace_back(field);
+	}
+
+	m_lexer.expect(RightBrace);
+
+	return stmt;
+}
+
+pars::ImplStmt * pars::AST::parse_impl()
+{
+	auto *stmt = new_node<ImplStmt>();
+
+	stmt->type_symbol = get_symbol();
+
+	m_lexer.expect(LeftBrace);
+
+	while (!m_lexer.peek(RightBrace))
+	{
+		collect_attributes();
+
+		auto *self = new_node<VarDeclStmt>();
+
+		self->symbol.name = "self";
+
+		m_lexer.expect(Fn);
+
+		auto *fn = parse_fn(std::span{&self, 1});
+
+		stmt->methods.emplace_back(fn);
 	}
 
 	m_lexer.expect(RightBrace);
@@ -846,6 +877,14 @@ pars::FnType* pars::AST::get_current_fn()
 bool pars::AST::followed_by_body()
 {
 	return m_lexer.peek(LeftBrace) || m_lexer.peek(Arrow);
+}
+
+void pars::AST::collect_attributes()
+{
+	if (m_lexer.match(At))
+	{
+		parse_attributes();
+	}
 }
 
 std::vector<pars::Expr*> pars::AST::collect_call_arguments()

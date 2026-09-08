@@ -177,9 +177,13 @@ the above shows a common use case for const variables as it is somewhat like C d
 
 you cannot take the address of consts.
 
-#### let or const?
+arrays and structs can also be made const and accessing indices or members will be purely compile time.
+
+#### let, var or const?
 
 if a variable does not need to ever be reassigned then let should be chosen otherwise var. 
+
+if a variable is known at compile time and does not ever need mutation then const is ideal as it will not allocate any memory.
 
 ## Aliases
 

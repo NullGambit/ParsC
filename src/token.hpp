@@ -119,6 +119,7 @@ namespace pars
         LDecimalLiteral,
         Sizeof,
         Struct,
+        Impl,
         Trait,
         Union,
         Eof

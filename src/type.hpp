@@ -447,6 +447,7 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		Symbol symbol;
 		std::vector<StructField> fields;
+		ImplStmt *impl {};
 
 		u32 get_size() override;
 

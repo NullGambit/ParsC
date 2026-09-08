@@ -132,7 +132,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 	{
 		mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
 		{
-			return param->type_meta.type;
+			return param->type;
 		});
 	}
 
@@ -493,6 +493,29 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 	}
 
 	stmt->body->accept(this, {});
+
+	return stmt;
+}
+
+pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
+{
+	auto *type = dynamic_cast<Struct*>(get_type(stmt->type_symbol.name, stmt->token));
+
+	if (type == nullptr)
+	{
+		throw FrontendError{stmt->token, "type does not support methods"};
+	}
+
+	type->accept(this, ctx);
+
+	type->impl = stmt;
+
+	for (auto *method : stmt->methods)
+	{
+		method->signature.parameters.front()->type = type;
+
+		method->accept(this, ctx);
+	}
 
 	return stmt;
 }

@@ -160,4 +160,12 @@ namespace pars
 		ACCEPT
 	};
 
+	struct ImplStmt : Stmt
+	{
+		Symbol type_symbol;
+		std::vector<FnType*> methods;
+
+		ACCEPT
+	};
+
 }
