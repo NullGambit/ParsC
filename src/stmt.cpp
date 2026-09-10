@@ -428,6 +428,16 @@ bool pars::ForStmt::has_index() const
 	return bindings.size() == iterable->type->get_iter_bindings().size() + 1;
 }
 
+llvm::Value * pars::ImplStmt::emit(EmitCtx &ctx, EmitParams params)
+{
+	for (auto *method : methods)
+	{
+		method->emit(ctx, params);
+	}
+
+	return nullptr;
+}
+
 llvm::Value* do_break_continue(pars::Node *node, pars::EmitCtx &ctx, llvm::BasicBlock *bb, std::string_view type)
 {
 	if (ctx.loop_bbs.empty())

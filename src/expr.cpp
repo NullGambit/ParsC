@@ -147,7 +147,7 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 		return fn;
 	}
 
-	if (value->getType()->isPointerTy())
+	if (value->getType()->isPointerTy() && !has_flag(flags, ExprFlags::AlwaysPtr))
 	{
 		value = ctx.builder.CreateLoad(type->get_llvm_type(ctx.llvm_ctx), value, symbol);
 	}
@@ -277,6 +277,11 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)
 
 llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
+	if (dynamic_cast<CallExpr*>(accessor))
+	{
+		return accessor->emit(ctx, params);
+	}
+
 	if (has_flag(flags, ExprFlags::Immutable))
 	{
 		throw CompileError{this, fmt::format("{} is immutable", target->get_symbol())};
@@ -304,7 +309,7 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 	// TODO placing this here might not work with nested member access.
 	// as of now struct members cannot be readonly but in the future it is worth refactoring this.
-	auto member = target->type->get_member(accessor->get_symbol()).value();
+	auto member = target->type->get_member(accessor->get_symbol(), false).value();
 
 	if (member.access == MemberAccess::Readonly)
 	{

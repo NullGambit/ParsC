@@ -165,6 +165,8 @@ namespace pars
 		Symbol type_symbol;
 		std::vector<FnType*> methods;
 
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params) override;
+
 		ACCEPT
 	};
 

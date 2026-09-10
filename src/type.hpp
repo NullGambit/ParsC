@@ -25,17 +25,13 @@ namespace pars
 		Readonly,
 	};
 
+	// represents a member of an object. can be a field or a method
 	struct MemberInfo
 	{
 		std::string_view name;
 		Type *type;
 		MemberAccess access;
-	};
-
-	struct MethodInfo
-	{
 		MutSet self_mut_set;
-		FnType *type {};
 	};
 
 	struct CallInfo
@@ -69,8 +65,7 @@ namespace pars
 		virtual bool is_callable() const { return false; }
 
 		virtual llvm::Value* access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const { return nullptr; }
-		virtual std::optional<MemberInfo> get_member(std::string_view symbol) const { return {}; }
-		virtual std::optional<MethodInfo> get_method(std::string_view symbol) const { return {}; }
+		virtual std::optional<MemberInfo> get_member(std::string_view symbol, bool is_method) const { return {}; }
 		virtual std::optional<CallInfo> get_call_info() { return {}; }
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
@@ -230,7 +225,7 @@ virtual bool is_equal(Type const *other) const override							\
 		Type *get_inner() const override;
 		bool is_callable() const override;
 
-		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol, bool is_method) const override;
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
 
 		ACCEPT
@@ -315,7 +310,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		std::string_view get_type_name() const override;
 
-		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol, bool is_method) const override;
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
@@ -374,7 +369,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const override;
 
-		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol, bool is_method) const override;
 
 		Type *get_inner() const override;
 
@@ -420,7 +415,7 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
-		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol, bool is_method) const override;
 
 		bool can_coerce_into(Type const *desired_type) const override;
 		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
@@ -475,9 +470,8 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_equal(Type const *other) const override;
 
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
-		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
-		// TODO support overloads and return multiple methods
-		std::optional<MethodInfo> get_method(std::string_view symbol) const override;
+		std::optional<MemberInfo> get_member(std::string_view symbol, bool is_method) const override;
+		std::optional<MemberInfo> get_method(std::string_view symbol) const;
 
 		ACCEPT
 	};

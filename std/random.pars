@@ -8,10 +8,4 @@ fn rand(): i32
 @[extern, private]
 fn time(n: i32): i32
 
-fn random(): i32
-{
-    srand(time(0))
-    return rand()
-}
-
-fn rand_range(min: i32, max: i32) => random() % (max + 1 - min) + min
+fn rand_range(min: i32, max: i32) => rand() % (max + 1 - min) + min

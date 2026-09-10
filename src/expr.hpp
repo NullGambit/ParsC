@@ -21,6 +21,7 @@ namespace pars
 	enum class ExprFlags : u8
 	{
 		Immutable = 1 << 0,
+		AlwaysPtr = 1 << 1,
 	};
 
 	PARS_FLAGIFY(ExprFlags);

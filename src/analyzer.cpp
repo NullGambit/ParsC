@@ -22,17 +22,20 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 		table_override = &ctx.parse_ctx_override->scope_table;
 	}
 
-	// set type from the expr in case of being called from a member access
-	expr->callable->type = expr->type;
-
 	for (auto &arg : expr->arguments)
 	{
 		arg = visit_expr(expr, arg, ctx);
 	}
 
-	ctx.invoker = expr;
+	if (expr->callable->type == nullptr)
+	{
+		// set type from the expr in case of being called from a member access
+		expr->callable->type = expr->type;
 
-	expr->callable->accept(this, ctx);
+		ctx.invoker = expr;
+
+		expr->callable->accept(this, ctx);
+	}
 
 	if (expr->callable->type == nullptr)
 	{
@@ -510,9 +513,13 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 	type->impl = stmt;
 
+	auto *self = new_node<Pointer>();
+
+	self->inner = type;
+
 	for (auto *method : stmt->methods)
 	{
-		method->signature.parameters.front()->type = type;
+		method->signature.parameters.front()->type = self;
 
 		method->accept(this, ctx);
 	}
@@ -533,7 +540,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 {
 	if (ctx.member)
 	{
-		auto maybe_member = expr->type->get_member(expr->symbol);
+		auto maybe_member = expr->type->get_member(expr->symbol, false);
 
 		if (maybe_member.has_value())
 		{
@@ -682,18 +689,30 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		auto subsymbol = expr->accessor->get_symbol();
 
-		if (auto *call = dynamic_cast<CallExpr*>(expr->accessor))
-		{
-
-		}
-
-		auto maybe_member = expr->target->type->get_member(subsymbol);
-
-		// a.b.c
-		if (!maybe_member.has_value())
+		auto throw_error = [&] -> std::optional<MemberInfo>
 		{
 			throw FrontendError{expr->token, fmt::format("member '{}' does not exist on '{}' object",
 				subsymbol, expr->target->get_symbol())};
+		};
+
+		auto *call = dynamic_cast<CallExpr*>(expr->accessor);
+		auto is_method = call != nullptr;
+
+		auto maybe_member = expr->target->type->get_member(subsymbol, is_method).or_else(throw_error);
+
+		if (is_method)
+		{
+			expr->target->flags |= ExprFlags::AlwaysPtr;
+
+			auto *self = new_node<Pointer>();
+
+			self->inner = expr->target->type;
+
+			expr->target->type = self;
+
+			call->arguments.insert(call->arguments.begin(), expr->target);
+
+			call->callable->type = type;
 		}
 
 		expr->accessor->type = maybe_member.value().type;
