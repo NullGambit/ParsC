@@ -585,9 +585,9 @@ pars::FnType* pars::AST::parse_fn(std::span<VarDeclStmt*> added_methods)
 	return fn;
 }
 
-pars::Struct * pars::AST::parse_struct(bool skip_signature)
+pars::StructType * pars::AST::parse_struct(bool skip_signature)
 {
-	auto *stmt = new_node<Struct>();
+	auto *stmt = new_node<StructType>();
 
 	if (!skip_signature)
 	{
@@ -606,7 +606,7 @@ pars::Struct * pars::AST::parse_struct(bool skip_signature)
 
 	while (!m_lexer.peek(RightBrace))
 	{
-		StructField field {};
+		StructFieldInfo field {};
 
 		field.symbol = get_symbol();
 

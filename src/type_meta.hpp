@@ -10,11 +10,11 @@ namespace pars
 	 *	{x: i32, y: str}
 	 */
 
-	using ConstSet = std::bitset<32>;
+	using MutSet = std::bitset<32>;
 
 	struct TypeMeta
 	{
-		ConstSet mut_set;
+		MutSet mut_set;
 		Type *type {};
 	};
 }

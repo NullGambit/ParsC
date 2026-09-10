@@ -22,7 +22,7 @@ namespace pars
 
 		Node* visit(CallExpr *expr, VisitCtx ctx) override;
 		Node* visit(FnType *fn, VisitCtx ctx) override;
-		Node* visit(Struct *stmt, VisitCtx ctx) override;
+		Node* visit(StructType *stmt, VisitCtx ctx) override;
 		Node* visit(VarDeclStmt *stmt, VisitCtx ctx) override;
 		Node* visit(ImportStmt *stmt, VisitCtx ctx) override;
 		Node* visit(ReturnStmt *stmt, VisitCtx ctx) override;

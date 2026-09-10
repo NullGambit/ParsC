@@ -13,6 +13,10 @@
     - theres a lot of allocations made when using stl containers. replace them with custom allocators and reuse memory more often
     - the compeval is currently very incomplete
     - theres too much repeated work between the ast and analyzer
+    - the compiler wastes too much memory:
+        - once a module is compiled a lot of local nodes can be erased and reused by the node arena.
+            only nodes that can be seen from other modules must be kept.
+        - some types should be cached.
 
 - design issues:
     - literals and type coercion need addressing.

@@ -13,7 +13,7 @@ namespace pars
 	struct UnresolvedSymbol;
 	struct SliceExpr;
 	struct StructLiteral;
-	struct Struct;
+	struct StructType;
 	struct ParseCtx;
 	struct IndexOpExpr;
 	struct ArrayLiteralExpr;
@@ -93,7 +93,7 @@ namespace pars
 		virtual Node* visit(ContinueStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(Symbol *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(FnType *stmt, VisitCtx ctx) { return nullptr; }
-		virtual Node* visit(Struct *stmt, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(StructType *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(AliasType *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(SizeofExpr *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(TypeExpr *stmt, VisitCtx ctx) { return nullptr; }

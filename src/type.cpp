@@ -743,16 +743,16 @@ llvm::Value * pars::Slice::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::V
 	return nullptr;
 }
 
-u32 pars::Struct::get_size()
+u32 pars::StructType::get_size()
 {
 	// TODO calculate alignment
-	return std::accumulate(fields.begin(), fields.end(), u32{0}, [](u32 a, const StructField &b)
+	return std::accumulate(fields.begin(), fields.end(), u32{0}, [](u32 a, const StructFieldInfo &b)
 	{
 		return a + b.type->get_size();
 	});
 }
 
-llvm::Type * pars::Struct::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::StructType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	auto *type = llvm::StructType::getTypeByName(*ctx, symbol.name);
 
@@ -775,24 +775,24 @@ llvm::Type * pars::Struct::get_llvm_type(llvm::LLVMContext *ctx) const
 	return type;
 }
 
-llvm::Constant* pars::Struct::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
+llvm::Constant* pars::StructType::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
 {
 	return llvm::ConstantStruct::get((llvm::StructType*)get_llvm_type(ctx.llvm_ctx), init_list);
 }
 
-std::string_view pars::Struct::get_type_name() const
+std::string_view pars::StructType::get_type_name() const
 {
 	return symbol.name;
 }
 
-llvm::Value * pars::Struct::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::StructType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::ConstantAggregateZero::get(get_llvm_type(ctx));
 }
 
-bool pars::Struct::is_equal(Type const *other) const
+bool pars::StructType::is_equal(Type const *other) const
 {
-	auto *other_struct = dynamic_cast<Struct const*>(other);
+	auto *other_struct = dynamic_cast<StructType const*>(other);
 
 	// do structural equality matching of either one is anon
 	if (other_struct != nullptr && symbol.name.empty() || other_struct->symbol.name.empty())
@@ -816,7 +816,7 @@ bool pars::Struct::is_equal(Type const *other) const
 	return this == other;
 }
 
-llvm::Value * pars::Struct::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
+llvm::Value * pars::StructType::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
 	std::string_view symbol) const
 {
 	auto index = UINT32_MAX;
@@ -845,7 +845,7 @@ llvm::Value * pars::Struct::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::
 	return ctx.builder.CreateGEP(get_llvm_type(ctx.llvm_ctx), ptr, {ctx.builder.getInt32(0), ctx.builder.getInt32(index)});
 }
 
-std::optional<pars::MemberInfo> pars::Struct::get_member(std::string_view symbol) const
+std::optional<pars::MemberInfo> pars::StructType::get_member(std::string_view symbol) const
 {
 	auto iter = std::find_if(fields.begin(), fields.end(),
 		[symbol](auto &element) { return element.symbol.name == symbol; });
@@ -856,6 +856,24 @@ std::optional<pars::MemberInfo> pars::Struct::get_member(std::string_view symbol
 	}
 
 	return MemberInfo{iter->symbol.name, iter->type};
+}
+
+std::optional<pars::MethodInfo> pars::StructType::get_method(std::string_view symbol) const
+{
+	if (impl == nullptr)
+	{
+		return std::nullopt;
+	}
+
+	auto iter = std::find_if(impl->methods.begin(), impl->methods.end(),
+		[symbol](auto &method) { return method->symbol.name == symbol; });
+
+	if (iter == impl->methods.end())
+	{
+		return std::nullopt;
+	}
+
+	return MethodInfo{.type = *iter};
 }
 
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const

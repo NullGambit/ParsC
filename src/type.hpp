@@ -32,6 +32,12 @@ namespace pars
 		MemberAccess access;
 	};
 
+	struct MethodInfo
+	{
+		MutSet self_mut_set;
+		FnType *type {};
+	};
+
 	struct CallInfo
 	{
 		std::span<VarDeclStmt*> parameters;
@@ -64,6 +70,7 @@ namespace pars
 
 		virtual llvm::Value* access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const { return nullptr; }
 		virtual std::optional<MemberInfo> get_member(std::string_view symbol) const { return {}; }
+		virtual std::optional<MethodInfo> get_method(std::string_view symbol) const { return {}; }
 		virtual std::optional<CallInfo> get_call_info() { return {}; }
 
 		virtual llvm::Value* op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const { return nullptr; }
@@ -436,17 +443,18 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
 	};
 
-	struct StructField
+	struct StructFieldInfo
 	{
 		Symbol symbol;
 		TypeMeta type_meta;
-		Type *type;
+		Type *type {};
 	};
 
-	struct Struct : Type
+
+	struct StructType : Type
 	{
 		Symbol symbol;
-		std::vector<StructField> fields;
+		std::vector<StructFieldInfo> fields;
 		ImplStmt *impl {};
 
 		u32 get_size() override;
@@ -468,6 +476,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
 		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
+		// TODO support overloads and return multiple methods
+		std::optional<MethodInfo> get_method(std::string_view symbol) const override;
 
 		ACCEPT
 	};

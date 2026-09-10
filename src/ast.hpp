@@ -58,7 +58,7 @@ namespace pars
 		Symbol get_symbol();
 		FnSignature parse_fn_signature(bool parse_names = true, std::span<VarDeclStmt*> added_methods = {});
 		FnType* parse_fn(std::span<VarDeclStmt*> added_methods = {});
-		Struct* parse_struct(bool skip_signature = false);
+		StructType* parse_struct(bool skip_signature = false);
 		ImplStmt* parse_impl();
 		InitializerList parse_brace_list();
 		BlockStmt* parse_block();

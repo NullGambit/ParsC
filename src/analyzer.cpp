@@ -195,7 +195,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 	return fn;
 }
 
-pars::Node* pars::Analyzer::visit(Struct *stmt, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(StructType *stmt, VisitCtx ctx)
 {
 	// already been resolved
 	if (!stmt->fields.empty() && stmt->fields.front().type != nullptr)
@@ -499,7 +499,7 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 {
-	auto *type = dynamic_cast<Struct*>(get_type(stmt->type_symbol.name, stmt->token));
+	auto *type = dynamic_cast<StructType*>(get_type(stmt->type_symbol.name, stmt->token));
 
 	if (type == nullptr)
 	{
@@ -682,6 +682,11 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		auto subsymbol = expr->accessor->get_symbol();
 
+		if (auto *call = dynamic_cast<CallExpr*>(expr->accessor))
+		{
+
+		}
+
 		auto maybe_member = expr->target->type->get_member(subsymbol);
 
 		// a.b.c
@@ -825,9 +830,9 @@ namespace pars
 		}
 	}
 
-	void assign_struct_indices(Struct *type, Analyzer *analyzer, InitializerList &initializers)
+	void assign_struct_indices(StructType *type, Analyzer *analyzer, InitializerList &initializers)
 	{
-		auto find_fn = [](const StructField &field, NamedExpr *named_expr)
+		auto find_fn = [](const StructFieldInfo &field, NamedExpr *named_expr)
 		{
 			// TODO perhaps implementing a string interning system within the compiler to speed up this comparison
 			// or see if llvm has one i can already use
@@ -835,7 +840,7 @@ namespace pars
 			return named_expr->name == field.symbol.name;
 		};
 
-		auto get_type_fn = [](const StructField &field) { return field.type; };
+		auto get_type_fn = [](const StructFieldInfo &field) { return field.type; };
 
 		assign_named_indices(type->fields, find_fn, get_type_fn, analyzer, initializers);
 	}
@@ -953,7 +958,7 @@ pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
 	expr->type = get_type(expr->name, expr->token);
 
-	auto *struct_type = dynamic_cast<Struct*>(expr->type);
+	auto *struct_type = dynamic_cast<StructType*>(expr->type);
 
 	assign_struct_indices(struct_type, this, expr->initializers);
 
@@ -964,7 +969,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 {
 	if (ctx.type == nullptr && !expr->values.empty())
 	{
-		auto *type = new_node<Struct>();
+		auto *type = new_node<StructType>();
 
 		expr->type = type;
 
@@ -975,7 +980,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 				named->value->accept(this, ctx);
 
 				type->fields.emplace_back(
-					StructField
+					StructFieldInfo
 					{
 						{named->name},
 						{},
@@ -996,7 +1001,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 
 	expr->type = ctx.type;
 
-	if (auto *struct_type = dynamic_cast<Struct*>(expr->type))
+	if (auto *struct_type = dynamic_cast<StructType*>(expr->type))
 	{
 		assign_struct_indices(struct_type, this, expr->values);
 	}
