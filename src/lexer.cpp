@@ -92,6 +92,7 @@ pars::Token pars::Lexer::advance_one()
         case '<': return build_token('=', LessEqual, Less);
         case '>': return build_token('=', GreaterEqual, Greater);
         case '!': return build_token('=', BangEqual, Bang);
+        case ':': return build_token(':', ColonColon, Colon);
         case '%': return build_token(Percent);
         case '$': return build_token(Dollar);
         case '&': return build_token(Ampersand);
@@ -105,7 +106,6 @@ pars::Token pars::Lexer::advance_one()
         case '~': return build_token(Tilde);
         case ',': return build_token(Comma);
         case ';': return build_token(SemiColon);
-        case ':': return build_token(Colon);
         case '?': return build_token(Question);
         case '^': return build_token(Caret);
         case '[': return build_token(LeftBracket);

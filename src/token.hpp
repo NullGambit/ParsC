@@ -10,6 +10,7 @@ namespace pars
     {
         TokenError,
         Colon,
+        ColonColon,
         Question,
 
         _ComparisonStart,

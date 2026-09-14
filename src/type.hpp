@@ -548,6 +548,7 @@ virtual bool is_equal(Type const *other) const override							\
 		Inline = 1 << 1,
 		Private = 1 << 2,
 		ArrowFn = 1 << 3,
+		Static = 1 << 4,
 	};
 
 	PARS_FLAGIFY(FnFlags);

@@ -157,6 +157,7 @@ namespace pars
 	{
 		Expr *target;
 		Expr *accessor;
+		bool is_static_access {};
 
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;

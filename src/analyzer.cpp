@@ -517,9 +517,16 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 	self->inner = type;
 
+	auto scope = m_ctx->scope_table.new_scope();
+
+	m_ctx->scope_table.add_to_scope({.name = "Self"}, type);
+
 	for (auto *method : stmt->methods)
 	{
-		method->signature.parameters.front()->type = self;
+		if (!has_flag(method->flags, FnFlags::Static))
+		{
+			method->signature.parameters.front()->type = self;
+		}
 
 		method->accept(this, ctx);
 	}
@@ -658,7 +665,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		expr->accessor = visit_expr(expr, expr->accessor, ctx);
 	}
-	else if (auto *type = dynamic_cast<Type*>(symbol_node))
+	else if (auto *type = dynamic_cast<Type*>(symbol_node); type && !expr->is_static_access)
 	{
 		auto *prop_expr = new_node<TypePropExpr>();
 
@@ -702,17 +709,20 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		if (is_method)
 		{
-			expr->target->flags |= ExprFlags::AlwaysPtr;
+			if (!expr->is_static_access)
+			{
+				expr->target->flags |= ExprFlags::AlwaysPtr;
 
-			auto *self = new_node<Pointer>();
+				auto *self = new_node<Pointer>();
 
-			self->inner = expr->target->type;
+				self->inner = expr->target->type;
 
-			expr->target->type = self;
+				expr->target->type = self;
 
-			call->arguments.insert(call->arguments.begin(), expr->target);
+				call->arguments.insert(call->arguments.begin(), expr->target);
+			}
 
-			call->callable->type = type;
+			call->callable->type = maybe_member.value().type;
 		}
 
 		expr->accessor->type = maybe_member.value().type;

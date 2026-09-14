@@ -8,8 +8,8 @@ struct User
 
 impl User
 {
-    //@static
-    //fn new() => Self{name: "unnamed", score: 10}
+    @static
+    fn new() => Self{name: "unnamed", score: 10}
 
     // self is imut here because it does not mutate
     fn print() => printf("name: %s, score: %d\n", self.name, self.score)
@@ -23,9 +23,13 @@ impl User
 
 fn main()
 {
-    //var default_user = User::new()
+    var default_user = User::new()
+
+    default_user.print()
 
     let user = User{name: "john", score: 100}
+
+    //user.double_score()
 
     user.print()
 

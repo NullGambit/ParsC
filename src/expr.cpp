@@ -177,7 +177,8 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 		if (index < call_info.parameters.size())
 		{
-			desired_type = call_info.parameters[index]->type;
+			auto *param = call_info.parameters[index];
+			auto *desired_type = param->type;
 
 			if (!is_assignable_from(arg->type, desired_type))
 			{
@@ -192,6 +193,12 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 						index
 					)
 				};
+			}
+
+			if (!param->type_meta.mut_set.test(0) && arg->mut_set.test(0))
+			//if (arg->mut_set != param->type_meta.mut_set)
+			{
+				throw CompileError {this, "Mutability does not match"};
 			}
 		}
 
@@ -240,6 +247,11 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	}
 
 	return callable->type->op_call(ctx, callable_ptr, argv);
+}
+
+std::string_view pars::MemberAccessExpr::get_symbol()
+{
+	return target->get_symbol();
 }
 
 llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)

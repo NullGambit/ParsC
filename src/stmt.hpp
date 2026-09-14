@@ -36,9 +36,9 @@ namespace pars
 	{
 		Symbol symbol;
 		TypeMeta type_meta;
-		Type *type;
-		Expr* initializer;
-		VarFlags flags;
+		Type *type {};
+		Expr *initializer {};
+		VarFlags flags {};
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 

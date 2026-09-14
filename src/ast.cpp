@@ -480,13 +480,13 @@ pars::Symbol pars::AST::get_symbol()
 	return symbol;
 }
 
-pars::FnSignature pars::AST::parse_fn_signature(bool parse_names, std::span<VarDeclStmt*> added_methods)
+pars::FnSignature pars::AST::parse_fn_signature(bool parse_names, std::span<VarDeclStmt*> added_params)
 {
 	FnSignature signature;
 
 	m_lexer.expect(LeftParen);
 
-	signature.parameters.insert(signature.parameters.begin(), added_methods.begin(), added_methods.end());
+	signature.parameters.insert(signature.parameters.begin(), added_params.begin(), added_params.end());
 
 	auto saw_default_param = false;
 
@@ -535,7 +535,7 @@ pars::FnSignature pars::AST::parse_fn_signature(bool parse_names, std::span<VarD
 	return signature;
 }
 
-pars::FnType* pars::AST::parse_fn(std::span<VarDeclStmt*> added_methods)
+pars::FnType* pars::AST::parse_fn(std::span<VarDeclStmt*> added_params)
 {
 	auto *fn = new_node<FnType>();
 
@@ -545,13 +545,20 @@ pars::FnType* pars::AST::parse_fn(std::span<VarDeclStmt*> added_methods)
 	{
 		fn->flags |= FnFlags::Extern;
 	}
-
 	if (has_keyword_attribute(fn->symbol, Private))
 	{
 		fn->flags |= FnFlags::Private;
 	}
 
-	fn->signature = parse_fn_signature(true, added_methods);
+	auto added_params_override = added_params;
+
+	if (has_keyword_attribute(fn->symbol, Static))
+	{
+		fn->flags |= FnFlags::Static;
+		added_params_override = {};
+	}
+
+	fn->signature = parse_fn_signature(true, added_params_override);
 
 	fn->collection = m_ctx->scope_table.get_or_add_symbol<FnCollection>(fn->symbol, !has_flag(fn->flags, FnFlags::Private));
 
@@ -732,16 +739,17 @@ pars::Expr* pars::AST::parse_primary()
 
 	if (inner != nullptr)
 	{
-		if (m_lexer.match(Dot))
+		if (m_lexer.match(Dot) || m_lexer.match(ColonColon))
 		{
 			auto *expr = new_node<MemberAccessExpr>();
+
+			expr->is_static_access = m_lexer.peek_last(ColonColon);
 
 			expr->target = inner;
 			expr->accessor = parse_primary();
 
 			return expr;
 		}
-
 
 		Expr *lhs {};
 

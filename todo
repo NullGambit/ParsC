@@ -37,7 +37,7 @@
 
 - structs:
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
-    - methods
+    - allow overloading for methods
     - traits
     - reflection
     - refactor attributes to allow user defined types
@@ -49,6 +49,7 @@
     - mixins
     - move and copy system
     - allow initialization of structs without braces (maybe bad idea?)
+    - static fields
 
 - enums:
     - payloads
