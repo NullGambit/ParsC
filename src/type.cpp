@@ -46,6 +46,24 @@ llvm::Value * pars::Void::get_default_value(llvm::LLVMContext *ctx) const
 	return llvm::UndefValue::get(get_llvm_type(ctx));
 }
 
+std::optional<pars::MemberInfo> pars::UserDefType::get_method(std::string_view symbol) const
+{
+	if (impl == nullptr)
+	{
+		return std::nullopt;
+	}
+
+	auto iter = std::find_if(impl->methods.begin(), impl->methods.end(),
+		[symbol](auto &method) { return method->symbol.name == symbol; });
+
+	if (iter == impl->methods.end())
+	{
+		return std::nullopt;
+	}
+
+	return MemberInfo{.type = *iter};
+}
+
 llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::IntegerType::get(*ctx, bits);
@@ -237,6 +255,15 @@ bool pars::AliasType::is_callable() const
 
 std::optional<pars::MemberInfo> pars::AliasType::get_member(std::string_view symbol, bool is_method) const
 {
+	if (is_method)
+	{
+		auto maybe_method = get_method(symbol);
+
+		if (maybe_method.has_value())
+		{
+			return maybe_method.value();
+		}
+	}
 	return type->get_member(symbol, is_method);
 }
 
@@ -623,6 +650,11 @@ llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm
 
 std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol, bool is_method) const
 {
+	if (is_method)
+	{
+		return element_type->get_member(symbol, is_method);
+	}
+
 	auto maybe_member = BaseArray::get_member(symbol, is_method);
 
 	if (maybe_member.has_value())
@@ -861,24 +893,6 @@ std::optional<pars::MemberInfo> pars::StructType::get_member(std::string_view sy
 	}
 
 	return MemberInfo{iter->symbol.name, iter->type};
-}
-
-std::optional<pars::MemberInfo> pars::StructType::get_method(std::string_view symbol) const
-{
-	if (impl == nullptr)
-	{
-		return std::nullopt;
-	}
-
-	auto iter = std::find_if(impl->methods.begin(), impl->methods.end(),
-		[symbol](auto &method) { return method->symbol.name == symbol; });
-
-	if (iter == impl->methods.end())
-	{
-		return std::nullopt;
-	}
-
-	return MemberInfo{.type = *iter};
 }
 
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const

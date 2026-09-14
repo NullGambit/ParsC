@@ -1,40 +1,18 @@
 import core.stdc.stdio
 
-struct User
+alias Vec2 = [2]i32{x, y}
+
+impl Vec2
 {
-    name: str
-    score: i32
-}
-
-impl User
-{
-    @static
-    fn new() => Self{name: "unnamed", score: 10}
-
-    // self is imut here because it does not mutate
-    fn print() => printf("name: %s, score: %d\n", self.name, self.score)
-
-    // self is not imut here because it is mutated
-    fn double_score()
-    {
-        self.score *= 2
-    }
+    fn dot(other: Self) => self.x * other.x + self.y * other.y
 }
 
 fn main()
 {
-    var default_user = User::new()
+    let pos = Vec2[x: 10, y: 20]
+    let pos2 = Vec2[x: 30, y: 40]
 
-    default_user.print()
+    let result = pos.dot(pos2)
 
-    default_user.double_score()
-
-    let user = User{name: "john", score: 100}
-
-    user.double_score()
-
-    user.print()
-
-    // user.double_score() // this should fail
-    // default_user.double_score() // this is fine
+    printf("d\n", result)
 }

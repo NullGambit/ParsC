@@ -1,0 +1,40 @@
+import core.stdc.stdio
+
+struct User
+{
+    name: str
+    score: i32
+}
+
+impl User
+{
+    @static
+    fn new() => Self{name: "unnamed", score: 10}
+
+    // self is imut here because it does not mutate
+    fn print() => printf("name: %s, score: %d\n", self.name, self.score)
+
+    // self is not imut here because it is mutated
+    fn double_score()
+    {
+        self.score *= 2
+    }
+}
+
+fn main()
+{
+    var default_user = User::new()
+
+    default_user.print()
+
+    default_user.double_score()
+
+    let user = User{name: "john", score: 100}
+
+    user.double_score()
+
+    user.print()
+
+    // user.double_score() // this should fail
+    // default_user.double_score() // this is fine
+}

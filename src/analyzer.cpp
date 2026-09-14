@@ -509,7 +509,7 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 {
-	auto *type = dynamic_cast<StructType*>(get_type(stmt->type_symbol.name, stmt->token));
+	auto *type = dynamic_cast<UserDefType*>(get_type(stmt->type_symbol.name, stmt->token));
 
 	if (type == nullptr)
 	{

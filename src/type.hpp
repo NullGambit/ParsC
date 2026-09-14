@@ -158,6 +158,13 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 	};
 
+	struct UserDefType : Type
+	{
+		ImplStmt *impl {};
+
+		std::optional<MemberInfo> get_method(std::string_view symbol) const;
+	};
+
 	struct Integral : Type
 	{
 		u8 bits;
@@ -195,7 +202,7 @@ virtual bool is_equal(Type const *other) const override							\
 		DEFAULT_INTEGRAL_EQUAL(Integral)
 	};
 
-	struct AliasType : Type
+	struct AliasType : UserDefType
 	{
 		Symbol symbol;
 		TypeMeta meta;
@@ -445,12 +452,10 @@ virtual bool is_equal(Type const *other) const override							\
 		Type *type {};
 	};
 
-
-	struct StructType : Type
+	struct StructType : UserDefType
 	{
 		Symbol symbol;
 		std::vector<StructFieldInfo> fields;
-		ImplStmt *impl {};
 
 		u32 get_size() override;
 
@@ -471,7 +476,6 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
 		std::optional<MemberInfo> get_member(std::string_view symbol, bool is_method) const override;
-		std::optional<MemberInfo> get_method(std::string_view symbol) const;
 
 		ACCEPT
 	};
