@@ -340,11 +340,6 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	return accessor_value != nullptr ? accessor_value : result;
 }
 
-std::string_view pars::MemberAccessExpr::get_symbol()
-{
-	return target->get_symbol();
-}
-
 llvm::Value* pars::TypePropExpr::emit(EmitCtx& ctx, EmitParams params)
 {
 	auto *prop = type->get_property(ctx.llvm_ctx, property_name);

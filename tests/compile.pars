@@ -27,6 +27,8 @@ fn main()
 
     default_user.print()
 
+    default_user.double_score()
+
     let user = User{name: "john", score: 100}
 
     //user.double_score()

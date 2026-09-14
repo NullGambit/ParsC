@@ -391,6 +391,13 @@ pars::Node* pars::Analyzer::visit(AssignmentStmt *stmt, VisitCtx ctx)
 	stmt->lhs = visit_expr(nullptr, stmt->lhs, {});
 	stmt->rhs = visit_expr(nullptr, stmt->rhs, {stmt->lhs->type});
 
+	auto *var = m_ctx->scope_table.find_symbol<VarDeclStmt>(stmt->lhs->get_symbol());
+
+	if (var != nullptr)
+	{
+		var->flags |= VarFlags::Mutated;
+	}
+
 	if (!stmt->lhs->type->is_equal(stmt->rhs->type) && !stmt->lhs->type->can_coerce_into(stmt->rhs->type))
 	{
 		throw FrontendError{stmt->token,
@@ -523,12 +530,20 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 	for (auto *method : stmt->methods)
 	{
+		VarDeclStmt *self_param {};
+
 		if (!has_flag(method->flags, FnFlags::Static))
 		{
-			method->signature.parameters.front()->type = self;
+			self_param = method->signature.parameters.front();
+			self_param->type = self;
 		}
 
 		method->accept(this, ctx);
+
+		if (self_param != nullptr && !has_flag(self_param->flags, VarFlags::Mutated))
+		{
+			self_param->type_meta.mut_set.set(0);
+		}
 	}
 
 	return stmt;
