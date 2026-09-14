@@ -31,7 +31,7 @@ fn main()
 
     let user = User{name: "john", score: 100}
 
-    //user.double_score()
+    user.double_score()
 
     user.print()
 

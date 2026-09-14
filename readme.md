@@ -36,6 +36,7 @@ fn main()
       - [logical operators](#logical-operators)
       - [loops](#loops)
   - [Structs](#structs)
+  - [Methods](#methods)
   - [Modules](#modules)
       - [Multiplatform imports](#multiplatform-imports)
       - [private symbols](#private-symbols)
@@ -536,6 +537,57 @@ struct User
 ```
 this is useful for writing structs that are meant to be used for json or some other serialization format.
 
+## Methods
+methods are functions associated with a type.
+
+any user defined type can have methods.
+
+methods are defined separately from structs to improve readability.
+
+```rs 
+import core.stdc.stdio
+
+struct User
+{
+    name: str
+    score: i32
+}
+
+impl User
+{
+    @static
+    fn new() => Self{name: "unnamed", score: 10}
+
+    // self is imut here because it does not mutate
+    fn print() => printf("name: %s, score: %d\n", self.name, self.score)
+
+    // self is not imut here because it is mutated
+    fn double_score()
+    {
+        self.score *= 2
+    }
+}
+
+fn main()
+{
+    var default_user = User::new()
+    
+    default_user.score = 55
+
+    default_user.double_score()
+    
+    default_user.print()
+
+    let user = User{name: "john", score: 100}
+    
+    // this will not compile because double_score expects a mutable User and user is declared with imut
+    // user.double_score()
+
+    user.print()
+}
+```
+
+the compiler will automatically set the mutability of self in methods based on its usage.
 
 ## Modules
 

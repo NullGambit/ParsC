@@ -195,8 +195,8 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 				};
 			}
 
+			// TODO check all positions not just 0
 			if (!param->type_meta.mut_set.test(0) && arg->mut_set.test(0))
-			//if (arg->mut_set != param->type_meta.mut_set)
 			{
 				throw CompileError {this, "Mutability does not match"};
 			}
