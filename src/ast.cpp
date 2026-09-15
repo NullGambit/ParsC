@@ -608,7 +608,12 @@ pars::EnumType* pars::AST::parse_enum()
 
 		variant.symbol = get_symbol();
 
-		type->variants.emplace_back(variant);
+		auto [_, ok] = type->variants.emplace(variant.symbol.name, variant);
+
+		if (!ok)
+		{
+			throw FrontendError{m_lexer.peek_last(), "Duplicate variant found"};
+		}
 	});
 
 	m_ctx->scope_table.add_to_scope(type->symbol, type);

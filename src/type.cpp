@@ -1175,10 +1175,7 @@ pars::EnumLiteral * pars::EnumType::get_literal(std::string_view name) const
 
 std::optional<u32> pars::EnumType::get_value(std::string_view name) const
 {
-	auto iter = std::find_if(variants.begin(), variants.end(), [&](const EnumVariant &variant)
-	{
-		return variant.symbol.name == name;
-	});
+	auto iter = variants.find(name);
 
 	if (iter == variants.end())
 	{

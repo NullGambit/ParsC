@@ -630,7 +630,7 @@ virtual bool is_equal(Type const *other) const override							\
 	struct EnumType : Type
 	{
 		Symbol symbol;
-		std::vector<EnumVariant> variants;
+		HashMap<std::string_view, EnumVariant> variants;
 
 		std::string_view get_type_name() const override;
 

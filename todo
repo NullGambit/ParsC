@@ -7,8 +7,6 @@
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
 
 - current roadmap:
-    - enums
-    - enum payloads
     - sum types
     - match expr
     - StringId
@@ -61,6 +59,9 @@
     - static fields
 
 - enums:
+    - allow setting the value of an enum variant
+    - a way to stringify enum name
+    - allow setting the backing type of enums
     - payloads
     - flag enums
     - iota members
@@ -146,6 +147,7 @@
         in this case the method degrades to a normal function so it can be taken as a function pointer
 
     - make pointers have index operators.
+    - unicode.
     - implement destructuring of all aggregate types.
     - implement warning system.
     - implement command line interface.
