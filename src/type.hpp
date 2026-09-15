@@ -625,11 +625,13 @@ virtual bool is_equal(Type const *other) const override							\
 	struct EnumVariant
 	{
 		Symbol symbol;
+		u64 value;
 	};
 
 	struct EnumType : Type
 	{
 		Symbol symbol;
+		u64 default_value = UINT64_MAX;
 		HashMap<std::string_view, EnumVariant> variants;
 
 		std::string_view get_type_name() const override;

@@ -2,7 +2,7 @@ import core.stdc.stdio
 
 enum Color
 {
-    Red
+    Red = 4
     Blue
     Green
     Yellow
@@ -10,7 +10,7 @@ enum Color
 
 fn main()
 {
-    let color: Color = Blue
+    let color: Color = Green
 
     printf("%d\n", color)
 }

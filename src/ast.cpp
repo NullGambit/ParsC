@@ -602,11 +602,27 @@ pars::EnumType* pars::AST::parse_enum()
 
 	type->symbol = get_symbol();
 
+	u64 highest_value {};
+
 	parse_fields([&]
 	{
 		EnumVariant variant {};
 
 		variant.symbol = get_symbol();
+
+		if (m_lexer.match(Equal))
+		{
+			auto literal = m_lexer.expect(IntegerLiteral);
+
+			highest_value = std::atol(literal.lexeme.data());
+		}
+
+		if (type->default_value == UINT64_MAX)
+		{
+			type->default_value = highest_value;
+		}
+
+		variant.value = highest_value++;
 
 		auto [_, ok] = type->variants.emplace(variant.symbol.name, variant);
 

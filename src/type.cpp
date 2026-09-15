@@ -1142,7 +1142,7 @@ std::string_view pars::EnumType::get_type_name() const
 
 llvm::Value * pars::EnumType::get_default_value(llvm::LLVMContext *ctx) const
 {
-	return U32Type.get_default_value(ctx);
+	return llvm::ConstantInt::get(U64Type.get_llvm_type(ctx), default_value, true);
 }
 
 llvm::Type * pars::EnumType::get_llvm_type(llvm::LLVMContext *ctx) const
@@ -1182,7 +1182,7 @@ std::optional<u32> pars::EnumType::get_value(std::string_view name) const
 		return std::nullopt;
 	}
 
-	return std::distance(variants.begin(), iter);
+	return iter->second.value;
 }
 
 pars::Type * pars::produce_type(Type *type)
