@@ -509,11 +509,11 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 {
-	auto *type = dynamic_cast<UserDefType*>(get_type(stmt->type_symbol.name, stmt->token));
+	auto *type = dynamic_cast<UserDefType*>(m_ctx->scope_table.find_local_symbol(stmt->type_symbol.name));
 
 	if (type == nullptr)
 	{
-		throw FrontendError{stmt->token, "type does not support methods"};
+		throw FrontendError{stmt->token, "type does not support methods or is not in the same module as the impl statement"};
 	}
 
 	type->accept(this, ctx);
@@ -720,7 +720,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		auto *call = dynamic_cast<CallExpr*>(expr->accessor);
 		auto is_method = call != nullptr;
 
-		auto maybe_member = expr->target->type->get_member(subsymbol, is_method).or_else(throw_error);
+		auto member = expr->target->type->get_member(subsymbol, is_method).or_else(throw_error).value();
 
 		if (is_method)
 		{
@@ -737,10 +737,10 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 				call->arguments.insert(call->arguments.begin(), expr->target);
 			}
 
-			call->callable->type = maybe_member.value().type;
+			call->callable->type = member.type;
 		}
 
-		expr->accessor->type = maybe_member.value().type;
+		expr->accessor->type = member.type;
 		ctx.member = true;
 
 		expr->accessor = visit_expr(expr, expr->accessor, ctx);
