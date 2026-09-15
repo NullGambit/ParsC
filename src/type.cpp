@@ -1135,6 +1135,26 @@ bool pars::FnType::is_equal(Type const *other) const
 	return ret_match();
 }
 
+std::string_view pars::EnumType::get_type_name() const
+{
+	return symbol.name;
+}
+
+llvm::Value * pars::EnumType::get_default_value(llvm::LLVMContext *ctx) const
+{
+	return U32Type.get_default_value(ctx);
+}
+
+llvm::Type * pars::EnumType::get_llvm_type(llvm::LLVMContext *ctx) const
+{
+	return U32Type.get_llvm_type(ctx);
+}
+
+bool pars::EnumType::is_equal(Type const *other) const
+{
+	return this == other;
+}
+
 pars::Type * pars::produce_type(Type *type)
 {
 	if (auto *alias = dynamic_cast<AliasType*>(type))

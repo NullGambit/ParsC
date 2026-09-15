@@ -621,6 +621,25 @@ virtual bool is_equal(Type const *other) const override							\
 		ACCEPT
 	};
 
+	struct EnumVariant
+	{
+		Symbol symbol;
+	};
+
+	struct EnumType : Type
+	{
+		Symbol symbol;
+		std::vector<EnumVariant> variants;
+
+		std::string_view get_type_name() const override;
+
+		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
+
+		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
+
+		bool is_equal(Type const *other) const override;
+	};
+
 	Type* produce_type(Type *type);
 
 	template<class T>

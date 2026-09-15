@@ -114,6 +114,10 @@ pars::Node* pars::AST::declaration()
 	{
 		return parse_impl();
 	}
+	if (m_lexer.match(Enum))
+	{
+		return parse_enum();
+	}
 	if (m_lexer.match(Var) || m_lexer.match(Let) || m_lexer.match(Const))
 	{
 		return parse_var();
@@ -592,26 +596,42 @@ pars::FnType* pars::AST::parse_fn(std::span<VarDeclStmt*> added_params)
 	return fn;
 }
 
-pars::StructType * pars::AST::parse_struct(bool skip_signature)
+pars::EnumType* pars::AST::parse_enum()
 {
-	auto *stmt = new_node<StructType>();
+	auto *type = new_node<EnumType>();
+
+	type->symbol = get_symbol();
+
+	parse_fields([&]
+	{
+		EnumVariant variant {};
+
+		variant.symbol = get_symbol();
+
+		type->variants.emplace_back(variant);
+	});
+
+	return type;
+}
+
+pars::StructType* pars::AST::parse_struct(bool skip_signature)
+{
+	auto *type = new_node<StructType>();
 
 	if (!skip_signature)
 	{
-		stmt->symbol = get_symbol();
+		type->symbol = get_symbol();
 
-		m_ctx->scope_table.add_to_scope(stmt->symbol, stmt);
+		m_ctx->scope_table.add_to_scope(type->symbol, type);
 
 		// fieldless struct
 		if (!m_lexer.peek(LeftBrace))
 		{
-			return stmt;
+			return type;
 		}
-
-		m_lexer.expect(LeftBrace);
 	}
 
-	while (!m_lexer.peek(RightBrace))
+	parse_fields([&]
 	{
 		StructFieldInfo field {};
 
@@ -621,15 +641,10 @@ pars::StructType * pars::AST::parse_struct(bool skip_signature)
 
 		field.type_meta = parse_type_meta();
 
-		// optional comma for inline structs
-		m_lexer.match(Comma);
+		type->fields.emplace_back(field);
+	});
 
-		stmt->fields.emplace_back(field);
-	}
-
-	m_lexer.expect(RightBrace);
-
-	return stmt;
+	return type;
 }
 
 pars::ImplStmt * pars::AST::parse_impl()
@@ -1234,7 +1249,7 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overr
 
 		return fn;
 	}
-	if (m_lexer.match(LeftBrace))
+	if (m_lexer.peek(LeftBrace))
 	{
 		return parse_struct(/*skip_signature=*/true);
 	}

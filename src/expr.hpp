@@ -289,6 +289,7 @@ namespace pars
 		ACCEPT
 	};
 
+	// TODO perhaps generalize this so any type such as an i32 can be initialized with braces
 	struct StructLiteral : AggregateExpr
 	{
 		std::string_view name;
@@ -309,5 +310,10 @@ namespace pars
 
 	private:
 		llvm::Value *m_cached_result {};
+	};
+
+	struct EnumLiteral : Expr
+	{
+		u32 value {};
 	};
 }

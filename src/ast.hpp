@@ -58,6 +58,7 @@ namespace pars
 		Symbol get_symbol();
 		FnSignature parse_fn_signature(bool parse_names = true, std::span<VarDeclStmt*> added_params = {});
 		FnType* parse_fn(std::span<VarDeclStmt*> added_params = {});
+		EnumType* parse_enum();
 		StructType* parse_struct(bool skip_signature = false);
 		ImplStmt* parse_impl();
 		InitializerList parse_brace_list();
@@ -122,6 +123,19 @@ namespace pars
 			}
 
 			return expr;
+		}
+
+		template<class Fn>
+		void parse_fields(Fn fn)
+		{
+			m_lexer.expect(TokenType::LeftBrace);
+
+			while (!m_lexer.peek(TokenType::RightBrace))
+			{
+				fn();
+			}
+
+			m_lexer.expect(TokenType::RightBrace);
 		}
 	};
 }

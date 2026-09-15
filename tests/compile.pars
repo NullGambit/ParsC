@@ -1,15 +1,13 @@
-import core.stdc.stdio
 
-alias Integer = i32
-
-impl Integer
+enum Color
 {
-    fn print() => printf("%d\n", ^self)
+    Red
+    Blue
+    Green
+    Yellow
 }
 
 fn main()
 {
-    let integer: Integer = 10
-
-    integer.print()
+    let color = Color::Blue
 }

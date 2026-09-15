@@ -1,0 +1,15 @@
+import core.stdc.stdio
+
+alias Integer = i32
+
+impl Integer
+{
+    fn print() => printf("%d\n", ^self)
+}
+
+fn main()
+{
+    let integer: Integer = 10
+
+    integer.print()
+}
