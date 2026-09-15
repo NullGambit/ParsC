@@ -321,7 +321,7 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 	// TODO placing this here might not work with nested member access.
 	// as of now struct members cannot be readonly but in the future it is worth refactoring this.
-	auto member = target->type->get_member(accessor->get_symbol(), false).value();
+	auto member = target->type->get_member(accessor->get_symbol()).value();
 
 	if (member.access == MemberAccess::Readonly)
 	{

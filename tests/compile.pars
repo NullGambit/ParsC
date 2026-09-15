@@ -1,18 +1,15 @@
 import core.stdc.stdio
 
-alias Vec2 = [2]i32{x, y}
+alias Integer = i32
 
-impl Vec2
+impl Integer
 {
-    fn dot(other: Self) => self.x * other.x + self.y * other.y
+    fn print() => printf("%d\n", ^self)
 }
 
 fn main()
 {
-    let pos = Vec2[x: 10, y: 20]
-    let pos2 = Vec2[x: 30, y: 40]
+    let integer: Integer = 10
 
-    let result = pos.dot(pos2)
-
-    printf("d\n", result)
+    integer.print()
 }

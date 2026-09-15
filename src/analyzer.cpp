@@ -562,7 +562,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 {
 	if (ctx.member)
 	{
-		auto maybe_member = expr->type->get_member(expr->symbol, false);
+		auto maybe_member = expr->type->get_member(expr->symbol);
 
 		if (maybe_member.has_value())
 		{
@@ -720,7 +720,9 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		auto *call = dynamic_cast<CallExpr*>(expr->accessor);
 		auto is_method = call != nullptr;
 
-		auto member = expr->target->type->get_member(subsymbol, is_method).or_else(throw_error).value();
+		auto maybe_member = is_method ? expr->target->type->get_method(subsymbol) : expr->target->type->get_member(subsymbol);
+
+		auto member = maybe_member.or_else(throw_error).value();
 
 		if (is_method)
 		{
@@ -730,7 +732,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 				auto *self = new_node<Pointer>();
 
-				self->inner = expr->target->type;
+				self->inner = produce_type(expr->target->type);
 
 				expr->target->type = self;
 

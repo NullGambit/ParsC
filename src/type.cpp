@@ -253,18 +253,21 @@ bool pars::AliasType::is_callable() const
 	return type->is_callable();
 }
 
-std::optional<pars::MemberInfo> pars::AliasType::get_member(std::string_view symbol, bool is_method) const
+std::optional<pars::MemberInfo> pars::AliasType::get_member(std::string_view symbol) const
 {
-	if (is_method)
-	{
-		auto maybe_method = get_method(symbol);
+	return type->get_member(symbol);
+}
 
-		if (maybe_method.has_value())
-		{
-			return maybe_method.value();
-		}
+std::optional<pars::MemberInfo> pars::AliasType::get_method(std::string_view symbol) const
+{
+	auto result = UserDefType::get_method(symbol);
+
+	if (result.has_value())
+	{
+		return result;
 	}
-	return type->get_member(symbol, is_method);
+
+	return type->get_method(symbol);
 }
 
 llvm::Value * pars::AliasType::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
@@ -446,9 +449,9 @@ std::string_view pars::Pointer::get_type_name() const
 	return "pointer";
 }
 
-std::optional<pars::MemberInfo> pars::Pointer::get_member(std::string_view symbol, bool is_method) const
+std::optional<pars::MemberInfo> pars::Pointer::get_member(std::string_view symbol) const
 {
-	return inner->get_member(symbol, is_method);
+	return inner->get_member(symbol);
 }
 
 llvm::Value * pars::Pointer::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
@@ -510,7 +513,7 @@ llvm::Value * pars::BaseArray::op_index(EmitCtx &ctx, llvm::Value *target, llvm:
 	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
 }
 
-std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view symbol, bool is_method) const
+std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view symbol) const
 {
 	if (symbol == "length")
 	{
@@ -648,14 +651,9 @@ llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm
 	return op_index(ctx, target, ctx.builder.getInt32(index));
 }
 
-std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol, bool is_method) const
+std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol) const
 {
-	if (is_method)
-	{
-		return element_type->get_member(symbol, is_method);
-	}
-
-	auto maybe_member = BaseArray::get_member(symbol, is_method);
+	auto maybe_member = BaseArray::get_member(symbol);
 
 	if (maybe_member.has_value())
 	{
@@ -877,13 +875,8 @@ llvm::Value * pars::StructType::access_member(EmitCtx &ctx, llvm::Value *ptr, ll
 	return ctx.builder.CreateGEP(get_llvm_type(ctx.llvm_ctx), ptr, {ctx.builder.getInt32(0), ctx.builder.getInt32(index)});
 }
 
-std::optional<pars::MemberInfo> pars::StructType::get_member(std::string_view symbol, bool is_method) const
+std::optional<pars::MemberInfo> pars::StructType::get_member(std::string_view symbol) const
 {
-	if (is_method)
-	{
-		return get_method(symbol);
-	}
-
 	auto iter = std::find_if(fields.begin(), fields.end(),
 		[symbol](auto &element) { return element.symbol.name == symbol; });
 
@@ -1140,4 +1133,14 @@ bool pars::FnType::is_equal(Type const *other) const
 	}
 
 	return ret_match();
+}
+
+pars::Type * pars::produce_type(Type *type)
+{
+	if (auto *alias = dynamic_cast<AliasType*>(type))
+	{
+		return alias->type;
+	}
+
+	return type;
 }
