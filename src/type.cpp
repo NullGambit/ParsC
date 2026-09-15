@@ -1155,6 +1155,39 @@ bool pars::EnumType::is_equal(Type const *other) const
 	return this == other;
 }
 
+pars::EnumLiteral * pars::EnumType::get_literal(std::string_view name) const
+{
+	auto maybe_value = get_value(name);
+
+	if (!maybe_value.has_value())
+	{
+		return nullptr;
+	}
+
+	auto *literal = new_node<EnumLiteral>();
+
+	literal->type = const_cast<EnumType*>(this);
+
+	literal->value = maybe_value.value();
+
+	return literal;
+}
+
+std::optional<u32> pars::EnumType::get_value(std::string_view name) const
+{
+	auto iter = std::find_if(variants.begin(), variants.end(), [&](const EnumVariant &variant)
+	{
+		return variant.symbol.name == name;
+	});
+
+	if (iter == variants.end())
+	{
+		return std::nullopt;
+	}
+
+	return std::distance(variants.begin(), iter);
+}
+
 pars::Type * pars::produce_type(Type *type)
 {
 	if (auto *alias = dynamic_cast<AliasType*>(type))

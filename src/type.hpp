@@ -15,6 +15,7 @@ namespace llvm
 
 namespace pars
 {
+	struct EnumLiteral;
 	struct FnCollection;
 	constexpr auto IS_SIGNED = true;
 
@@ -638,6 +639,9 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		bool is_equal(Type const *other) const override;
+
+		EnumLiteral* get_literal(std::string_view name) const;
+		std::optional<u32> get_value(std::string_view name) const;
 	};
 
 	Type* produce_type(Type *type);

@@ -573,6 +573,21 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	}
 	else
 	{
+		if (auto *enum_type = dynamic_cast<EnumType*>(ctx.type))
+		{
+			auto *literal = enum_type->get_literal(expr->symbol);
+
+			if (literal == nullptr)
+			{
+				throw FrontendError{expr->token,
+					fmt::format("enum {} does not have a variant {}",
+						enum_type->symbol.name,
+						expr->symbol)};
+			}
+
+			return literal;
+		}
+
 		auto *sym_node = find_symbol(expr->symbol, expr->token);
 
 		if (auto *var = dynamic_cast<VarDeclStmt*>(sym_node))
@@ -679,6 +694,20 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		ctx.parse_ctx_override = import->module->ast.get_ctx();
 
 		expr->accessor = visit_expr(expr, expr->accessor, ctx);
+	}
+	else if (auto *enum_type = dynamic_cast<EnumType*>(symbol_node))
+	{
+		auto *literal = enum_type->get_literal(expr->accessor->get_symbol());
+
+		if (literal == nullptr)
+		{
+			throw FrontendError{expr->accessor->token,
+				fmt::format("enum {} does not have a variant {}",
+					enum_type->symbol.name,
+					expr->accessor->get_symbol())};
+		}
+
+		return literal;
 	}
 	else if (auto *type = dynamic_cast<Type*>(symbol_node); type && !expr->is_static_access)
 	{

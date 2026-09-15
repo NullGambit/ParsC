@@ -611,6 +611,8 @@ pars::EnumType* pars::AST::parse_enum()
 		type->variants.emplace_back(variant);
 	});
 
+	m_ctx->scope_table.add_to_scope(type->symbol, type);
+
 	return type;
 }
 

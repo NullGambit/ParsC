@@ -6,6 +6,15 @@
         there is no way currently to detect this without the lexer automatically inserting semicolon tokens which it does not do.
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
 
+- current roadmap:
+    - enums
+    - enum payloads
+    - sum types
+    - match expr
+    - StringId
+    - refactor compiler directives and implement reflection
+    - user defined attributes
+
 - tech debt:
     - fn and var structs have redundant type information
     - lots of types dont return correct type names such as arrays or pointers

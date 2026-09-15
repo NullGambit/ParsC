@@ -37,6 +37,7 @@ fn main()
       - [loops](#loops)
   - [Structs](#structs)
   - [Methods](#methods)
+  - [Enums](#enums)
   - [Modules](#modules)
       - [Multiplatform imports](#multiplatform-imports)
       - [private symbols](#private-symbols)
@@ -588,6 +589,38 @@ fn main()
 ```
 
 the compiler will automatically set the mutability of self in methods based on its usage.
+
+## Enums 
+enums allow you to bind constants to symbols. they are purely a compile time abstraction
+
+```rs 
+import core.stdc.stdio
+
+enum Color
+{
+    Red
+    Blue
+    Green
+    Yellow
+}
+
+fn main()
+{
+    var color = Color::Blue
+    
+    // because the desired type is already known Color:: can be omitted
+    color = Red
+
+    printf("%d\n", color)
+}
+```
+
+anywhere the type of the enum is known the enum name can be omitted for better readability
+
+```rs 
+let color: Color = Green
+```
+this is another way an enum can be written but most often it is useful for function arguments.
 
 ## Modules
 

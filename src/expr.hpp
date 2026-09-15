@@ -315,5 +315,8 @@ namespace pars
 	struct EnumLiteral : Expr
 	{
 		u32 value {};
+
+		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params) override;
 	};
 }

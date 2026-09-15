@@ -10,7 +10,9 @@ enum Color
 
 fn main()
 {
-    let color: Color = Blue
+    var color = Color::Blue
+
+    color = Red
 
     printf("%d\n", color)
 }

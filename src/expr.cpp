@@ -654,3 +654,13 @@ llvm::Value * pars::SliceExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 	return params.target_ptr;
 }
+
+llvm::Constant * pars::EnumLiteral::emit_constant(EmitCtx &ctx, EmitParams params)
+{
+	return ctx.builder.getInt32(value);
+}
+
+llvm::Value * pars::EnumLiteral::emit(EmitCtx &ctx, EmitParams params)
+{
+	return emit_constant(ctx, params);
+}
