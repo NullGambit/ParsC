@@ -22,17 +22,19 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 		table_override = &ctx.parse_ctx_override->scope_table;
 	}
 
+	ctx.invoker = expr;
+
 	for (auto &arg : expr->arguments)
 	{
 		arg = visit_expr(expr, arg, ctx);
 	}
 
+	ctx.invoker = {};
+
 	if (expr->callable->type == nullptr)
 	{
 		// set type from the expr in case of being called from a member access
 		expr->callable->type = expr->type;
-
-		ctx.invoker = expr;
 
 		expr->callable->accept(this, ctx);
 	}
@@ -573,6 +575,13 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	}
 	else
 	{
+		// allow the symbol to be resolved later when context information is known
+		// mostly just done for enums
+		if (dynamic_cast<CallExpr*>(ctx.invoker))
+		{
+			return expr;
+		}
+
 		if (auto *enum_type = dynamic_cast<EnumType*>(ctx.type))
 		{
 			auto *literal = enum_type->get_literal(expr->symbol);
@@ -785,6 +794,8 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 {
+	ctx.invoker = nullptr;
+
 	expr->type_expr = visit_expr(expr, expr->type_expr, ctx);
 
 	expr->type = expr->type_expr->type;

@@ -2,15 +2,18 @@ import core.stdc.stdio
 
 enum Color
 {
-    Red = 4
+    Red
     Blue
     Green
     Yellow
 }
 
+fn set_color(color: Color)
+{
+
+}
+
 fn main()
 {
-    let color: Color = Green
-
-    printf("%d\n", color)
+   set_color(Blue)
 }

@@ -61,6 +61,7 @@ namespace pars
 		virtual llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name);
 		virtual Type* get_inner() const { return nullptr; }
 		virtual bool is_ptr() const { return false; }
+		virtual bool is_int() const { return false; }
 		virtual bool is_array() const { return false; }
 		virtual bool is_struct() const { return false; }
 		virtual bool is_callable() const { return false; }
@@ -233,6 +234,7 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_struct() const override;
 		Type *get_inner() const override;
 		bool is_callable() const override;
+		bool is_int() const override;
 
 		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
 		std::optional<MemberInfo> get_method(std::string_view symbol) const override;
@@ -253,6 +255,11 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
 
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
+
+		bool is_int() const override
+		{
+			return true;
+		}
 
 		DEFAULT_INTEGRAL_EQUAL(Integer)
 	};
@@ -349,6 +356,11 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_ptr() const override
 		{
 			return true;
+		}
+
+		bool is_int() const override
+		{
+			return false;
 		}
 	};
 
@@ -644,6 +656,8 @@ virtual bool is_equal(Type const *other) const override							\
 
 		EnumLiteral* get_literal(std::string_view name) const;
 		std::optional<u32> get_value(std::string_view name) const;
+
+		llvm::Value *op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 	};
 
 	Type* produce_type(Type *type);

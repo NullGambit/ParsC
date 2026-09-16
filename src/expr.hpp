@@ -98,6 +98,11 @@ namespace pars
 			return symbol;
 		}
 
+		bool is_ctx_sensitive() override
+		{
+			return true;
+		}
+
 		ACCEPT
 	};
 

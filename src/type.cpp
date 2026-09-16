@@ -253,6 +253,11 @@ bool pars::AliasType::is_callable() const
 	return type->is_callable();
 }
 
+bool pars::AliasType::is_int() const
+{
+	return type->is_int();
+}
+
 std::optional<pars::MemberInfo> pars::AliasType::get_member(std::string_view symbol) const
 {
 	return type->get_member(symbol);
@@ -1183,6 +1188,16 @@ std::optional<u32> pars::EnumType::get_value(std::string_view name) const
 	}
 
 	return iter->second.value;
+}
+
+llvm::Value * pars::EnumType::op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+{
+	if (!desired_type->is_int())
+	{
+		return nullptr;
+	}
+
+	return value;
 }
 
 pars::Type * pars::produce_type(Type *type)
