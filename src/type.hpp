@@ -658,6 +658,7 @@ virtual bool is_equal(Type const *other) const override							\
 		std::optional<u32> get_value(std::string_view name) const;
 
 		llvm::Value *op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
+		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 	};
 
 	Type* produce_type(Type *type);

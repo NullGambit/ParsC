@@ -152,7 +152,15 @@ pars::Node * pars::AST::statement()
 	}
 	if (m_lexer.match(While))
 	{
-		return parse_while(expression());
+		m_can_initialize_stack.emplace_back(false);
+
+		auto *condition = expression();
+
+		m_can_initialize_stack.pop_back();
+
+		auto *stmt = parse_while(condition);
+
+		return stmt;
 	}
 	if (m_lexer.match(Loop))
 	{
@@ -252,7 +260,11 @@ pars::IfStmt * pars::AST::parse_if()
 {
 	auto *stmt = new_node<IfStmt>();
 
+	m_can_initialize_stack.emplace_back(false);
+
 	stmt->condition = expression();
+
+	m_can_initialize_stack.pop_back();
 
 	m_lexer.expect(LeftBrace);
 
@@ -950,6 +962,11 @@ std::vector<pars::Expr*> pars::AST::collect_call_arguments()
 	return arguments;
 }
 
+bool pars::AST::can_initialize() const
+{
+	return !m_can_initialize_stack.empty() && m_can_initialize_stack.front();
+}
+
 pars::Expr* pars::AST::parse_unary()
 {
 	if (m_lexer.match(Bang) || m_lexer.match(Minus))
@@ -1028,16 +1045,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 			return expr;
 		}
-
-		// insanely hacky and terrible way to disambiguate this expression.
-		// this is to fix ambiguity with a statement such as
-		// if is_true {}
-		// and any similar statement
-		// in theory this should work 99% of time but
-		// TODO please fix future me
-		// on possible fix could be recording a stack of statement types or passing the current statement type to expressions
-		// and disallowing struct initialization within statement heads
-		if (isupper(identifier[0]) && m_lexer.match(LeftBrace))
+		if (can_initialize() && m_lexer.match(LeftBrace))
 		{
 			auto *expr = new_node<StructLiteral>();
 

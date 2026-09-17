@@ -10,7 +10,13 @@ enum Color
 
 impl Color
 {
-    fn print() => printf("%d\n", ^self)
+    fn print()
+    {
+        if ^self == Blue
+        {
+            printf("color is blue\n")
+        }
+    }
 }
 
 fn set_color(color: Color)
@@ -22,7 +28,7 @@ fn main()
 {
    set_color(Blue)
 
-   let color = Color::Red
+   let color = Color::Blue
 
    color.print()
 }

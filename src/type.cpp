@@ -1200,6 +1200,16 @@ llvm::Value * pars::EnumType::op_cast(EmitCtx &ctx, llvm::Value *value, Type *de
 	return value;
 }
 
+llvm::Value * pars::EnumType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+{
+	switch (op)
+	{
+		case TokenType::EqualEqual: return ctx.builder.CreateICmpEQ(lhs, rhs);
+	}
+
+	return nullptr;
+}
+
 pars::Type * pars::produce_type(Type *type)
 {
 	if (auto *alias = dynamic_cast<AliasType*>(type))

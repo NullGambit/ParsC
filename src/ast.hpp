@@ -40,6 +40,10 @@ namespace pars
 		std::vector<TokenType> m_pending_attributes;
 		std::vector<TokenType> m_module_attributes;
 
+		// keeps track of if an object can be initialized. this allows forbidding initialization in certain places
+		// such as if statement conditions to avoid ambiguity with struct initialziation
+		std::vector<bool> m_can_initialize_stack;
+
 		HashMap<std::string_view, std::function<Expr*(const std::vector<Expr*>&)>> m_builtin_functions;
 
 		Node* declaration();
@@ -137,5 +141,7 @@ namespace pars
 
 			m_lexer.expect(TokenType::RightBrace);
 		}
+
+		bool can_initialize() const;
 	};
 }

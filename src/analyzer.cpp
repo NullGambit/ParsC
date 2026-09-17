@@ -629,7 +629,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 pars::Node* pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 {
 	expr->left = visit_expr(expr, expr->left, ctx);
-	expr->right = visit_expr(expr, expr->right, ctx);
+	expr->right = visit_expr(expr, expr->right, {.type = expr->left->type});
 
 	if (expr->op > _ComparisonStart && expr->op < _ComparisonEnd)
 	{
