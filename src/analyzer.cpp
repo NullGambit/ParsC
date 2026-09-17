@@ -826,6 +826,8 @@ pars::Node* pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
+	ctx.invoker = nullptr;
+
 	expr->target = visit_expr(expr, expr->target, ctx);
 
 	expr->mut_set = expr->target->mut_set;

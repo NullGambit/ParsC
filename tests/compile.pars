@@ -8,6 +8,11 @@ enum Color
     Yellow
 }
 
+impl Color
+{
+    fn print() => printf("%d\n", ^self)
+}
+
 fn set_color(color: Color)
 {
 
@@ -16,4 +21,8 @@ fn set_color(color: Color)
 fn main()
 {
    set_color(Blue)
+
+   let color = Color::Red
+
+   color.print()
 }

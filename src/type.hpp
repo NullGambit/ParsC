@@ -640,7 +640,7 @@ virtual bool is_equal(Type const *other) const override							\
 		u64 value;
 	};
 
-	struct EnumType : Type
+	struct EnumType : UserDefType
 	{
 		Symbol symbol;
 		u64 default_value = UINT64_MAX;
