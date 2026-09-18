@@ -7,7 +7,7 @@
 @Register
 struct Get 
 {
-    endpoint: s
+    endpoint: str
 }
 
 // because the Get attribute has the Register attribute this function will be Registered in the global registry
@@ -28,7 +28,7 @@ struct MyHandler
 
 // now all structs that implement this trait are also Registered 
 // can specify to only Register in debug builds
-@Register(.DebugOnly)
+@Register(DebugOnly)
 trait Component 
 {
     fn update()
@@ -38,12 +38,12 @@ import std.registry
 
 fn main()
 {
-    var get_handlers = find_in_registry<Get>(.Method | .Function)
+    var get_handlers = find_in_registry<Get>(Method | Function)
 
     // in real world you would index these
     for handler in get_handlers 
     {
-        if handler.type == .Method 
+        if handler.type == Method
         {
             // creates on the stack 
             var handler_struct = create_from_Register(handler)
@@ -57,7 +57,7 @@ fn main()
         }
     }
 
-    var components = find_in_registry<Get>(.Struct)
+    var components = find_in_registry<Get>(Struct)
 
     for component in components 
     {

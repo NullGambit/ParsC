@@ -183,4 +183,6 @@
     - for loop where clause
     - references
     - auto references
+    - cuda support
+    - openmp support
 

@@ -8,37 +8,11 @@ fn test_unions(value: JsonValue)
         _ => println("has some other value")
     }
 
-    if value is string
+    if value is str
     {
         // value will only be a string here
         println(value)
     }
-}
-
-// a union unlike a sum type is identical to a C union except it can have methods like a regular 
-// struct and each member can be named 
-// useful sometimes
-union JsonUnion 
-{
-    i: i32
-    f: f32 
-    s: str 
-    b: bool 
-}
-
-enum JsonKind 
-{
-    Int
-    Float
-    String
-    Boo
-}
-
-// tagged union
-struct JsonValue 
-{
-    as: JsonUnion 
-    kind: JsonKind
 }
 
 // rust style enum payload
@@ -49,6 +23,3 @@ enum JsonValue
     String(str)
     Bool(bool)
 }
-
-// may seem redundant to have so many different forms of algebraic types, even the error unions are another form of algebraic types 
-// but each form is useful for some specific reason and i prefer to have all to more naturally represent different class of problems.

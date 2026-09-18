@@ -20,7 +20,7 @@ fn main()
         y: int
     }
 
-    var data_points = List<Data>{{1, 10}, {20, 30}}
+    var data_points = List<Data>::new({1, 10}, {20, 30})
 
     var modified_data = from data_points select x = data_points.x map x *= 2
 

@@ -5,17 +5,14 @@ struct Entity
 
 struct MyStruct
 {
-    // now all fields and methods of Entity will also be a part of my struct.
+    // now all fields of Entity will also be a part of my struct.
+    // the fields are added where ever the mixin is used
+    // mixins can also be used within an impl block to mixin methods
     mixin Entity
 
-    // all fields must come first
-    // fields and methods cannot be mixed
     x: int
     y: float
     s: str
-
-    // structs can be nested
-    struct Nested { state: bool }
 }
 
 impl MyStruct 
@@ -32,64 +29,31 @@ fn print_struct<T>(value: &&T)
     }
 }
 
-// constraint forces only real types
-struct Vector<T, N: int> if T is Real
-{
-    // anonymous structs and unions will become a part of its higher scope
-    union
-    {
-        struct
-        {
-            $if N >= 1 x: T
-            $if N >= 2 y: T
-            $if N >= 3 z: T
-            $if N >= 4 w: T
-        }
-        T[N] raw
-    }
-
-    // the compiler will figure this out through duck typing
-    fn op_binary<Op: str>(rhs: Self) if Op == "+" or Op == "-" => mixin ($"raw {op} rhs")
-}
-
-alias Vec3 = Vector<float, 3>
-
-fn dot<T>(T lhs, T rhs): float if $compiles(rhs.raw)
-{
-    var result: float
-
-    $for i in 0..rhs.raw.length
-    {
-        result += rhs.raw[i] * lhs.raw[i]
-    }
-
-    return result
-}
-
 trait Shape
 {
     fn get_area(): float
 }
 
-struct Square : Shape
+struct Square
 {
     width: float
     height: float
+}
 
-    // return type is inferred
+impl Square : Shape
+{
     fn get_area() => width * height
 }
 
 // the compiler will use duck typing instead where possible.
-// when calling print shape because this has a matching function signature it will also consider this to be ok
+// when calling print_area because this has a matching function signature it will also consider this to be ok
 // traits have the advantage of working at runtime as well as compile time
 struct FakeShape
 {
     fn get_area() => 0.0f
 }
 
-// type can always be infered in single line functions
-fn make_shape() => Shape {width: 1024, height: 1920}
+fn make_shape() => Square {width: 1024, height: 1920}
 
 fn print_area(shape: Shape) => println(shape.get_area())
 
@@ -102,13 +66,10 @@ fn test_shape()
 
 fn test_dyn()
 {
-    var shape: *Shape
+    // scope_alloc will add a defer #free call automatically
+    let shape = #scope_alloc(Square{width: 1024, height: 1920})
 
-    shape = #alloc(Square{width: 1024, height: 1920})
-
-    defer #free(shape)
-
-    var fake_shape: *Shape
+    var fake_shape: ^Shape
 
     // this is a compiler error. it does not have the trait so it only works for compile time duck typing
     fake_shape = #alloc<FakeShape>()
@@ -120,7 +81,7 @@ struct Tag
 // traits can have default implementations
 trait DefaultTraitTest
 {
-    alias MyType = int
+    alias MyType = i32
     const PI = 3.14
 
     fn say_hello() => println("not implemented")
@@ -140,3 +101,53 @@ fn test_wrapper()
 
     println(wrapper) // should print 101
 }
+
+struct Data
+{
+    value: i32
+}
+
+impl Data
+{
+    Self() => {100}
+}
+
+fn test_default()
+{
+    // here the compiler will insert a call to Data::Self and initialize itself to 100
+    var data: Data
+
+    data.value = 10
+
+    // again Data::Self is called and the value is set back to 100
+    data = {}
+
+    // because of the undefined keyword Data::Self is not called and no default value will be set.
+    var data2: Data = undefined
+}
+
+// class types are private by default
+// methods are still public by default
+class SecretData
+{
+    password: str
+}
+
+// fields are public by default
+struct Player
+{
+    data: PlayerData
+    private secret_data: bool
+}
+
+impl Player
+{
+    fn print_stats() => println($"{self.name}: {self.score}")
+
+    @static
+    fn static_function() => println("this is a static call")
+
+    // function overloading that only allows + and -
+    fn op_compare<Op: str>(rhs: &Self) when Op == ("+", "-") => mixin($"{self.score} {Op} {rhs.score}")
+}
+

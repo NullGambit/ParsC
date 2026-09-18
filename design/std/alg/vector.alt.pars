@@ -1,5 +1,6 @@
+// field names will be truncated if the array is not big enough
 @distinct
-alias Vec<T, N> = [N]T{"x", "y", "z", "w"} // field names will be truncated if the array is not big enough
+alias Vec<T, N> = [N]T{"x", "y", "z", "w"} where T is Real
 
 // main benefit of using this approach is most operators simply do not need to be overloaded because an array supports
 // all array programming features

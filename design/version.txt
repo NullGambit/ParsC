@@ -25,4 +25,11 @@ version Linux
         println("im on linux")
     }
 }
+else
+{
+    fn print_platform()
+    {
+        println("im not on linux")
+    }
+}
 

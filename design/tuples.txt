@@ -5,23 +5,24 @@ fn make_tuple(): (i32, str)
     return (10, "hello")
 }
 
-fn make_named_tuple(): (n: i32, message: str)
-{   
+// an anon struct is the same thing as a named tuple so it can be used when this is needed
+fn make_named_tuple(): {n: i32, message: str}
+{
     // can also just use positional syntax as well
-    return (n: 10, message: "hello")
+    return {n: 10, message: "hello"}
 }
 
 fn main()
 {
-    var x, s = make_tuple()
+    let x, s = make_tuple()
 
     println($"{x} {s}")
 
-    var tuple = make_tuple()
+    let tuple = make_tuple()
 
     println($"{tuple[0]} {tuple[1]}")
 
-    var named = make_named_tuple()
+    let named = make_named_tuple()
 
     println($"{named.message} {named.n}")
 }

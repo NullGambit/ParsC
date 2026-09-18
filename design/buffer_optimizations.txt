@@ -1,0 +1,13 @@
+Lets say we have a println function and our string interpretation expression which compiles down to a call to Core::format
+in such a case the format function would make an allocation when the println function would have its own thread local cache.
+so we would want some way for format to know of this cache and to write to it instead of returning a String object.
+
+possible solutions:
+    - println could have an attribute such as @TransformFmt where instead of transforming the string interpolation
+        to a call to format it would just change it to the arguments it would use for format but for the println function.
+        so an expression such as `println($"hello {my_var})` would become `println("hello {}, my_var)"`
+        this would be an ideal solution but should only be allowed if the parameters would allow this transformation.
+    - println would use an attribute to declare that it has a cache and to use it for parameters.
+        such as @UseCache{g_print_buffer}.
+        then this would be set as a field inside the context struct and the format function can write to it.
+        then simply the print function would just write it to standard out.
