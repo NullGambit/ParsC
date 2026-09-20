@@ -107,5 +107,7 @@ namespace pars
 		virtual Node* visit(FnPtrType *type, VisitCtx ctx) { return nullptr; }
 
 		void visit_nodes(const std::vector<Node*> &nodes);
+
+		VisitCtx new_ctx(Node *invoker, const VisitCtx &ctx, Type *type_override = nullptr);
 	};
 }
