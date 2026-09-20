@@ -15,14 +15,7 @@ using enum pars::TokenType;
 
 pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 {
-	ScopeTable *table_override {};
-
-	if (ctx.parse_ctx_override != nullptr)
-	{
-		table_override = &ctx.parse_ctx_override->scope_table;
-	}
-
-	ctx.invoker = expr;
+	ctx = new_ctx(expr, ctx);
 
 	for (auto &arg : expr->arguments)
 	{
@@ -171,11 +164,11 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 			{
 				if (auto *expr = dynamic_cast<Expr*>(node))
 				{
-					fn->body->nodes[i] = visit_expr(nullptr, expr, ctx);
+					fn->body->nodes[i] = visit_expr(nullptr, expr, {});
 				}
 				else
 				{
-					node->accept(this, ctx);
+					node->accept(this, {});
 				}
 
 				i += 1;
@@ -227,7 +220,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	// var x = E
 	if (stmt->initializer != nullptr)
 	{
-		stmt->initializer = visit_expr(nullptr, stmt->initializer, {.type = stmt->type});
+		stmt->initializer = visit_expr(nullptr, stmt->initializer, new_ctx(stmt, ctx, stmt->type));
 
 		// var x = {}
 		if (stmt->initializer->type == nullptr)
@@ -295,7 +288,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 			throw FrontendError{stmt->token, "const must have an initializer"};
 		}
 
-		stmt->initializer = dynamic_cast<Expr*>(stmt->initializer->accept(&m_comp_eval, ctx));
+		stmt->initializer = dynamic_cast<Expr*>(stmt->initializer->accept(&m_comp_eval, new_ctx(stmt, ctx)));
 
 		if (stmt->initializer == nullptr)
 		{
@@ -362,6 +355,8 @@ pars::Node* pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 pars::Node* pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 {
 	auto scope = m_ctx->scope_table.new_scope();
+
+	ctx = new_ctx(stmt, ctx);
 
 	for (auto i = 0; auto *node : stmt->nodes)
 	{
@@ -448,7 +443,7 @@ pars::Node* pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(CompIfStmt *stmt, VisitCtx ctx)
 {
-	stmt->stmt->accept(this, ctx);
+	stmt->stmt->accept(this, {});
 
 	return stmt;
 }
@@ -518,7 +513,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 		throw FrontendError{stmt->token, "type does not support methods or is not in the same module as the impl statement"};
 	}
 
-	type->accept(this, ctx);
+	type->accept(this, {});
 
 	type->impl = stmt;
 
@@ -540,7 +535,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 			self_param->type = self;
 		}
 
-		method->accept(this, ctx);
+		method->accept(this, {});
 
 		if (self_param != nullptr && !has_flag(self_param->flags, VarFlags::Mutated))
 		{
@@ -597,7 +592,14 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 			return literal;
 		}
 
-		auto *sym_node = find_symbol(expr->symbol, expr->token);
+		ScopeTable *table_override {};
+
+		if (ctx.parse_ctx_override != nullptr)
+		{
+			table_override = &ctx.parse_ctx_override->scope_table;
+		}
+
+		auto *sym_node = find_symbol(expr->symbol, expr->token, table_override);
 
 		if (auto *var = dynamic_cast<VarDeclStmt*>(sym_node))
 		{
@@ -628,7 +630,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 {
-	expr->left = visit_expr(expr, expr->left, ctx);
+	expr->left = visit_expr(expr, expr->left, new_ctx(expr, ctx));
 	expr->right = visit_expr(expr, expr->right, {.type = expr->left->type});
 
 	if (expr->op > _ComparisonStart && expr->op < _ComparisonEnd)
@@ -656,7 +658,7 @@ pars::Node* pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(UnaryExpr *expr, VisitCtx ctx)
 {
-	expr->right = visit_expr(expr, expr->right, ctx);
+	expr->right = visit_expr(expr, expr->right, new_ctx(expr, ctx));
 
 	if (expr->op == '!')
 	{
@@ -672,7 +674,7 @@ pars::Node* pars::Analyzer::visit(UnaryExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(GroupExpr* expr, VisitCtx ctx)
 {
-	expr->inner = visit_expr(expr, expr->inner, ctx);
+	expr->inner = visit_expr(expr, expr->inner, new_ctx(expr, ctx));
 	expr->type = expr->inner->type;
 
 	return expr;
@@ -680,7 +682,7 @@ pars::Node* pars::Analyzer::visit(GroupExpr* expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 {
-	expr->expr = visit_expr(expr, expr->expr, ctx);
+	expr->expr = visit_expr(expr, expr->expr, new_ctx(expr, ctx));
 
 	return expr;
 }
@@ -702,7 +704,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	{
 		ctx.parse_ctx_override = import->module->ast.get_ctx();
 
-		expr->accessor = visit_expr(expr, expr->accessor, ctx);
+		expr->accessor = visit_expr(expr, expr->accessor, new_ctx(expr, ctx));
 	}
 	else if (auto *enum_type = dynamic_cast<EnumType*>(symbol_node))
 	{
@@ -794,13 +796,15 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 {
-	ctx.invoker = nullptr;
+	ctx = new_ctx(expr, ctx);
 
 	expr->type_expr = visit_expr(expr, expr->type_expr, ctx);
 
 	expr->type = expr->type_expr->type;
 
-	expr->target = visit_expr(expr, expr->target, {expr->type});
+	ctx.type = expr->type;
+
+	expr->target = visit_expr(expr, expr->target, ctx);
 
 	expr->original_type = expr->target->type;
 	expr->target->type = expr->type;
@@ -810,7 +814,7 @@ pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
 {
-	expr->value = visit_expr(expr, expr->value, ctx);
+	expr->value = visit_expr(expr, expr->value, new_ctx(expr, ctx));
 	expr->type = expr->value->type;
 
 	return expr;
@@ -818,7 +822,7 @@ pars::Node* pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 {
-	expr->value = visit_expr(expr, expr->value, ctx);
+	expr->value = visit_expr(expr, expr->value, new_ctx(expr, ctx));
 	expr->type = expr->value->type;
 
 	return expr;
@@ -826,9 +830,7 @@ pars::Node* pars::Analyzer::visit(AbsExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 {
-	ctx.invoker = nullptr;
-
-	expr->target = visit_expr(expr, expr->target, ctx);
+	expr->target = visit_expr(expr, expr->target, new_ctx(expr, ctx));
 
 	expr->mut_set = expr->target->mut_set;
 
@@ -941,6 +943,8 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		return expr;
 	}
 
+	ctx = new_ctx(expr, ctx);
+
 	auto *array_type = new_node<Array>();
 
 	if (expr->type_specifier != nullptr)
@@ -1021,11 +1025,11 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 		literal->type_specifier = expr->lhs;
 		literal->initializers = InitializerList{InitializerElement{expr->index}};
 
-		return visit_expr(expr, literal, ctx);
+		return visit_expr(expr, literal, {});
 	}
 
-	expr->lhs = visit_expr(expr, expr->lhs, ctx);
-	expr->index = visit_expr(expr, expr->index, ctx);
+	expr->lhs = visit_expr(expr, expr->lhs, {});
+	expr->index = visit_expr(expr, expr->index, {});
 
 	if (dynamic_cast<Integer*>(expr->index->type) == nullptr)
 	{
@@ -1065,7 +1069,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 		{
 			if (auto *named = dynamic_cast<NamedExpr*>(expr))
 			{
-				named->value->accept(this, ctx);
+				named->value->accept(this, {});
 
 				type->fields.emplace_back(
 					StructFieldInfo
@@ -1099,16 +1103,16 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 {
-	expr->lhs = visit_expr(expr, expr->lhs, ctx);
+	expr->lhs = visit_expr(expr, expr->lhs, {});
 
 	if (expr->start != nullptr)
 	{
-		expr->start = visit_expr(expr, expr->start, ctx);
+		expr->start = visit_expr(expr, expr->start, {});
 	}
 
 	if (expr->end != nullptr)
 	{
-		expr->end = visit_expr(expr, expr->end, ctx);
+		expr->end = visit_expr(expr, expr->end, {});
 	}
 
 	if (!expr->lhs->type->is_array())
@@ -1150,7 +1154,7 @@ pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 {
 	type->element_type->accept(this, {.result = (Node**)&type->element_type});
 
-	type->size_expr = visit_expr(nullptr, type->size_expr, ctx);
+	type->size_expr = visit_expr(nullptr, type->size_expr, {});
 
 	auto *value = type->size_expr->accept(&m_comp_eval, {});
 

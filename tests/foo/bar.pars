@@ -5,3 +5,5 @@ fn say_yes()
 
     puts("yes")
 }
+
+fn add(a: i32, b: i32) => a + b

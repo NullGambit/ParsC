@@ -24,7 +24,6 @@
         - once a module is compiled a lot of local nodes can be erased and reused by the node arena.
             only nodes that can be seen from other modules must be kept.
         - some types should be cached.
-    - add a way to strip away information that should not be passed down through analyzer ctx but keep things that should
 
 - design issues:
     - literals and type coercion need addressing.

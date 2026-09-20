@@ -1,34 +1,11 @@
-import core.stdc.stdio
-
-enum Color
-{
-    Red
-    Blue
-    Green
-    Yellow
-}
-
-impl Color
-{
-    fn print()
-    {
-        if ^self == Blue
-        {
-            printf("color is blue\n")
-        }
-    }
-}
-
-fn set_color(color: Color)
-{
-
-}
+import my_mod = tests.foo.bar
 
 fn main()
 {
-   set_color(Blue)
+    var x = 10
 
-   let color = Color::Blue
-
-   color.print()
+    if x >= 10
+    {
+        my_mod.say_yes()
+    }
 }

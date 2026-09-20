@@ -326,7 +326,7 @@ llvm::Value * pars::Integer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *
 		case Percent: return is_signed ? ctx.builder.CreateSRem(lhs, rhs) : ctx.builder.CreateURem(lhs, rhs);
 		case EqualEqual: return ctx.builder.CreateICmpEQ(lhs, rhs);
 		case BangEqual: return ctx.builder.CreateICmpNE(lhs, rhs);
-		case GreaterEqual: return ctx.builder.CreateICmpSGT(lhs, rhs);
+		case GreaterEqual: return ctx.builder.CreateICmpSGE(lhs, rhs);
 		case LessEqual: return ctx.builder.CreateICmpSLE(lhs, rhs);
 		case Less:
 		{

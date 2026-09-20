@@ -8,6 +8,17 @@ enum Color
     Yellow
 }
 
+impl Color
+{
+    fn print()
+    {
+        if ^self == Blue
+        {
+            printf("color is blue\n")
+        }
+    }
+}
+
 fn main()
 {
     var color = Color::Blue
