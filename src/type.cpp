@@ -122,7 +122,7 @@ llvm::Value * pars::Integral::op_cast(EmitCtx &ctx, llvm::Value *value, Type *de
 {
 	auto *target_type = desired_type->get_llvm_type(ctx.llvm_ctx);
 
-	auto *other_type = dynamic_cast<Integral*>(desired_type);
+	auto *other_type = produce_type_as<Integral>(desired_type);
 
 	if (other_type == nullptr)
 	{
