@@ -742,7 +742,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	{
 		if (expr->type == nullptr)
 		{
-			expr->target = visit_expr(expr, expr->target, ctx);
+			expr->target = visit_expr(expr, expr->target, {});
 		}
 		else
 		{

@@ -137,6 +137,7 @@ namespace pars
 			while (!m_lexer.peek(TokenType::RightBrace))
 			{
 				fn();
+				m_lexer.match(TokenType::Comma);
 			}
 
 			m_lexer.expect(TokenType::RightBrace);

@@ -24,6 +24,7 @@
         - once a module is compiled a lot of local nodes can be erased and reused by the node arena.
             only nodes that can be seen from other modules must be kept.
         - some types should be cached.
+    - aliases often cause bugs because dynamic casts are used heavily. stop using dynamic casts in favor of functions such as produce type.
 
 - design issues:
     - literals and type coercion need addressing.
