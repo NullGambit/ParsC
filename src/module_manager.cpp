@@ -8,6 +8,7 @@
 #include "module.hpp"
 #include "analyzer.hpp"
 #include "compile_error.hpp"
+#include "config.hpp"
 #include "parse_ctx.hpp"
 #include "util/fmt.hpp"
 
@@ -120,14 +121,20 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 		node->emit(ctx);
 	}
 
-	ctx.module->print(llvm::outs(), nullptr);
+	if (get_config().emit_llvm)
+	{
+		ctx.module->print(llvm::outs(), nullptr);
+	}
 
 	std::error_code EC;
 	auto out_name = path.filename().replace_extension(".ir");
 
 	llvm::raw_fd_ostream fs(out_name.c_str(), EC, llvm::sys::fs::OpenFlags::OF_Text);
 
-	ctx.module->print(fs, nullptr);
+	if (get_config().emit_llvm)
+	{
+		ctx.module->print(fs, nullptr);
+	}
 
 	std::string error_str;
 	llvm::raw_string_ostream error_stream(error_str);

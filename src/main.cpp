@@ -9,31 +9,17 @@
 #include "file_manager.hpp"
 #include "lexer.hpp"
 #include "ast.hpp"
+#include "cli.hpp"
+#include "config.hpp"
 #include "module.hpp"
 #include "module_manager.hpp"
+#include "path.hpp"
 #include "token.hpp"
 #include "type.hpp"
+#include "magic_enum/magic_enum.hpp"
 #include "util/fmt.hpp"
 
 void init_global_symbols();
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-
-std::filesystem::path get_exe_path()
-{
-// i have no idea if this actually works.
-#ifdef _WIN32
-	constexpr auto BUFF_SIZE = 4096;
-	wchar_t buffer[BUFF_SIZE]{};
-	auto len = GetModuleFileNameW(nullptr, buffer, BUFF_SIZE);
-	return buffer;
-#else
-	return std::filesystem::canonical("/proc/self/exe");
-#endif
-}
 
 int main(int argc, char **argv)
 {
@@ -43,15 +29,30 @@ int main(int argc, char **argv)
 		fmt::panic("Must provide an entry file\n");
 	}
 
-	auto exe_path = get_exe_path();
+	pars::init_config();
+
+	auto result = pars::parse_cli_args(argc, argv,
+	{
+		.needs_command = true,
+	});
+
+	if (!result.message.empty())
+	{
+		fmt::println("{}", result.message);
+		return -1;
+	}
+
+	auto exe_path = pars::get_exe_path();
 
 	// remove the executables name
 	exe_path.remove_filename();
 
-	auto source_path = std::filesystem::path{argv[1]};
+	auto source_path = std::filesystem::path{result.args[0]};
 
 	pars::add_module_path("./");
 	pars::add_module_path(exe_path);
+
+	auto &config = pars::get_config();
 
 	try
 	{
@@ -64,7 +65,10 @@ int main(int argc, char **argv)
 			fmt::panic("Could not read main module");
 		}
 
-		pars::compile_exe("./a");
+		if (!config.do_not_compile)
+		{
+			pars::compile_exe(config.out);
+		}
 	}
 	catch (std::exception &e)
 	{

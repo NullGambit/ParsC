@@ -538,7 +538,7 @@ struct User
 ```
 this is useful for writing structs that are meant to be used for json or some other serialization format.
 
-You can also define anonymous structs as literals similair to javascript objects but they are fully static
+You can also define anonymous structs as literals similar to javascript objects but they are fully static.
 
 ```rs
 let user = {name: "john", score: 100}

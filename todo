@@ -5,6 +5,7 @@
         the compiler will interpret 'return expr' as a void return and as a separate expression.
         there is no way currently to detect this without the lexer automatically inserting semicolon tokens which it does not do.
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
+    - inside of anon_structs.pars test the same llvm type is generated 5 times instead of 1.
 
 - current roadmap:
     - sum types

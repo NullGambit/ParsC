@@ -88,6 +88,12 @@ add_executable(ParsC src/main.cpp
         src/mangle.hpp
         src/fn_collection.cpp
         src/fn_collection.hpp
+        src/cli.cpp
+        src/cli.hpp
+        src/config.cpp
+        src/config.hpp
+        src/path.cpp
+        src/path.hpp
 )
 
 set(LLVM_STATIC ON)
