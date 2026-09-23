@@ -8,6 +8,7 @@ void pars::init_config()
 {
 	set_cli_command("build", CompileCommand::Build, &g_config.command);
 	set_cli_command("run", CompileCommand::Run, &g_config.command);
+	set_cli_command("help", CompileCommand::Help, &g_config.command);
 	set_cli_command("test", CompileCommand::Test, &g_config.command);
 
 	add_cli_switch
