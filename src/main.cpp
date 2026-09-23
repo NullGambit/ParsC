@@ -67,7 +67,11 @@ int main(int argc, char **argv)
 
 		if (!config.do_not_compile)
 		{
-			pars::compile_exe(config.out);
+			auto filename = source_path.filename().replace_extension("");
+
+			auto out = config.out.empty() ? filename.c_str() : config.out;
+
+			pars::compile_exe(out);
 		}
 	}
 	catch (std::exception &e)
