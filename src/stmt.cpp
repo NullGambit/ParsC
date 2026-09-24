@@ -27,6 +27,12 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		warn(fmt::format("variable '{}' declared but not used", symbol.name), token);
 	}
 
+	if (has_flag(flags, VarFlags::Var) && !has_flag(flags, VarFlags::Mutated))
+	{
+		warn(fmt::format("'{}' is declared as var but does not mutate. replace with let to improve readability.",
+			symbol.name), token);
+	}
+
 	if (has_flag(flags, VarFlags::Const))
 	{
 		auto *result = initializer->emit_constant(ctx);

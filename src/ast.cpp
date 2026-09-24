@@ -348,6 +348,10 @@ pars::VarDeclStmt* pars::AST::parse_var()
 	{
 		stmt->flags |= VarFlags::Const;
 	}
+	if (m_lexer.peek_last(Var))
+	{
+		stmt->flags |= VarFlags::Var;
+	}
 
 	auto is_let = m_lexer.peek_last(Let);
 

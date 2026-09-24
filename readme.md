@@ -47,6 +47,7 @@ fn main()
   - [Function pointers](#function-pointers)
   - [Type casting](#type-casting)
   - [Function overloading](#function-overloading)
+  - [Command line interface](#command-line-interface)
   - [Building pars](#building-pars)
   - [Technical details](#technical-details)
 
@@ -881,6 +882,17 @@ fn main()
 
 here the compiler will pick the correct function based on the arguments provided. the arguments must not be ambiguous.
 
+## Command line interface
+
+In order to build a parse program invoke the compiler with the build command and a file path to the program that must be built.
+
+Example:
+
+```bash
+parsc build main.pars -o my_exe 
+```
+
+use the help command to learn about the other commands and switches.
 
 ## Building pars
 
