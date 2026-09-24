@@ -471,6 +471,7 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		Symbol symbol;
 		std::vector<StructFieldInfo> fields;
+		llvm::StructType *llvm_type {};
 
 		u32 get_size() override;
 

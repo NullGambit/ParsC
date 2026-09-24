@@ -16,6 +16,7 @@
 #include "path.hpp"
 #include "token.hpp"
 #include "type.hpp"
+#include "warnings.hpp"
 #include "magic_enum/magic_enum.hpp"
 #include "util/fmt.hpp"
 
@@ -65,6 +66,8 @@ int main(int argc, char **argv)
 			fmt::panic("Could not read main module");
 		}
 
+		pars::display_warnings();
+		
 		if (!config.do_not_compile)
 		{
 			auto filename = source_path.filename().replace_extension("");

@@ -16,6 +16,8 @@ namespace pars
 		CompileCommand command;
 		bool emit_llvm;
 		bool do_not_compile;
+		bool do_not_warn;
+		bool fail_on_warning;
 		std::string_view out;
 	};
 

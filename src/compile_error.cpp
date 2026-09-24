@@ -9,7 +9,7 @@ pars::CompileError::CompileError(Node *node, std::string &&message) :
 {
 	if (node != nullptr)
 	{
-		this->message = report_token(node->token, message);
+		this->message = report_token(node->token, message, ReportType::Error);
 	}
 }
 

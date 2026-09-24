@@ -31,6 +31,20 @@ void pars::init_config()
 		.alias = "o",
 		.buffer = &g_config.out
 	});
+
+	add_cli_switch
+	({
+		.name = "no-warnings",
+		.alias = "nowarn",
+		.buffer = &g_config.do_not_warn
+	});
+
+	add_cli_switch
+	({
+		.name = "fail-on-warning",
+		.alias = "fow",
+		.buffer = &g_config.fail_on_warning
+	});
 }
 
 const pars::Config & pars::get_config()

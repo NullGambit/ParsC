@@ -150,6 +150,10 @@
 
     - make pointers have index operators.
     - unicode.
+    - implement a custom version of vector called FrameVec that relies on temporary short lived allocations that allocate from a large arena.
+        this is very useful for temporary buffers in recursive function calls that cannot be static.
+        so the memory allocated will be cheap and predictable.
+        alternatively i can just make a custom frame allocator for std::vector but i have to see which is more ideal.
     - implement destructuring of all aggregate types.
     - implement warning system.
     - implement command line interface.

@@ -12,7 +12,7 @@ bool pars::is_binary_op(TokenType type)
 	return type > TokenType::_BinaryStart && type < TokenType::_BinaryEnd;
 }
 
-std::string pars::report_token(Token token, std::string_view message)
+std::string pars::report_token(Token token, std::string_view message, ReportType type)
 {
 	auto source_file = get_source(token.location.file_id);
 
@@ -27,7 +27,8 @@ std::string pars::report_token(Token token, std::string_view message)
 		reader.skip_insignificant();
 	}
 
-	return fmt::format("{} ({}:{}) '{}'\n\t{}\n\t^ Reason: {}",
+	return fmt::format("[{}] {} ({}:{}) '{}'\n\t{}\n\t^ Reason: {}",
+		magic_enum::enum_name(type),
 		source_file.path,
 		token.location.line,
 		token.location.column,

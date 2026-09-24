@@ -94,6 +94,8 @@ add_executable(ParsC src/main.cpp
         src/config.hpp
         src/path.cpp
         src/path.hpp
+        src/warnings.cpp
+        src/warnings.hpp
 )
 
 set(LLVM_STATIC ON)

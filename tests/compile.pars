@@ -3,9 +3,4 @@ import my_mod = tests.foo.bar
 fn main()
 {
     var x = 10
-
-    if x >= 10
-    {
-        my_mod.say_yes()
-    }
 }

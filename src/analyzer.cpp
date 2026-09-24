@@ -603,6 +603,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 		if (auto *var = dynamic_cast<VarDeclStmt*>(sym_node))
 		{
+			var->flags |= VarFlags::Used;
 			expr->mut_set = var->type_meta.mut_set;
 			expr->type = var->type;
 		}

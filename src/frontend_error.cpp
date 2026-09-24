@@ -13,7 +13,7 @@ pars::FrontendError::FrontendError(Token token, std::string &&message, Node *nod
 		this->message = message;
 	}
 
-	this->message = report_token(token, message);
+	this->message = report_token(token, message, ReportType::Error);
 }
 
 const char * pars::FrontendError::what() const noexcept

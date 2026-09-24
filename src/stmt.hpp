@@ -29,6 +29,7 @@ namespace pars
 		Global = 1 << 3,
 		Const = 1 << 4,
 		Mutated = 1 << 5,
+		Used = 1 << 6,
 	};
 
 	PARS_FLAGIFY(VarFlags);

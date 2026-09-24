@@ -8,6 +8,7 @@
 #include "expr.hpp"
 #include "frontend_error.hpp"
 #include "type.hpp"
+#include "warnings.hpp"
 #include "debug/ast_printer.hpp"
 #include "magic_enum/magic_enum.hpp"
 #include "util/defer.hpp"
@@ -21,6 +22,11 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 {
+	if (!has_flag(flags, VarFlags::Used))
+	{
+		warn(fmt::format("variable '{}' declared but not used", symbol.name), token);
+	}
+
 	if (has_flag(flags, VarFlags::Const))
 	{
 		auto *result = initializer->emit_constant(ctx);

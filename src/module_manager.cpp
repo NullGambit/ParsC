@@ -124,15 +124,13 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	if (get_config().emit_llvm)
 	{
 		ctx.module->print(llvm::outs(), nullptr);
-	}
 
-	std::error_code EC;
-	auto out_name = path.filename().replace_extension(".ir");
+		std::error_code EC;
 
-	llvm::raw_fd_ostream fs(out_name.c_str(), EC, llvm::sys::fs::OpenFlags::OF_Text);
+		auto out_name = path.filename().replace_extension(".ir");
 
-	if (get_config().emit_llvm)
-	{
+		llvm::raw_fd_ostream fs(out_name.c_str(), EC, llvm::sys::fs::OpenFlags::OF_Text);
+
 		ctx.module->print(fs, nullptr);
 	}
 

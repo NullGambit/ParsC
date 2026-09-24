@@ -135,5 +135,11 @@ namespace pars
 
     bool is_binary_op(TokenType type);
 
-    std::string report_token(Token token, std::string_view message);
+    enum class ReportType
+    {
+        Warning,
+        Error,
+    };
+
+    std::string report_token(Token token, std::string_view message, ReportType type);
 }

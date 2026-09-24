@@ -13,6 +13,8 @@
 #include "emit_context.hpp"
 #include "expr.hpp"
 #include "stmt.hpp"
+#include "memory/arena.hpp"
+#include "memory/defs.hpp"
 #include "util/fmt.hpp"
 #include "util/llvm_utils.hpp"
 
@@ -793,8 +795,9 @@ llvm::Type * pars::StructType::get_llvm_type(llvm::LLVMContext *ctx) const
 
 	if (type == nullptr)
 	{
-		type = llvm::StructType::create(*ctx, symbol.name);
+		type = symbol.name.empty() ? llvm::StructType::get(*ctx) : llvm::StructType::create(*ctx, symbol.name);
 
+		// TODO this will cause a lot of allocations because anon structs will always run this code. pls fix.
 		std::vector<llvm::Type*> llvm_types;
 
 		llvm_types.reserve(fields.size());
