@@ -35,8 +35,6 @@
         integer suffixes should also be added for greater ease of use.
 
 - warnings to add:
-    - unused variable
-    - code after return
 
 - arrays:
     - named element swizzling
@@ -155,7 +153,6 @@
         so the memory allocated will be cheap and predictable.
         alternatively i can just make a custom frame allocator for std::vector but i have to see which is more ideal.
     - implement destructuring of all aggregate types.
-    - implement warning system.
     - implement command line interface.
     - implement arithmetic operations for nested arrays such as [4][4]f32.
     - currently a lot of types have wonky sizes. implement more accurate sizes.

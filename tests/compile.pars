@@ -1,6 +1,10 @@
-import my_mod = tests.foo.bar
+import core.stdc.stdio
 
 fn main()
 {
     var x = 10
+
+    return
+
+    printf("%d\n", x)
 }

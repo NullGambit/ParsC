@@ -171,8 +171,9 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *bb = ctx.builder.GetInsertBlock();
 
-	for (auto *node : nodes)
+	for (auto iter = nodes.begin(); iter != nodes.end(); iter++)
 	{
+		auto *node = *iter;
 		auto *value = node->emit(ctx);
 
 		if (is_block_poison(ctx, value))
@@ -190,6 +191,11 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 		// eliminate dead code so llvm doesnt complain about terminator in the middle of basic block
 		if (dynamic_cast<TerminatorStmt*>(node))
 		{
+			if (std::distance(iter, nodes.end()) > 1)
+			{
+				warn("unreachable code", (*++iter)->token);
+			}
+
 			break;
 		}
 	}
