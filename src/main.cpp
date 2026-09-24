@@ -74,13 +74,28 @@ int main(int argc, char **argv)
 
 		pars::display_warnings();
 
-		if (!config.do_not_compile)
+		auto filename = source_path.filename().replace_extension("");
+
+		auto out = config.out.empty() ? filename.c_str() : config.out;
+
+		if (config.should_compile())
 		{
-			auto filename = source_path.filename().replace_extension("");
-
-			auto out = config.out.empty() ? filename.c_str() : config.out;
-
 			pars::compile_exe(out);
+		}
+
+		if (config.command == pars::CompileCommand::Run)
+		{
+			std::string args;
+
+			for (auto iter = result.args.begin() + 1; iter != result.args.end(); ++iter)
+			{
+				args += *iter;
+				args += " ";
+			}
+
+			fmt::println("{}", args);
+
+			system(fmt::format("{} {}", out, args).data());
 		}
 	}
 	catch (std::exception &e)

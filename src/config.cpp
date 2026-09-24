@@ -4,6 +4,11 @@
 
 static pars::Config g_config {};
 
+bool pars::Config::should_compile() const
+{
+	return !do_not_compile && command == CompileCommand::Build || command == CompileCommand::Run;
+}
+
 void pars::init_config()
 {
 #define CMD(C) .index = (u32)C, .buffer = (u32*)&g_config.command
