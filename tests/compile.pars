@@ -2,7 +2,5 @@ import core.stdc.stdio
 
 fn main()
 {
-    var x = 10
-
-    printf("%d\n", x)
+    return 10
 }

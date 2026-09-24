@@ -195,11 +195,20 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 		ctx.builder.SetInsertPoint(bb);
 
 		// eliminate dead code so llvm doesnt complain about terminator in the middle of basic block
-		if (dynamic_cast<TerminatorStmt*>(node))
+		if (auto *term = dynamic_cast<TerminatorStmt*>(node))
 		{
 			if (std::distance(iter, nodes.end()) > 1)
 			{
-				warn("unreachable code", (*++iter)->token);
+				auto next_token = (*++iter)->token;
+
+				if (node->token.location.line == next_token.location.line)
+				{
+					warn("Misleading terminator statement. expression used on the same line as terminator.", next_token);
+				}
+				else
+				{
+					warn("unreachable code", next_token);
+				}
 			}
 
 			break;

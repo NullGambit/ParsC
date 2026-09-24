@@ -1,15 +1,13 @@
 - BUG:
     -if expecting expression but got eof will make the compiler get stuck
         even doing checks for eof seems to not work unless the file ended with a line feed
-    - the compiler does not handle a case of returning a value in a void function.
-        the compiler will interpret 'return expr' as a void return and as a separate expression.
-        there is no way currently to detect this without the lexer automatically inserting semicolon tokens which it does not do.
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
     - inside of anon_structs.pars test the same llvm type is generated 5 times instead of 1.
 
 - current roadmap:
+    - enum payloads
     - sum types
-    - match expr
+    - match expr and other pattern matching
     - StringId
     - refactor compiler directives and implement reflection
     - user defined attributes
@@ -45,12 +43,13 @@
 
 - structs:
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
+    - change self to be a reference instead of a pointer
     - allow overloading for methods
     - traits
     - reflection
     - refactor attributes to allow user defined types
-    - null coalescing
-    - readonly attribute
+    - nil coalescing
+    - readonly attribute per field and per struct
     - offsetof operator for struct fields
     - raii
     - operator overloading
@@ -83,8 +82,7 @@
         the biggest benefit of this is it makes long declarative code very readable and simple because
         the type is only specified once.
     - defer
-    - union literals A | B
-    - unions
+    - sum types in the form of: A | B
     - error unions
     - pattern matching
     - comptime blocks
@@ -123,16 +121,6 @@
     - digest
 
 - misc:
-    - anonymous struct literals and types eg:
-
-        var my_obj =
-        {
-            a: 10,
-            s: "hello"
-        }
-
-        var my_obj: {a: i32, s: str}
-
     - currently type coercion is unreliable. perhaps implement type coercion inside the analyzer so when a node is visited
         it will check the context type and if it is not equal to its own type it will do a coercion.
     - undefined keyword that can be used when setting the initial value of a variable. this will make it not initialize to its default value.
@@ -154,22 +142,18 @@
         so the memory allocated will be cheap and predictable.
         alternatively i can just make a custom frame allocator for std::vector but i have to see which is more ideal.
     - implement destructuring of all aggregate types.
-    - implement command line interface.
     - implement arithmetic operations for nested arrays such as [4][4]f32.
     - currently a lot of types have wonky sizes. implement more accurate sizes.
     - pure functions with the pure attribute. perhaps even automatic pure detection.
     - change keyword attributes to not actually be real keywords so they can be used for symbols. possibly just use structs defined inside core package.
     - bitwise operators
-    - expressions like ^(ptr + 1) = 10 do not compile. that might be a good thing actually. but look into it someday.
     - improve literal analysis. literals should be coerced into anytype if they fit.
     - correctly handle float min and max value properties. currently its the same as integers which is obviously wrong.
     - replace recursive descent with operator precedent parsing (pratt parsing)
     - break and continue to label. possibly goto? probably a bad idea anyway
     - automatic va_list creation when passing ... to another function
     - manual va_list support
-    - theres too much repeated work between the ast parser and the analyzer. and sometimes even the code gen.
     - compile time for loops
-    - make types be responsible for how they can be casted to other types
     - floor div with //
     - stringify operator
     - currently shadowing works fine. but this was unintended. in the future i might want to consider disallowing it.
