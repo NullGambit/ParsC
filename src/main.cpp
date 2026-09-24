@@ -43,6 +43,14 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+	auto &config = pars::get_config();
+
+	if (config.command == pars::CompileCommand::Help)
+	{
+		pars::print_cli_help();
+		return 0;
+	}
+
 	auto exe_path = pars::get_exe_path();
 
 	// remove the executables name
@@ -52,8 +60,6 @@ int main(int argc, char **argv)
 
 	pars::add_module_path("./");
 	pars::add_module_path(exe_path);
-
-	auto &config = pars::get_config();
 
 	try
 	{
@@ -67,7 +73,7 @@ int main(int argc, char **argv)
 		}
 
 		pars::display_warnings();
-		
+
 		if (!config.do_not_compile)
 		{
 			auto filename = source_path.filename().replace_extension("");

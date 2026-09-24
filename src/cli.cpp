@@ -4,30 +4,24 @@
 #include "containers/hash_map.hpp"
 #include "util/fmt.hpp"
 
-struct CliCommandInfo
-{
-	u32 index;
-	u32 *buffer;
-};
+using SwitchMap = pars::HashMap<std::string_view, pars::CliSwitch>;
 
-using SwitchMap = pars::HashMap<std::string_view, pars::CliSwitchValue>;
-
-static pars::HashMap<std::string_view, CliCommandInfo> g_cli_commands;
+static pars::HashMap<std::string_view, pars::CliCommandInfo> g_cli_commands;
 static SwitchMap g_switches;
 static SwitchMap g_switches_aliases;
 
-void pars::set_cli_command_raw(std::string_view name, u32 index, u32 *buffer)
+void pars::set_cli_command(std::string_view name, CliCommandInfo info)
 {
-	g_cli_commands[name] = {index, buffer};
+	g_cli_commands[name] = info;
 }
 
 void pars::add_cli_switch(CliSwitch cli_switch)
 {
-	g_switches[cli_switch.name] = cli_switch.buffer;
+	g_switches[cli_switch.name] = cli_switch;
 
 	if (!cli_switch.alias.empty())
 	{
-		g_switches_aliases[cli_switch.alias] = cli_switch.buffer;
+		g_switches_aliases[cli_switch.alias] = cli_switch;
 	}
 }
 
@@ -82,7 +76,7 @@ pars::CliParseResult pars::parse_cli_args(i32 argc, char **argv, CliParseOptions
 					arg = argv[++i];
 					*buff = arg;
 				},
-			}, iter->second);
+			}, iter->second.buffer);
 		}
 		else
 		{
@@ -112,4 +106,24 @@ pars::CliParseResult pars::parse_cli_args(i32 argc, char **argv, CliParseOptions
 	}
 
 	return {.args = args};
+}
+
+void pars::print_cli_help()
+{
+	fmt::println("all switches must be prefixed with '--' and switch aliases with only '-'\n");
+	fmt::println("Example:\n\tparsc build ./main.pars -o my_exe\n");
+
+	fmt::println("======== Commands ========\n");
+
+	for (auto &[name, info] : g_cli_commands)
+	{
+		fmt::println("{}: {}\n", name, info.description);
+	}
+
+	fmt::println("======== Switches ========\n");
+
+	for (auto &[name, info] : g_switches)
+	{
+		fmt::println("--{} (-{}): {}\n", name, info.alias, info.description);
+	}
 }

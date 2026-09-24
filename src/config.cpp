@@ -6,15 +6,36 @@ static pars::Config g_config {};
 
 void pars::init_config()
 {
-	set_cli_command("build", CompileCommand::Build, &g_config.command);
-	set_cli_command("run", CompileCommand::Run, &g_config.command);
-	set_cli_command("help", CompileCommand::Help, &g_config.command);
-	set_cli_command("test", CompileCommand::Test, &g_config.command);
+#define CMD(C) .index = (u32)C, .buffer = (u32*)&g_config.command
+
+	set_cli_command("build",
+	{
+		CMD(CompileCommand::Build),
+		.description = "builds the file into an executable"
+	});
+	set_cli_command("run",
+	{
+		CMD(CompileCommand::Run),
+		.description = "builds the file into an executable and then runs it directly"
+	});
+	set_cli_command("help",
+	{
+		CMD(CompileCommand::Help),
+		.description = "shows the help command"
+	});
+	set_cli_command("test",
+	{
+		CMD(CompileCommand::Test),
+		.description = "runs all unit tests. (currently not implemented)"
+	});
+
+#undef CMD
 
 	add_cli_switch
 	({
 		.name = "emit-llvm",
-		.alias = "ellvm",
+		.alias = "llvm",
+		.description = "emits llvm ir",
 		.buffer = &g_config.emit_llvm
 	});
 
@@ -22,6 +43,7 @@ void pars::init_config()
 	({
 		.name = "do-not-compile",
 		.alias = "nocomp",
+		.description = "will not compile. useful when combined with other switches.",
 		.buffer = &g_config.do_not_compile
 	});
 
@@ -29,6 +51,7 @@ void pars::init_config()
 	({
 		.name = "out",
 		.alias = "o",
+		.description = "sets the output path",
 		.buffer = &g_config.out
 	});
 
@@ -36,6 +59,7 @@ void pars::init_config()
 	({
 		.name = "no-warnings",
 		.alias = "nowarn",
+		.description = "will supress warnings",
 		.buffer = &g_config.do_not_warn
 	});
 
@@ -43,6 +67,7 @@ void pars::init_config()
 	({
 		.name = "fail-on-warning",
 		.alias = "fow",
+		.description = "will stop compilation on any error",
 		.buffer = &g_config.fail_on_warning
 	});
 }
