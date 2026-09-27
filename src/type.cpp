@@ -596,7 +596,7 @@ std::string_view pars::Array::get_type_name() const
 
 bool pars::Array::is_equal(Type const *other) const
 {
-	auto *other_array = dynamic_cast<Array const*>(other);
+	auto *other_array = produce_type_as<Array>(const_cast<Type*>(other));
 
 	return other_array != nullptr
 	&& (other_array->size == size || other_array->size == UNSIZED_ARRAY) && other_array->element_type->is_equal(element_type);

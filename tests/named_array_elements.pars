@@ -1,7 +1,7 @@
 import core.stdc.stdio
 
 // can use any identifier to name the elements
-alias Vec3 = [3]i32{x, y, z, w}
+alias Vec3 = [3]i32{x, y, z}
 
 fn print_vec(vec: Vec3) => printf("%d, %d, %d\n", vec.x, vec.y, vec.z)
 
@@ -12,7 +12,7 @@ fn main()
     // will work perfectly within the function but here we can still add the type to get the named initialization like structs
     var position: Vec3 = [x: 1, y: 2, z: 3]
 
-    var w = position.w
+    var z = position.z
 
     print_vec(position)
 }
