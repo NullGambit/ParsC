@@ -75,6 +75,14 @@ void pars::init_config()
 		.description = "will stop compilation on any error",
 		.buffer = &g_config.fail_on_warning
 	});
+
+	add_cli_switch
+	({
+		.name = "silent-errors",
+		.alias = "silent",
+		.description = "Will not emit any errors on failure",
+		.buffer = &g_config.silent_errors
+	});
 }
 
 const pars::Config & pars::get_config()

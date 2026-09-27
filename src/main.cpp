@@ -100,7 +100,12 @@ int main(int argc, char **argv)
 	}
 	catch (std::exception &e)
 	{
-		fmt::println("\n{}", e.what());
+		if (!config.silent_errors)
+		{
+			fmt::println("\n{}", e.what());
+		}
+
+		return -1;
 	}
 }
 

@@ -134,6 +134,8 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 		ctx.module->print(fs, nullptr);
 	}
 
+#ifndef NDEBUG
+
 	std::string error_str;
 	llvm::raw_string_ostream error_stream(error_str);
 
@@ -156,6 +158,7 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 
 		//throw CompileError{this, std::move(module_str)};
 	}
+#endif
 
 	return module;
 }

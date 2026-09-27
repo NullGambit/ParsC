@@ -18,6 +18,7 @@ namespace pars
 		bool do_not_compile;
 		bool do_not_warn;
 		bool fail_on_warning;
+		bool silent_errors;
 		std::string_view out;
 
 		bool should_compile() const;
