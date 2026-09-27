@@ -62,9 +62,15 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto &arg : expr->arguments)
 	{
-		if (index < call_info.parameters.size() && arg->type == nullptr)
+		Type *ctx_type {};
+
+		if (index < call_info.parameters.size())
 		{
-			auto *ctx_type = call_info.parameters[index++]->type;
+			ctx_type = call_info.parameters[index++]->type;
+		}
+
+		if (arg->type == nullptr)
+		{
 			arg = visit_expr(expr, arg, {ctx_type});
 		}
 
@@ -101,7 +107,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 		if (param->initializer != nullptr)
 		{
-			param->initializer = visit_expr(expr, param->initializer, {call_info.parameters[i]->type});
+			param->initializer = visit_expr(expr, param->initializer, {param->type});
 		}
 	}
 
