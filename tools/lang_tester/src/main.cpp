@@ -4,10 +4,6 @@
 #include "cli.hpp"
 #include "util/fmt.hpp"
 
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-
 int main(int argc, char **argv)
 {
 	auto result = pars::parse_cli_args(argc, argv, {.needs_command = false});

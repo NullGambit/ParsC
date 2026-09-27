@@ -5,6 +5,11 @@
 #include <variant>
 #include <vector>
 
+#define RESET   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+
 namespace pars
 {
 	using CliSwitchValue = std::variant<bool*, i32*, std::string_view*>;

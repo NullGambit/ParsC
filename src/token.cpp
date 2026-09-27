@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "cli.hpp"
 #include "file_manager.hpp"
 #include "text_reader.hpp"
 #include "util/fmt.hpp"
@@ -27,12 +28,25 @@ std::string pars::report_token(Token token, std::string_view message, ReportType
 		reader.skip_insignificant();
 	}
 
-	return fmt::format("[{}] {} ({}:{}) '{}'\n\t{}\n\t^ Reason: {}",
+	std::string_view color;
+
+	if (type == ReportType::Error)
+	{
+		color = RED;
+	}
+	else if (type == ReportType::Warning)
+	{
+		color = YELLOW;
+	}
+
+	return fmt::format("{}[{}] {} ({}:{}) '{}'\n\t{}\n\t^ Reason: {}{}",
+		color,
 		magic_enum::enum_name(type),
 		source_file.path,
 		token.location.line,
 		token.location.column,
 		token.lexeme,
 		line,
-		message);
+		message,
+		RESET);
 }
