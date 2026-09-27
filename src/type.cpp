@@ -124,7 +124,7 @@ llvm::Value * pars::Integral::op_cast(EmitCtx &ctx, llvm::Value *value, Type *de
 {
 	auto *target_type = desired_type->get_llvm_type(ctx.llvm_ctx);
 
-	auto *other_type = produce_type_as<Integral>(desired_type);
+	auto *other_type = produce_type<Integral>(desired_type);
 
 	if (other_type == nullptr)
 	{
@@ -173,6 +173,11 @@ bool pars::AliasType::is_equal(Type const *other) const
 	}
 
 	return type->is_equal(other);
+}
+
+pars::Type * pars::AliasType::get_real_type() const
+{
+	return type;
 }
 
 llvm::Value * pars::AliasType::op_abs(EmitCtx &ctx, llvm::Value *value) const
@@ -596,10 +601,14 @@ std::string_view pars::Array::get_type_name() const
 
 bool pars::Array::is_equal(Type const *other) const
 {
-	auto *other_array = produce_type_as<Array>(const_cast<Type*>(other));
+	auto *other_array = produce_type<Array>(other);
 
-	return other_array != nullptr
-	&& (other_array->size == size || other_array->size == UNSIZED_ARRAY) && other_array->element_type->is_equal(element_type);
+	if (other_array == nullptr)
+	{
+		return false;
+	}
+
+	return other_array->size == size || other_array->size == UNSIZED_ARRAY && other_array->element_type->is_equal(element_type);
 }
 
 llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
@@ -1213,12 +1222,7 @@ llvm::Value * pars::EnumType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value 
 	return nullptr;
 }
 
-pars::Type * pars::produce_type(Type *type)
+pars::Type* pars::produce_type(Type const *type)
 {
-	if (auto *alias = dynamic_cast<AliasType*>(type))
-	{
-		return alias->type;
-	}
-
-	return type;
+	return type->get_real_type();
 }

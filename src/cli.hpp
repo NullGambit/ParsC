@@ -5,10 +5,10 @@
 #include <variant>
 #include <vector>
 
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
+#define CLI_RESET   "\033[0m"
+#define CLI_RED     "\033[31m"
+#define CLI_GREEN   "\033[32m"
+#define CLI_YELLOW  "\033[33m"
 
 namespace pars
 {

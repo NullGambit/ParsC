@@ -32,11 +32,11 @@ std::string pars::report_token(Token token, std::string_view message, ReportType
 
 	if (type == ReportType::Error)
 	{
-		color = RED;
+		color = CLI_RED;
 	}
 	else if (type == ReportType::Warning)
 	{
-		color = YELLOW;
+		color = CLI_YELLOW;
 	}
 
 	return fmt::format("{}[{}] {} ({}:{}) '{}'\n\t{}\n\t^ Reason: {}{}",
@@ -48,5 +48,5 @@ std::string pars::report_token(Token token, std::string_view message, ReportType
 		token.lexeme,
 		line,
 		message,
-		RESET);
+		CLI_RESET);
 }

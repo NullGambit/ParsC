@@ -55,6 +55,10 @@ namespace pars
 			return nullptr;
 		}
 
+		// will return the real type that this type node holds. in case of a wrapper such as alias it will be its
+		// aliased type but in other cases it will be the type itself.
+		virtual Type* get_real_type() const { return this; }
+
 		virtual std::string_view get_type_name() const = 0;
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) const = 0;
@@ -215,6 +219,8 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 		std::string_view get_type_name() const override;
 		bool is_equal(Type const *other) const override;
+
+		Type *get_real_type() const override;
 
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
@@ -662,10 +668,10 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 	};
 
-	Type* produce_type(Type *type);
+	Type* produce_type(Type const *type);
 
 	template<class T>
-	T* produce_type_as(Type *type)
+	T* produce_type(Type const *type)
 	{
 		return (T*)produce_type(type);
 	}

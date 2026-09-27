@@ -42,9 +42,9 @@ int main(int argc, char **argv)
 		}
 
 		auto message = result == 0 ? "passed!" : "failed!";
-		auto color = result == 0 ? GREEN : RED;
+		auto color = result == 0 ? CLI_GREEN : CLI_RED;
 
-		fmt::println("{} {} {} {}", entry.path(), color, message, RESET);
+		fmt::println("{} {} {} {}", entry.path(), color, message, CLI_RESET);
 	}
 
 	fmt::println("{} passed, {} failed", passed, failed);
