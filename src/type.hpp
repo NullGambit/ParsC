@@ -57,7 +57,7 @@ namespace pars
 
 		// will return the real type that this type node holds. in case of a wrapper such as alias it will be its
 		// aliased type but in other cases it will be the type itself.
-		virtual Type* get_real_type() const { return this; }
+		virtual Type* get_real_type() const { return const_cast<Type*>(this); }
 
 		virtual std::string_view get_type_name() const = 0;
 		virtual u32 get_size() { return 1; }
@@ -94,6 +94,28 @@ namespace pars
 		virtual llvm::Value* iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const { return nullptr; }
 	};
 
+	Type* produce_type(Type const *type);
+
+	template<class T>
+	T* produce_type(Type const *type)
+	{
+		return dynamic_cast<T*>(produce_type(type));
+	}
+
+	template<class T>
+	T* produce_type(Type *type)
+	{
+		return dynamic_cast<T*>(produce_type(type));
+	}
+
+	template<class T>
+	bool is_type_same(Type const *type)
+	{
+		auto *real = produce_type<T>(type);
+
+		return real != nullptr;
+	}
+
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
 
 	bool is_assignable_from(Type const *from, Type  const *to);
@@ -101,8 +123,8 @@ namespace pars
 	template<class T>
 	T const * types_match(Type const *a_type, Type  const *b_type)
 	{
-		auto *a = dynamic_cast<const T*>(a_type);
-		auto *b = dynamic_cast<const T*>(b_type);
+		auto *a = produce_type<const T>(a_type);
+		auto *b = produce_type<const T>(b_type);
 
 		if (a != nullptr && b != nullptr)
 		{
@@ -667,12 +689,4 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 	};
-
-	Type* produce_type(Type const *type);
-
-	template<class T>
-	T* produce_type(Type const *type)
-	{
-		return (T*)produce_type(type);
-	}
 }

@@ -839,7 +839,7 @@ llvm::Value * pars::StructType::get_default_value(llvm::LLVMContext *ctx) const
 
 bool pars::StructType::is_equal(Type const *other) const
 {
-	auto *other_struct = dynamic_cast<StructType const*>(other);
+	auto *other_struct = produce_type<StructType>(other);
 
 	// do structural equality matching of either one is anon
 	if (other_struct != nullptr && symbol.name.empty() || other_struct->symbol.name.empty())

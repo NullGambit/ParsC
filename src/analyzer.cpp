@@ -246,7 +246,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 	}
 
-	if (auto *array = dynamic_cast<Array*>(stmt->type); array && array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
+	if (auto *array = produce_type<Array>(stmt->type); array && array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
 	{
 		throw FrontendError{stmt->token, "Cannot infer size of array"};
 	}
@@ -506,7 +506,8 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 {
-	auto *type = dynamic_cast<UserDefType*>(m_ctx->scope_table.find_local_symbol(stmt->type_symbol.name));
+	auto *symbol = m_ctx->scope_table.find_local_symbol(stmt->type_symbol.name);
+	auto *type = produce_type<UserDefType>(dynamic_cast<Type const*>(symbol));
 
 	if (type == nullptr)
 	{
@@ -707,7 +708,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		expr->accessor = visit_expr(expr, expr->accessor, new_ctx(expr, ctx));
 	}
-	else if (auto *enum_type = dynamic_cast<EnumType*>(symbol_node))
+	else if (auto *enum_type = produce_type<EnumType>(dynamic_cast<Type const *>(symbol_node)))
 	{
 		auto *literal = enum_type->get_literal(expr->accessor->get_symbol());
 
@@ -952,10 +953,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 	{
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 
-		if (auto *alias = dynamic_cast<AliasType*>(array_type->element_type))
-		{
-			array_type = dynamic_cast<Array*>(alias->type);
-		}
+		array_type = produce_type<Array>(array_type->element_type);
 	}
 
 	expr->type = array_type;
@@ -1002,7 +1000,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 	}
 
 
-	if (auto *ctx_array = dynamic_cast<Array*>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
+	if (auto *ctx_array = produce_type<Array>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
 	{
 		if (ctx_array->size < array_type->size)
 		{
