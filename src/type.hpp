@@ -639,6 +639,8 @@ virtual bool is_equal(Type const *other) const override							\
 			return symbol.name;
 		}
 
+		llvm::Function* get_llvm_fn(EmitCtx &ctx) const;
+
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		llvm::FunctionType* get_fn_llvm_type(llvm::LLVMContext *ctx) const;

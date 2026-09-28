@@ -136,7 +136,12 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 
 	if (value == nullptr)
 	{
-		auto *fn = ctx.module->getFunction(symbol);
+		llvm::Function *fn {};
+
+		if (auto *fn_type = produce_type<FnType>(type))
+		{
+			fn = fn_type->get_llvm_fn(ctx);
+		}
 
 		// TODO stack allocate if no target ptr
 		if (fn != nullptr && params.target_ptr != nullptr)
@@ -252,6 +257,12 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 std::string_view pars::MemberAccessExpr::get_symbol()
 {
 	return target->get_symbol();
+}
+
+bool pars::MemberAccessExpr::is_method_call()
+{
+	auto *call = dynamic_cast<CallExpr*>(accessor);
+	return call != nullptr && call->callable->type != nullptr;
 }
 
 llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
@@ -425,16 +436,6 @@ namespace pars
 	}
 }
 
-llvm::Value * pars::AnonInitExpr::emit(EmitCtx &ctx, EmitParams params)
-{
-	if (values.empty())
-	{
-		return type->get_default_value(ctx.llvm_ctx);
-	}
-
-	return emit_initializers(ctx, params, this, values);
-}
-
 llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *llvm_value = value->emit(ctx);
@@ -512,6 +513,11 @@ llvm::Value * pars::PackedExpr::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::AggregateExpr::emit(EmitCtx &ctx, EmitParams params)
 {
+	if (initializers.empty())
+	{
+		return type->get_default_value(ctx.llvm_ctx);
+	}
+
 	auto *llvm_type = type->get_llvm_type(ctx.llvm_ctx);
 
 	auto *block = ctx.builder.GetInsertBlock();

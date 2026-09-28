@@ -331,7 +331,11 @@ pars::ForStmt * pars::AST::parse_for()
 
 	m_lexer.expect(In);
 
+	m_can_initialize_stack.emplace_back(false);
+
 	stmt->iterable = expression();
+
+	m_can_initialize_stack.pop_back();
 
 	m_lexer.expect(LeftBrace);
 
@@ -1101,7 +1105,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 	{
 		auto *expr = new_node<AnonInitExpr>();
 
-		expr->values = parse_brace_list();
+		expr->initializers = parse_brace_list();
 
 		return expr;
 	}

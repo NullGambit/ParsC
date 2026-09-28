@@ -170,6 +170,8 @@ namespace pars
 
 		std::string_view get_symbol() override;
 
+		bool is_method_call();
+
 		ACCEPT
 	};
 
@@ -208,25 +210,7 @@ namespace pars
 		u32 index = UINT32_MAX;
 	};
 
-	// represents a list of expressions for initializers such as structs, arrays, tuples.
-	// is in a format that is useful for reordering when using named initializers.
-	// the second of the pair will later on be set to its correct order to be used in code gen.
-	using InitializerList = std::vector<InitializerElement>;
 
-	// represents any brace initialized value. also used for default value initializations
-	struct AnonInitExpr : Expr
-	{
-		InitializerList values;
-
-		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
-
-		bool is_ctx_sensitive() override
-		{
-			return true;
-		}
-
-		ACCEPT
-	};
 
 	struct AbsExpr : Expr
 	{
@@ -256,12 +240,28 @@ namespace pars
 		ACCEPT
 	};
 
+	// represents a list of expressions for initializers such as structs, arrays, tuples.
+	// is in a format that is useful for reordering when using named initializers.
+	// the second of the pair will later on be set to its correct order to be used in code gen.
+	using InitializerList = std::vector<InitializerElement>;
+
 	struct AggregateExpr : Expr
 	{
 		InitializerList initializers;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;
+
+		ACCEPT
+	};
+
+	// represents any brace initialized value. also used for default value initializations
+	struct AnonInitExpr : AggregateExpr
+	{
+		bool is_ctx_sensitive() override
+		{
+			return true;
+		}
 
 		ACCEPT
 	};

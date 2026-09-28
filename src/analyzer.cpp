@@ -132,20 +132,23 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		param->accept(this, {});
 	}
 
-	if (!has_flag(fn->flags, FnFlags::Extern) && fn->symbol.name != "main")
+	if (!fn->symbol.name.empty())
 	{
-		mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
+		if (!has_flag(fn->flags, FnFlags::Extern) && fn->symbol.name != "main")
 		{
-			return param->type;
-		});
-	}
+			mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
+			{
+				return param->type;
+			});
+		}
 
-	if (fn->collection->fn_is_duplicate(fn))
-	{
-		throw FrontendError{fn->token, "Function is a duplicate"};
-	}
+		if (fn->collection->fn_is_duplicate(fn))
+		{
+			throw FrontendError{fn->token, "Function is a duplicate"};
+		}
 
-	m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
+		m_ctx->scope_table.add_to_scope(fn->symbol, fn, !has_flag(fn->flags, FnFlags::Private));
+	}
 
 	m_function_stack.emplace_back(fn);
 
@@ -766,7 +769,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		};
 
 		auto *call = dynamic_cast<CallExpr*>(expr->accessor);
-		auto is_method = call != nullptr;
+		auto is_method = expr->is_method_call();
 
 		auto maybe_member = is_method ? expr->target->type->get_method(subsymbol) : expr->target->type->get_member(subsymbol);
 
@@ -787,6 +790,11 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 				call->arguments.insert(call->arguments.begin(), expr->target);
 			}
 
+			call->callable->type = member.type;
+		}
+
+		if (call != nullptr)
+		{
 			call->callable->type = member.type;
 		}
 
@@ -960,7 +968,12 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 	{
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 
-		array_type = produce_type<Array>(array_type->element_type);
+		auto *real = produce_type<Array>(array_type->element_type);
+
+		if (real != nullptr)
+		{
+			array_type = real;
+		}
 	}
 
 	expr->type = array_type;
@@ -1065,13 +1078,13 @@ pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 {
-	if (ctx.type == nullptr && !expr->values.empty())
+	if (ctx.type == nullptr && !expr->initializers.empty())
 	{
 		auto *type = new_node<StructType>();
 
 		expr->type = type;
 
-		for (auto i = 0; auto &[expr, pos] : expr->values)
+		for (auto i = 0; auto &[expr, pos] : expr->initializers)
 		{
 			if (auto *named = dynamic_cast<NamedExpr*>(expr))
 			{
@@ -1101,7 +1114,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 
 	if (auto *struct_type = dynamic_cast<StructType*>(expr->type))
 	{
-		assign_struct_indices(struct_type, this, expr->values);
+		assign_struct_indices(struct_type, this, expr->initializers);
 	}
 
 	return expr;
