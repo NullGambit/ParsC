@@ -183,9 +183,9 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		if (index < call_info.parameters.size())
 		{
 			auto *param = call_info.parameters[index];
-			auto *desired_type = param->type;
+			desired_type = param->type;
 
-			if (!is_assignable_from(arg->type, desired_type))
+			if (!arg->type->is_equal(desired_type))
 			{
 				throw CompileError
 				{

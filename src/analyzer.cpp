@@ -19,10 +19,13 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto &arg : expr->arguments)
 	{
-		arg = visit_expr(expr, arg, ctx);
+		if (arg->type == nullptr)
+		{
+			arg = visit_expr(expr, arg, ctx);
+		}
 	}
 
-	ctx.invoker = {};
+	// ctx.invoker = {};
 
 	if (expr->callable->type == nullptr)
 	{
@@ -255,9 +258,14 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 	}
 
-	if (auto *array = produce_type<Array>(stmt->type); array && array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
+	if (auto *array = produce_type<Array>(stmt->type))
 	{
-		throw FrontendError{stmt->token, "Cannot infer size of array"};
+		if (array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
+		{
+			throw FrontendError{stmt->token, "Cannot infer size of array"};
+		}
+
+		array->size = produce_type<Array>(stmt->initializer->type)->size;
 	}
 
 	// var x: T = E
@@ -582,10 +590,10 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	{
 		// allow the symbol to be resolved later when context information is known
 		// mostly just done for enums
-		if (dynamic_cast<CallExpr*>(ctx.invoker))
-		{
-			return expr;
-		}
+		// if (dynamic_cast<CallExpr*>(ctx.invoker))
+		// {
+		// 	return expr;
+		// }
 
 		if (auto *enum_type = dynamic_cast<EnumType*>(ctx.type))
 		{
@@ -782,22 +790,17 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		auto member = maybe_member.or_else(throw_error).value();
 
-		if (expr->is_method)
+		if (expr->is_method && !expr->is_static_access)
 		{
-			if (!expr->is_static_access)
-			{
-				expr->target->flags |= ExprFlags::AlwaysPtr;
+			expr->target->flags |= ExprFlags::AlwaysPtr;
 
-				auto *self = new_node<Pointer>();
+			auto *self = new_node<Pointer>();
 
-				self->inner = produce_type(expr->target->type);
+			self->inner = produce_type(expr->target->type);
 
-				expr->target->type = self;
+			expr->target->type = self;
 
-				call->arguments.insert(call->arguments.begin(), expr->target);
-			}
-
-			call->callable->type = member.type;
+			call->arguments.insert(call->arguments.begin(), expr->target);
 		}
 
 		if (call != nullptr)
@@ -1006,11 +1009,11 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 	}
 
-	ctx.type = array_type->element_type;
+	array_type->element_type = ctx.type;
 
 	for (auto i = 0; auto &[element, pos] : expr->initializers)
 	{
-		element = visit_expr(expr, element, ctx);
+		element = visit_expr(expr, element, {.type = array_type->element_type});
 
 		if (array_type->element_type == nullptr)
 		{
@@ -1182,6 +1185,11 @@ pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 
 	type->size_expr = visit_expr(nullptr, type->size_expr, {});
 
+	if (type->size_expr == nullptr)
+	{
+		return type;
+	}
+
 	auto *value = type->size_expr->accept(&m_comp_eval, {});
 
 	if (auto *literal = dynamic_cast<LiteralExpr*>(value))
@@ -1273,6 +1281,11 @@ pars::Type * pars::Analyzer::get_type(std::string_view name, Token &error_token)
 
 pars::Expr* pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
 {
+	if (expr == nullptr)
+	{
+		return nullptr;
+	}
+
 	ctx.depth = m_expr_depth++;
 
 	auto *result = expr->accept(this, ctx);

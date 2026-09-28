@@ -9,8 +9,8 @@ fn main()
 {
     var operations = [add, sub, mul, div]
 
-    let a = 10
-    let b = 25
+    var a = 10
+    var b = 25
 
     for op in operations
     {

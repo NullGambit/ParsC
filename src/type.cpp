@@ -842,7 +842,7 @@ bool pars::StructType::is_equal(Type const *other) const
 	auto *other_struct = produce_type<StructType>(other);
 
 	// do structural equality matching of either one is anon
-	if (other_struct != nullptr && symbol.name.empty() || other_struct->symbol.name.empty())
+	if (other_struct != nullptr && (symbol.name.empty() || other_struct->symbol.name.empty()))
 	{
 		auto len = std::min(fields.size(), other_struct->fields.size());
 
