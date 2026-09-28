@@ -13,14 +13,11 @@ fn take_f(b: f32)
 
 fn main()
 {
-    const b: u8
     var n: i32 = 10
 
     take_byte(cast(u8)n)
-    // can use any expression to type cast
-    take_byte(cast(b)n)
 
     take_n(n)
 
-    take_f(cast(f32)-3 / cast(f32)2)
+    take_f(cast(f32)(-3) / cast(f32)2)
 }

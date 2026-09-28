@@ -162,9 +162,9 @@ bool pars::AliasType::is_equal(Type const *other) const
 {
 	if (is_distinct)
 	{
-		auto *other_alias = types_match<AliasType>(this, other);
+		auto *other_alias = dynamic_cast<AliasType const*>(other);
 
-		if (other_alias)
+		if (other_alias != nullptr && other_alias == this)
 		{
 			return type->is_equal(other_alias->type);
 		}
@@ -172,7 +172,7 @@ bool pars::AliasType::is_equal(Type const *other) const
 		return false;
 	}
 
-	return type->is_equal(other);
+	return type->is_equal(produce_type(other));
 }
 
 pars::Type * pars::AliasType::get_real_type() const

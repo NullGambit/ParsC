@@ -3,11 +3,11 @@ alias Integer = i32
 alias UniqueInteger = distinct i32
 
 fn add(a: Integer, b: i32) => a + b
-fn add_unique(a: UniqueInteger, b: Integer) => a + b
+fn add_unique(a: UniqueInteger, b: UniqueInteger) => a + b
 
 fn main()
 {
     add(10, 20)
     // should fail to compile without cast
-    add_unique(cast(UniqueInteger)20, 30)
+    add_unique(cast(UniqueInteger)20, cast(UniqueInteger)30)
 }
