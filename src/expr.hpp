@@ -7,6 +7,7 @@
 #include "emit_context.hpp"
 #include "node.hpp"
 #include "symbol.hpp"
+#include "type_meta.hpp"
 #include "visitor.hpp"
 
 #include "llvm/IR/IRBuilder.h"
@@ -181,7 +182,7 @@ namespace pars
 
 	struct CastExpr : Expr
 	{
-		Expr *type_expr;
+		TypeMeta cast_type;
 		Expr *target;
 		// useful for correct integer casting when doing code gen
 		Type *original_type;

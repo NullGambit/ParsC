@@ -854,7 +854,7 @@ the `cast` expression can be used to change the type of an expression like so:
 var c: char = cast(char)10
 ```
 
-any expression can be used withing the brackets for cast and the type of the result of that expression will be used.
+only a valid type can appear within the parenthesis.
 
 ## Function overloading
 

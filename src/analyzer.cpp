@@ -806,9 +806,10 @@ pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 {
 	ctx = new_ctx(expr, ctx);
 
-	expr->type_expr = visit_expr(expr, expr->type_expr, ctx);
+	expr->cast_type.type = resolve_type(expr->cast_type, expr);
 
-	expr->type = expr->type_expr->type;
+	expr->type = expr->cast_type.type;
+	expr->mut_set = expr->cast_type.mut_set;
 
 	ctx.type = expr->type;
 

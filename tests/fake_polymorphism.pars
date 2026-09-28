@@ -11,14 +11,14 @@ struct Derived
     super: Base
 }
 
-fn print_base(base: ^Base)
+fn print_base(base: imut(^Base))
 {
     printf("%s %d\n", base.name, base.score)
 }
 
 fn main()
 {
-    var derived = Derived{{name: "john", score: 100}}
+    let derived = Derived{{name: "john", score: 100}}
 
     print_base(cast(^Base)&derived)
 }

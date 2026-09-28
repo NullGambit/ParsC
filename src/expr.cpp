@@ -294,11 +294,6 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		return accessor->emit(ctx, params);
 	}
 
-	if (has_flag(flags, ExprFlags::Immutable))
-	{
-		throw CompileError{this, fmt::format("{} is immutable", target->get_symbol())};
-	}
-
 	auto *target_value = params.predecessor_ptr == nullptr ? target->emit_ptr(ctx) : params.predecessor_ptr;
 
 	// target can be an import. use this as a fallback
@@ -323,7 +318,7 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	// as of now struct members cannot be readonly but in the future it is worth refactoring this.
 	auto member = target->type->get_member(accessor->get_symbol()).value();
 
-	if (member.access == MemberAccess::Readonly)
+	if (member.access == MemberAccess::Readonly || has_flag(flags, ExprFlags::Immutable))
 	{
 		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
 
