@@ -1224,5 +1224,10 @@ llvm::Value * pars::EnumType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value 
 
 pars::Type* pars::produce_type(Type const *type)
 {
+	if (type == nullptr)
+	{
+		return nullptr;
+	}
+	
 	return type->get_real_type();
 }

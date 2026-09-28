@@ -106,7 +106,7 @@ target_compile_options(ParsC PRIVATE -include ${CMAKE_SOURCE_DIR}/src/type_defs.
 set_target_properties(ParsC PROPERTIES OUTPUT_NAME "parsc")
 add_custom_command(TARGET ParsC
                    POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ParsC> ./../../)
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ParsC> ${CMAKE_SOURCE_DIR})
 
 llvm_map_components_to_libnames(llvm_libs
     core

@@ -1,5 +1,6 @@
+#include <filesystem>
 #include <iostream>
-#include <c++/12/filesystem>
+#include <filesystem>
 
 #include "cli.hpp"
 #include "util/fmt.hpp"

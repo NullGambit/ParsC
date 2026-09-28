@@ -23,6 +23,6 @@ add_executable(LangTester src/main.cpp
 set_target_properties(LangTester PROPERTIES OUTPUT_NAME "lang_tester")
 add_custom_command(TARGET LangTester
                    POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:LangTester> ./../../../../)
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:LangTester> ${CMAKE_SOURCE_DIR}/../../)
 
 target_compile_options(LangTester PRIVATE -include ${CMAKE_SOURCE_DIR}/../../src/type_defs.hpp)

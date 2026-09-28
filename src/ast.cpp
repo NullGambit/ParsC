@@ -702,6 +702,8 @@ pars::ImplStmt * pars::AST::parse_impl()
 
 		self->symbol.name = "self";
 
+		self->token = stmt->token;
+
 		m_lexer.expect(Fn);
 
 		auto *fn = parse_fn(std::span{&self, 1});
@@ -968,7 +970,7 @@ std::vector<pars::Expr*> pars::AST::collect_call_arguments()
 
 bool pars::AST::can_initialize() const
 {
-	return !m_can_initialize_stack.empty() && m_can_initialize_stack.front();
+	return m_can_initialize_stack.empty() || (!m_can_initialize_stack.empty() && m_can_initialize_stack.front());
 }
 
 pars::Expr* pars::AST::parse_unary()
