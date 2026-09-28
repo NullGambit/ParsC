@@ -30,6 +30,7 @@
     - function parameter mutability testing is very wonky right now. can pass a imut T to a function expecting T.
     - the api and the usage of type parsing and TypeMeta feels quite hacky. refactor everything related to it.
         - this is mostly due to the fact that how types were parsed and stored changed drastically.
+    - the analysis for member access has become extremely messy.
 
 - design issues:
     - literals and type coercion need addressing.

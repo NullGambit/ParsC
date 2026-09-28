@@ -769,13 +769,20 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		};
 
 		auto *call = dynamic_cast<CallExpr*>(expr->accessor);
-		auto is_method = expr->is_method_call();
+		expr->is_method = call != nullptr;
 
-		auto maybe_member = is_method ? expr->target->type->get_method(subsymbol) : expr->target->type->get_member(subsymbol);
+		auto maybe_member = expr->is_method ? expr->target->type->get_method(subsymbol) : expr->target->type->get_member(subsymbol);
+
+		// maybe its not a method and its just a function pointer field
+		if (expr->is_method && !maybe_member.has_value())
+		{
+			maybe_member = expr->target->type->get_member(subsymbol);
+			expr->is_method = false;
+		}
 
 		auto member = maybe_member.or_else(throw_error).value();
 
-		if (is_method)
+		if (expr->is_method)
 		{
 			if (!expr->is_static_access)
 			{

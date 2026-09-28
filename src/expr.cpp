@@ -259,12 +259,6 @@ std::string_view pars::MemberAccessExpr::get_symbol()
 	return target->get_symbol();
 }
 
-bool pars::MemberAccessExpr::is_method_call()
-{
-	auto *call = dynamic_cast<CallExpr*>(accessor);
-	return call != nullptr && call->callable->type != nullptr;
-}
-
 llvm::Value * pars::CallExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return emit_ptr(ctx, params);
@@ -300,7 +294,7 @@ llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)
 
 llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
-	if (dynamic_cast<CallExpr*>(accessor))
+	if (is_method)
 	{
 		return accessor->emit(ctx, params);
 	}

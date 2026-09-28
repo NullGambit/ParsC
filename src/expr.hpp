@@ -164,13 +164,12 @@ namespace pars
 		Expr *target;
 		Expr *accessor;
 		bool is_static_access {};
+		bool is_method {};
 
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_symbol() override;
-
-		bool is_method_call();
 
 		ACCEPT
 	};
