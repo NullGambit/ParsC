@@ -871,7 +871,6 @@ pars::Expr* pars::AST::parse_primary()
 			return expr;
 		}
 
-
 		if (lhs != nullptr)
 		{
 			lhs->token = inner->token;
@@ -1084,7 +1083,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 		auto *expr = new_node<CastExpr>();
 
-		expr->type_expr = expression();
+		expr->cast_type.type = parse_type(expr->cast_type);
 
 		m_lexer.expect(RightParen);
 
