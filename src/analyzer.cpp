@@ -524,7 +524,7 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 {
 	auto *symbol = m_ctx->scope_table.find_local_symbol(stmt->type_symbol.name);
-	auto *type = produce_type<UserDefType>(dynamic_cast<Type const*>(symbol));
+	auto *type = dynamic_cast<UserDefType*>(symbol);
 
 	if (type == nullptr)
 	{
