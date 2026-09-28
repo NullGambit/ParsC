@@ -1009,7 +1009,10 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 	}
 
-	array_type->element_type = ctx.type;
+	if (ctx.type != nullptr && array_type->element_type == nullptr)
+	{
+		array_type->element_type = ctx.type;
+	}
 
 	for (auto i = 0; auto &[element, pos] : expr->initializers)
 	{
