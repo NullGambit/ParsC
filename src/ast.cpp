@@ -1075,8 +1075,6 @@ pars::Expr * pars::AST::parse_primary_inner()
 	{
 		auto *expr = new_node<SizeofExpr>();
 
-		expr->type = const_cast<Integer*>(&I32Type);
-
 		expr->expr = expression();
 
 		return expr;

@@ -701,6 +701,8 @@ pars::Node* pars::Analyzer::visit(GroupExpr* expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 {
+	expr->type = const_cast<Integer*>(&I32Type);
+
 	expr->expr = visit_expr(expr, expr->expr, new_ctx(expr, ctx));
 
 	return expr;

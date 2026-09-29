@@ -209,8 +209,6 @@ namespace pars
 		u32 index = UINT32_MAX;
 	};
 
-
-
 	struct AbsExpr : Expr
 	{
 		Expr *value;
