@@ -17,7 +17,7 @@ fn test2()
     var value = 10
 
     // void pointers are any pointers
-    var vptr: *void
+    var vptr: ^void
 
     vptr = &value
 

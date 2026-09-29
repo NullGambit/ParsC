@@ -264,8 +264,10 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		{
 			throw FrontendError{stmt->token, "Cannot infer size of array"};
 		}
-
-		array->size = produce_type<Array>(stmt->initializer->type)->size;
+		if (stmt->initializer != nullptr)
+		{
+			array->size = produce_type<Array>(stmt->initializer->type)->size;
+		}
 	}
 
 	// var x: T = E
