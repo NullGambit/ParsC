@@ -19,8 +19,15 @@ impl Color
     }
 }
 
+fn set_color(color: Color)
+{
+
+}
+
 fn main()
 {
+    set_color(Green)
+
     var color = Color::Blue
 
     color = Red

@@ -25,8 +25,6 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 		}
 	}
 
-	ctx.invoker = {};
-
 	if (expr->callable->type == nullptr)
 	{
 		// set type from the expr in case of being called from a member access
@@ -592,13 +590,6 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	}
 	else
 	{
-		// allow the symbol to be resolved later when context information is known
-		// mostly just done for enums
-		if (dynamic_cast<CallExpr*>(ctx.invoker))
-		{
-			return expr;
-		}
-
 		if (auto *enum_type = dynamic_cast<EnumType*>(ctx.type))
 		{
 			auto *literal = enum_type->get_literal(expr->symbol);
