@@ -5,8 +5,8 @@ fn main()
     var x = 10
 
     // constness is positional and can be placed in multiple places.
-    // 'const ^const i32' is also possible.
-    var ptr: ^const i32
+    // 'const ^imut i32' is also possible.
+    var ptr: ^imut i32
 
     ptr = &x
 

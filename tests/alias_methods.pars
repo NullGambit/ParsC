@@ -22,6 +22,9 @@ impl Integer
 fn main()
 {
     let user: U = {10}
+
+    var value = user.get_value()
+
     let integer: Integer = 10
 
     integer.print()
