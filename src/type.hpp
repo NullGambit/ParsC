@@ -266,7 +266,30 @@ virtual bool is_equal(Type const *other) const override							\
 
 		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
 		std::optional<MemberInfo> get_method(std::string_view symbol) const override;
-		llvm::Value *access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+		llvm::Value* access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor, std::string_view symbol) const override;
+
+		llvm::Value* emit(EmitCtx &ctx, EmitParams params) override;
+
+		bool is_primitive() const override;
+
+		llvm::Constant*get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant*> init_list) const override;
+
+		llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name) override;
+
+		llvm::Value* op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start,
+			llvm::Value *end) const override;
+
+		bool can_coerce_into(Type const *desired_type) const override;
+
+		bool is_iterable() const override;
+
+		std::span<Type*> get_iter_bindings() const override;
+
+		llvm::Value* iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const override;
+
+		llvm::Value* iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const override;
+
+		llvm::Value* iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const override;
 
 		ACCEPT
 	};

@@ -2,6 +2,18 @@ import core.stdc.stdio
 
 alias Integer = i32
 
+struct User
+{
+    value: i32
+}
+
+impl User
+{
+    fn get_value() => self.value
+}
+
+alias U = User
+
 impl Integer
 {
     fn print() => printf("%d\n", ^self)
@@ -9,6 +21,7 @@ impl Integer
 
 fn main()
 {
+    let user: U = {10}
     let integer: Integer = 10
 
     integer.print()

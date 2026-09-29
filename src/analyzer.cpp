@@ -1120,7 +1120,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 
 	expr->type = ctx.type;
 
-	if (auto *struct_type = dynamic_cast<StructType*>(expr->type))
+	if (auto *struct_type = produce_type<StructType>(expr->type))
 	{
 		assign_struct_indices(struct_type, this, expr->initializers);
 	}

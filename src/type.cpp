@@ -288,6 +288,62 @@ llvm::Value * pars::AliasType::access_member(EmitCtx &ctx, llvm::Value *ptr, llv
 	return type->access_member(ctx, ptr, accessor, symbol);
 }
 
+llvm::Value * pars::AliasType::emit(EmitCtx &ctx, EmitParams params)
+{
+	return type->emit(ctx, params);
+}
+
+bool pars::AliasType::is_primitive() const
+{
+	return type->is_primitive();
+}
+
+llvm::Constant * pars::AliasType::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
+{
+	return type->get_aggregate_constant(ctx, init_list);
+}
+
+llvm::Value * pars::AliasType::get_property(llvm::LLVMContext *ctx, std::string_view name)
+{
+	return type->get_property(ctx, name);
+}
+
+llvm::Value * pars::AliasType::op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start,
+	llvm::Value *end) const
+{
+	return type->op_slice(ctx, array, target, start, end);
+}
+
+bool pars::AliasType::can_coerce_into(Type const *desired_type) const
+{
+	return type->can_coerce_into(desired_type);
+}
+
+bool pars::AliasType::is_iterable() const
+{
+	return type->is_iterable();
+}
+
+std::span<pars::Type *> pars::AliasType::get_iter_bindings() const
+{
+	return type->get_iter_bindings();
+}
+
+llvm::Value * pars::AliasType::iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+{
+	return type->iter_emit_init(ctx, iterable, vars);
+}
+
+llvm::Value * pars::AliasType::iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+{
+	return type->iter_emit_update(ctx, iterable, vars);
+}
+
+llvm::Value * pars::AliasType::iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+{
+	return type->iter_emit_condition(ctx, iterable, vars);
+}
+
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);
