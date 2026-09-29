@@ -307,7 +307,9 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 			throw FrontendError{stmt->token, "const must have an initializer"};
 		}
 
-		stmt->initializer = dynamic_cast<Expr*>(stmt->initializer->accept(&m_comp_eval, new_ctx(stmt, ctx)));
+		auto *result = stmt->initializer->accept(&m_comp_eval, {});
+
+		stmt->initializer = dynamic_cast<Expr*>(result);
 
 		if (stmt->initializer == nullptr)
 		{

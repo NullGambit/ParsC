@@ -46,6 +46,10 @@ pars::Node* pars::CompEval::visit(BinaryExpr* expr, VisitCtx ctx)
                 case Minus: return lhs - rhs;
                 case Star: return lhs * rhs;
                 case ForwardSlash: return lhs / rhs;
+                case Greater: return lhs > rhs;
+                case Less: return lhs < rhs;
+                case GreaterEqual: return lhs >= rhs;
+                case LessEqual: return lhs <= rhs;
             }
         }
 
