@@ -432,6 +432,8 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 	};
 
+	static Packed PackedType {};
+
 	struct BaseArray : Type
 	{
 		Type *element_type;

@@ -1079,7 +1079,7 @@ llvm::Value* pars::FnType::emit(EmitCtx &ctx, EmitParams params)
 			i++;
 		}
 
-		if (has_flag(flags, FnFlags::ArrowFn))
+		if (has_flag(flags, FnFlags::ArrowFn) && !signature.return_type->is_equal(&VoidType))
 		{
 			ctx.builder.CreateRet(body->nodes.front()->emit(ctx));
 		}

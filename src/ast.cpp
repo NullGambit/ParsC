@@ -1291,6 +1291,10 @@ pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overr
 	{
 		return parse_struct(/*skip_signature=*/true);
 	}
+	if (m_lexer.match(Ellipse))
+	{
+		return &PackedType;
+	}
 
 	return nullptr;
 }

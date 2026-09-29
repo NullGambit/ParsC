@@ -1,7 +1,12 @@
-import core.cstd.cstdio
+import core.stdc.stdio
 
-fn println(fmt: str, args: ...)
+fn println(fmt: str)
 {
-    printf(fmt, ...args)
+    printf(fmt)
     puts("")
+}
+
+fn print(fmt: str)
+{
+    printf(fmt)
 }
