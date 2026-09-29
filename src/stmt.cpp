@@ -262,6 +262,23 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx, EmitParams params)
 
 	body->emit(ctx);
 
+	llvm::BasicBlock *else_bb {};
+
+	if (else_br != nullptr)
+	{
+		else_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "else", fn);
+		ctx.builder.SetInsertPoint(else_bb);
+		else_br->emit(ctx);
+	}
+
+	if (has_return(else_bb) && has_return(then_bb))
+	{
+		ctx.builder.SetInsertPoint(start_bb);
+		ctx.builder.CreateCondBr(condition_value, then_bb, else_bb);
+
+		return get_block_poison(ctx);
+	}
+
 	auto pop_bb = false;
 
 	if (ctx.builder.GetInsertBlock() != then_bb)
@@ -286,24 +303,6 @@ llvm::Value * pars::IfStmt::emit(EmitCtx &ctx, EmitParams params)
 			ctx.if_merge_bbs.pop_back();
 		}
 	};
-
-	llvm::BasicBlock *else_bb {};
-
-	if (else_br != nullptr)
-	{
-		else_bb = llvm::BasicBlock::Create(*ctx.llvm_ctx, "else", fn);
-		ctx.builder.SetInsertPoint(else_bb);
-		else_br->emit(ctx);
-	}
-
-	if (has_return(else_bb) && has_return(then_bb))
-	{
-		ctx.builder.SetInsertPoint(start_bb);
-		ctx.builder.CreateCondBr(condition_value, then_bb, else_bb);
-
-		return get_block_poison(ctx);
-	}
-
 
 	if (else_br == nullptr)
 	{
