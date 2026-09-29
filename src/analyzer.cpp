@@ -19,13 +19,13 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto &arg : expr->arguments)
 	{
-		if (arg->type == nullptr)
+		if (arg->type == nullptr && !arg->is_ctx_sensitive())
 		{
 			arg = visit_expr(expr, arg, ctx);
 		}
 	}
 
-	// ctx.invoker = {};
+	ctx.invoker = {};
 
 	if (expr->callable->type == nullptr)
 	{
@@ -592,10 +592,10 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	{
 		// allow the symbol to be resolved later when context information is known
 		// mostly just done for enums
-		// if (dynamic_cast<CallExpr*>(ctx.invoker))
-		// {
-		// 	return expr;
-		// }
+		if (dynamic_cast<CallExpr*>(ctx.invoker))
+		{
+			return expr;
+		}
 
 		if (auto *enum_type = dynamic_cast<EnumType*>(ctx.type))
 		{
