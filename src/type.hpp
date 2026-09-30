@@ -55,6 +55,21 @@ namespace pars
 			return nullptr;
 		}
 
+		virtual llvm::Constant* get_constant_from_literal(EmitCtx &ctx, u64 n) const
+		{
+			return nullptr;
+		}
+
+		virtual llvm::Constant* get_constant_from_literal(EmitCtx &ctx, i64 n) const
+		{
+			return nullptr;
+		}
+
+		virtual llvm::Constant* get_constant_from_literal(EmitCtx &ctx, f64 n) const
+		{
+			return nullptr;
+		}
+
 		// will return the real type that this type node holds. in case of a wrapper such as alias it will be its
 		// aliased type but in other cases it will be the type itself.
 		virtual Type* get_real_type() const { return const_cast<Type*>(this); }
@@ -305,6 +320,10 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
 
+		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, i64 n) const override;
+		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, u64 n) const override;
+		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, f64 n) const override;
+
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
 
 		bool is_int() const override
@@ -328,6 +347,9 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_abs(EmitCtx &ctx, llvm::Value *value) const override;
+
+		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, f64 n) const override;
+		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, i64 n) const override;
 
 		DEFAULT_INTEGRAL_EQUAL(Float)
 	};

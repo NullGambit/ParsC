@@ -415,6 +415,25 @@ llvm::Value * pars::Integer::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *r
 	return nullptr;
 }
 
+llvm::Constant * pars::Integer::get_constant_from_literal(EmitCtx &ctx, i64 n) const
+{
+	auto ap = llvm::APInt(bits, n, true);
+
+	return llvm::ConstantInt::get(*ctx.llvm_ctx, ap);
+}
+
+llvm::Constant * pars::Integer::get_constant_from_literal(EmitCtx &ctx, u64 n) const
+{
+	auto ap = llvm::APInt(bits, n, false);
+
+	return llvm::ConstantInt::get(*ctx.llvm_ctx, ap);
+}
+
+llvm::Constant * pars::Integer::get_constant_from_literal(EmitCtx &ctx, f64 n) const
+{
+	return get_constant_from_literal(ctx, (i64)n);
+}
+
 llvm::Value * pars::Integer::op_abs(EmitCtx &ctx, llvm::Value *value) const
 {
 	auto *is_poison = ctx.builder.getInt1(true);
@@ -467,6 +486,18 @@ llvm::Value * pars::Float::get_default_value(llvm::LLVMContext *ctx) const
 llvm::Value * pars::Float::op_abs(EmitCtx &ctx, llvm::Value *value) const
 {
 	return ctx.builder.CreateIntrinsic(llvm::Intrinsic::fabs, get_llvm_type(ctx.llvm_ctx), {value});
+}
+
+llvm::Constant* pars::Float::get_constant_from_literal(EmitCtx &ctx, f64 n) const
+{
+	auto ap = llvm::APFloat(n);
+
+	return llvm::ConstantFP::get(*ctx.llvm_ctx, ap);
+}
+
+llvm::Constant * pars::Float::get_constant_from_literal(EmitCtx &ctx, i64 n) const
+{
+	return get_constant_from_literal(ctx, (f64)n);
 }
 
 llvm::Type * pars::Bool::get_llvm_type(llvm::LLVMContext *ctx) const

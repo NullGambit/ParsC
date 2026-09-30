@@ -29,43 +29,38 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 	{
 		[&](i32 _i32) -> llvm::Value*
 		{
-			auto int_type = produce_type<Integer>(type);
-
-			auto ap = llvm::APInt(int_type->bits, _i32);
-
-			return llvm::ConstantInt::get(*ctx.llvm_ctx, ap);
+			return type->get_constant_from_literal(ctx, (i64)_i32);
 		},
-		[&ctx](f32 _f32)
+		[&](f32 _f32) -> llvm::Value*
 		{
-			auto value = llvm::APFloat(_f32);
-			return (llvm::Value*)llvm::ConstantFP::get(*ctx.llvm_ctx, value);
+			return type->get_constant_from_literal(ctx, _f32);
 		},
-		[&ctx](std::string_view str)
+		[&ctx](std::string_view str) -> llvm::Value*
 		{
 			auto iter = g_static_strings.find(str);
 
 			if (iter != g_static_strings.end())
 			{
-				return (llvm::Value*)iter->second;
+				return iter->second;
 			}
 
 			auto *global = ctx.builder.CreateGlobalString(str, ".str", 0, ctx.module);
 
 			g_static_strings[str] = global;
 
-			return (llvm::Value*)global;
+			return global;
 		},
-		[&ctx](bool _bool)
+		[&ctx](bool _bool) -> llvm::Value*
 		{
 			auto value = llvm::APInt(1, _bool);
-			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
+			return llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 		},
-		[&ctx](char _char)
+		[&ctx](char _char) -> llvm::Value*
 		{
 			auto value = llvm::APInt(8, _char);
-			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
+			return llvm::ConstantInt::get(*ctx.llvm_ctx, value);
 		},
-		[&ctx](std::nullptr_t)
+		[&ctx](std::nullptr_t) -> llvm::Value*
 		{
 			return VoidPointerType.get_default_value(ctx.llvm_ctx);
 		}
