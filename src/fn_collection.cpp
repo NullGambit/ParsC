@@ -30,7 +30,7 @@ pars::FnType * pars::FnCollection::get_fn(std::span<Expr *> args, Analyzer *anal
 
 			auto *param = fn->signature.parameters[i];
 
-			if (!arg->is_resolved() && arg->is_ctx_sensitive())
+			if (arg->type == nullptr && arg->is_ctx_sensitive())
 			{
 				arg = analyzer->visit_expr(nullptr, arg, {.type = param->type});
 				ambiguous_args++;
