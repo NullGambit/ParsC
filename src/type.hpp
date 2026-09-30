@@ -306,6 +306,12 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Value* iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const override;
 
+		llvm::Constant * get_constant_from_literal(EmitCtx &ctx, u64 n) const override;
+
+		llvm::Constant * get_constant_from_literal(EmitCtx &ctx, i64 n) const override;
+
+		llvm::Constant * get_constant_from_literal(EmitCtx &ctx, f64 n) const override;
+
 		ACCEPT
 	};
 

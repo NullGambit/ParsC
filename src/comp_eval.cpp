@@ -63,11 +63,12 @@ pars::Node* pars::CompEval::visit(BinaryExpr* expr, VisitCtx ctx)
         return nullptr;
     }
 
-    return std::visit([](auto &&val) -> LiteralExpr*
+    return std::visit([left](auto &&val) -> LiteralExpr*
     {
         auto literal = new_node<LiteralExpr>();
 
         literal->value = val;
+        literal->type = left->type;
 
         return literal;
     }, result);

@@ -344,6 +344,21 @@ llvm::Value * pars::AliasType::iter_emit_condition(EmitCtx &ctx, Expr *iterable,
 	return type->iter_emit_condition(ctx, iterable, vars);
 }
 
+llvm::Constant * pars::AliasType::get_constant_from_literal(EmitCtx &ctx, u64 n) const
+{
+	return type->get_constant_from_literal(ctx, n);
+}
+
+llvm::Constant * pars::AliasType::get_constant_from_literal(EmitCtx &ctx, i64 n) const
+{
+	return type->get_constant_from_literal(ctx, n);
+}
+
+llvm::Constant * pars::AliasType::get_constant_from_literal(EmitCtx &ctx, f64 n) const
+{
+	return type->get_constant_from_literal(ctx, n);
+}
+
 llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return Integral::get_llvm_type(ctx);
