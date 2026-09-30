@@ -967,7 +967,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		return expr;
 	}
 
-	ctx = new_ctx(expr, ctx);
+	ctx = new_ctx(expr, ctx, ctx.type);
 
 	auto *array_type = new_node<Array>();
 
@@ -1004,6 +1004,11 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 	if (expr->type_specifier != nullptr)
 	{
 		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
+	}
+
+	if (auto *array_ctx = produce_type<BaseArray>(ctx.type))
+	{
+		array_type->element_type = array_ctx->element_type;
 	}
 
 	for (auto i = 0; auto &[element, pos] : expr->initializers)

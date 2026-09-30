@@ -634,7 +634,7 @@ llvm::Value * pars::SliceExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	}
 	else
 	{
-		auto *array_type = dynamic_cast<Array*>(lhs->type);
+		auto *array_type = produce_type<Array>(lhs->type);
 		end_value = ctx.builder.getInt32(array_type->size);
 	}
 

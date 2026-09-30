@@ -16,11 +16,11 @@ fn print_tests(tests: []Test)
 fn main()
 {
     var tests1 = [Test{1}, {2}, {3}]
-    var tests2: []Test = [{1}, {2}, {3}]
+    var tests2: [3]Test = [{1}, {2}, {3}]
     var tests3: [?]Test = [{1}, {2}, {3}]
 
-    print_tests(tests1)
-    print_tests(tests2)
-    print_tests(tests3)
+    print_tests(tests1[:])
+    print_tests(tests2[:])
+    print_tests(tests3[:])
 }
 
