@@ -27,10 +27,13 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return std::visit(overload
 	{
-		[&ctx](i32 _i32)
+		[&](i32 _i32) -> llvm::Value*
 		{
-			auto value = llvm::APInt(32, _i32);
-			return (llvm::Value*)llvm::ConstantInt::get(*ctx.llvm_ctx, value);
+			auto int_type = produce_type<Integer>(type);
+
+			auto ap = llvm::APInt(int_type->bits, _i32);
+
+			return llvm::ConstantInt::get(*ctx.llvm_ctx, ap);
 		},
 		[&ctx](f32 _f32)
 		{

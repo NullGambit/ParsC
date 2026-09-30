@@ -38,6 +38,7 @@
         then try to do a coercion.
         literals should be coerced to whatever type is is most viable in its context.
         integer suffixes should also be added for greater ease of use.
+    - function parameters should be immutable by default. perhaps use shadowing or a special keyword to make them mutable.
 
 - warnings to add:
 
@@ -63,6 +64,8 @@
     - move and copy system
     - allow initialization of structs without braces (maybe bad idea?)
     - static fields
+    - allow passing of anon structs to functions. currently only issue is llvm not equating the types.
+        - possibly only allow passing pointers or automatically turning them into pointers.
 
 - enums:
     - allow setting the value of an enum variant

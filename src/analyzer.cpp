@@ -19,7 +19,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto &arg : expr->arguments)
 	{
-		if (arg->type == nullptr && !arg->is_ctx_sensitive())
+		if (!arg->is_resolved() && !arg->is_ctx_sensitive())
 		{
 			arg = visit_expr(expr, arg, ctx);
 		}
@@ -70,7 +70,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 			ctx_type = call_info.parameters[index++]->type;
 		}
 
-		if (arg->type == nullptr)
+		if (!arg->is_resolved())
 		{
 			arg = visit_expr(expr, arg, {ctx_type});
 		}
@@ -644,7 +644,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 {
-	expr->left = visit_expr(expr, expr->left, new_ctx(expr, ctx));
+	expr->left = visit_expr(expr, expr->left, new_ctx(expr, ctx, ctx.type));
 	expr->right = visit_expr(expr, expr->right, {.type = expr->left->type});
 
 	if (expr->op > _ComparisonStart && expr->op < _ComparisonEnd)
@@ -1204,6 +1204,13 @@ pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(LiteralExpr *expr, VisitCtx ctx)
 {
+	expr->flags |= ExprFlags::ResolvedInternal;
+
+	if (ctx.type)
+	{
+		expr->type = ctx.type;
+	}
+
 	return expr;
 }
 

@@ -23,6 +23,8 @@ namespace pars
 	{
 		Immutable = 1 << 0,
 		AlwaysPtr = 1 << 1,
+		// a flag for the expression to decide internally if its been resolved or not.
+		ResolvedInternal = 1 << 2,
 	};
 
 	PARS_FLAGIFY(ExprFlags);
@@ -40,6 +42,7 @@ namespace pars
 		virtual std::string_view get_symbol() { return {}; }
 
 		virtual bool is_ctx_sensitive() { return false; }
+		virtual bool is_resolved() { return type != nullptr; }
 	};
 
 	using LiteralExprValue = std::variant
@@ -60,6 +63,16 @@ namespace pars
 
 		std::optional<i64> get_int() const;
 
+		bool is_ctx_sensitive() override
+		{
+			return true;
+		}
+
+		bool is_resolved() override
+		{
+			return has_flag(flags, ExprFlags::ResolvedInternal);
+		}
+
 		ACCEPT
 	};
 
@@ -70,6 +83,16 @@ namespace pars
 		Expr *right;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
+
+		bool is_ctx_sensitive() override
+		{
+			return left->is_ctx_sensitive() || right->is_ctx_sensitive();
+		}
+
+		bool is_resolved() override
+		{
+			return left->is_resolved() && right->is_resolved();
+		}
 
 		ACCEPT
 	};
