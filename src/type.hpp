@@ -249,8 +249,7 @@ virtual bool is_equal(Type const *other) const override							\
 	struct AliasType : UserDefType
 	{
 		Symbol symbol;
-		TypeMeta meta;
-		Type *type = nullptr;
+		TypeMeta type;
 		bool is_distinct = false;
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -544,15 +543,22 @@ virtual bool is_equal(Type const *other) const override							\
 	struct StructFieldInfo
 	{
 		Symbol symbol;
-		TypeMeta type_meta;
-		Type *type {};
+		TypeMeta type;
 	};
+
+	enum class StructFlags
+	{
+		Resolved = 1 << 0,
+	};
+
+	PARS_FLAGIFY(StructFlags);
 
 	struct StructType : UserDefType
 	{
 		Symbol symbol;
 		std::vector<StructFieldInfo> fields;
 		llvm::StructType *llvm_type {};
+		StructFlags flags;
 
 		u32 get_size() override;
 
@@ -650,6 +656,7 @@ virtual bool is_equal(Type const *other) const override							\
 		Private = 1 << 2,
 		ArrowFn = 1 << 3,
 		Static = 1 << 4,
+		Resolved = 1 << 5,
 	};
 
 	PARS_FLAGIFY(FnFlags);
@@ -663,8 +670,7 @@ virtual bool is_equal(Type const *other) const override							\
 		// the amount of non default parameters
 		u32 callable_arity {};
 		bool is_variadic {};
-		Type *return_type {};
-		TypeMeta return_type_meta;
+		TypeMeta return_type {};
 
 		llvm::Function* emit(EmitCtx &ctx, std::string_view name, FnFlags flags) const;
 	};
@@ -703,7 +709,7 @@ virtual bool is_equal(Type const *other) const override							\
 			return CallInfo
 			{
 				signature.parameters,
-				signature.return_type_meta,
+				signature.return_type,
 				signature.is_variadic,
 				signature.callable_arity
 			};

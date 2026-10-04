@@ -166,7 +166,7 @@ bool pars::AliasType::is_equal(Type const *other) const
 
 		if (other_alias != nullptr && other_alias == this)
 		{
-			return type->is_equal(other_alias->type);
+			return type->is_equal(other_alias->type.ptr);
 		}
 
 		return false;
@@ -177,7 +177,7 @@ bool pars::AliasType::is_equal(Type const *other) const
 
 pars::Type * pars::AliasType::get_real_type() const
 {
-	return type;
+	return type.ptr;
 }
 
 llvm::Value * pars::AliasType::op_abs(EmitCtx &ctx, llvm::Value *value) const
@@ -953,7 +953,7 @@ bool pars::StructType::is_equal(Type const *other) const
 			auto &this_field = fields[i];
 			auto &other_field = other_struct->fields[i];
 
-			if (this_field.symbol.name != other_struct->symbol.name && !this_field.type->is_equal(other_field.type))
+			if (this_field.symbol.name != other_struct->symbol.name && !this_field.type->is_equal(other_field.type.ptr))
 			{
 				return false;
 			}
@@ -1004,7 +1004,7 @@ std::optional<pars::MemberInfo> pars::StructType::get_member(std::string_view sy
 		return std::nullopt;
 	}
 
-	return MemberInfo{iter->symbol.name, iter->type};
+	return MemberInfo{iter->symbol.name, iter->type.ptr};
 }
 
 llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
@@ -1208,7 +1208,7 @@ llvm::FunctionType * pars::FnType::get_fn_llvm_type(llvm::LLVMContext *ctx) cons
 		llvm_type_cache.emplace_back(param->type->get_llvm_type(ctx));
 	}
 
-	return llvm::FunctionType::get(signature.return_type_meta.type->get_llvm_type(ctx), llvm_type_cache, false);
+	return llvm::FunctionType::get(signature.return_type.ptr->get_llvm_type(ctx), llvm_type_cache, false);
 }
 
 llvm::Type * pars::FnType::get_llvm_type(llvm::LLVMContext *ctx) const
@@ -1236,7 +1236,7 @@ bool pars::FnType::is_equal(Type const *other) const
 
 	auto ret_match = [&]()
 	{
-		return signature.return_type_meta.type->is_equal(other_fn->signature.return_type_meta.type);
+		return signature.return_type.ptr->is_equal(other_fn->signature.return_type.ptr);
 	};
 
 	if (other_fn == nullptr
@@ -1250,7 +1250,7 @@ bool pars::FnType::is_equal(Type const *other) const
 	{
 		auto *other_param = other_fn->signature.parameters[i];
 
-		if (!param->type->is_equal(other_param->type) || other_param->type_meta.mut_set != param->type_meta.mut_set)
+		if (!param->type->is_equal(other_param->type.ptr) || other_param->type.mut_set != param->type.mut_set)
 		{
 			return false;
 		}

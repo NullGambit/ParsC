@@ -98,7 +98,7 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 		}
 	}
 
-	if (type_meta.mut_set.test(0))
+	if (type.mut_set.test(0))
 	{
 		auto *node = llvm::MDNode::get(*ctx.llvm_ctx, {});
 
@@ -112,7 +112,7 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 
 bool pars::VarDeclStmt::is_explicitly_typed() const
 {
-	return type_meta.type != nullptr;
+	return type.is_valid();
 }
 
 bool pars::VarDeclStmt::is_type_inferred() const

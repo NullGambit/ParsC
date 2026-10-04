@@ -32,11 +32,11 @@ pars::FnType * pars::FnCollection::get_fn(std::span<Expr *> args, Analyzer *anal
 
 			if (arg->type == nullptr && arg->is_ctx_sensitive())
 			{
-				arg = analyzer->visit_expr(nullptr, arg, {.type = param->type});
+				arg = analyzer->visit_expr(nullptr, arg, {.type = param->type.ptr});
 				ambiguous_args++;
 			}
 
-			if (arg->type == nullptr || !arg->type->is_equal(param->type))
+			if (arg->type == nullptr || !arg->type->is_equal(param->type.ptr))
 			{
 				all_match = false;
 				break;
@@ -81,7 +81,7 @@ bool pars::FnCollection::fn_is_duplicate(FnType *in_fn)
 			{
 				auto *other_param = in_fn->signature.parameters[i];
 
-				if (!other_param->type->is_equal(param->type))
+				if (!other_param->type->is_equal(param->type.ptr))
 				{
 					return false;
 				}

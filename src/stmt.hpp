@@ -38,8 +38,7 @@ namespace pars
 	struct VarDeclStmt : Stmt
 	{
 		Symbol symbol;
-		TypeMeta type_meta;
-		Type *type {};
+		TypeMeta type;
 		Expr *initializer {};
 		VarFlags flags {};
 

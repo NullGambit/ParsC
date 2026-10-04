@@ -181,7 +181,7 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		if (index < call_info.parameters.size())
 		{
 			auto *param = call_info.parameters[index];
-			desired_type = param->type;
+			desired_type = param->type.ptr;
 
 			if (!arg->type->is_equal(desired_type))
 			{
@@ -199,7 +199,7 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 			}
 
 			// TODO check all positions not just 0
-			if (!param->type_meta.mut_set.test(0) && arg->mut_set.test(0))
+			if (!param->type.mut_set.test(0) && arg->mut_set.test(0))
 			{
 				throw CompileError {this, "Mutability does not match"};
 			}

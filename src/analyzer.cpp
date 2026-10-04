@@ -67,7 +67,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 		if (index < call_info.parameters.size())
 		{
-			ctx_type = call_info.parameters[index++]->type;
+			ctx_type = call_info.parameters[index++]->type.ptr;
 		}
 
 		if (!arg->is_resolved())
@@ -108,11 +108,11 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 		if (param->initializer != nullptr)
 		{
-			param->initializer = visit_expr(expr, param->initializer, {param->type});
+			param->initializer = visit_expr(expr, param->initializer, {param->type.ptr});
 		}
 	}
 
-	expr->type = call_info.return_meta.type;
+	expr->type = call_info.return_meta.ptr;
 	expr->mut_set = call_info.return_meta.mut_set;
 
 	return expr;
@@ -121,7 +121,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 {
 	// already been analyzed
-	if (fn->signature.return_type != nullptr)
+	if (has_flag(fn->flags, FnFlags::Resolved))
 	{
 		return fn;
 	}
@@ -139,7 +139,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		{
 			mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
 			{
-				return param->type;
+				return param->type.ptr;
 			});
 		}
 
@@ -158,15 +158,13 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		auto *expr = dynamic_cast<Expr*>(fn->body->nodes.front());
 
 		// TODO resolve return type if manually typed
-		expr->accept(this, {fn->signature.return_type});
+		expr->accept(this, {.type = fn->signature.return_type.ptr});
 
 		fn->signature.return_type = expr->type;
-		fn->signature.return_type_meta.type = expr->type;
 	}
 	else
 	{
-		fn->signature.return_type = resolve_type(fn->signature.return_type_meta, fn);
-		fn->signature.return_type_meta.type = fn->signature.return_type;
+		resolve_type(fn->signature.return_type, fn);
 
 		if (fn->body != nullptr)
 		{
@@ -200,21 +198,25 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 
 	m_function_stack.pop_back();
 
+	fn->flags |= FnFlags::Resolved;
+
 	return fn;
 }
 
 pars::Node* pars::Analyzer::visit(StructType *stmt, VisitCtx ctx)
 {
 	// already been resolved
-	if (!stmt->fields.empty() && stmt->fields.front().type != nullptr)
+	if (has_flag(stmt->flags, StructFlags::Resolved))
 	{
 		return stmt;
 	}
 
 	for (auto &field : stmt->fields)
 	{
-		field.type = resolve_type(field.type_meta, stmt);
+		resolve_type(field.type, stmt);
 	}
+
+	stmt->flags |= StructFlags::Resolved;
 
 	return stmt;
 }
@@ -224,13 +226,13 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	// var x: T
 	if (stmt->is_explicitly_typed())
 	{
-		stmt->type = resolve_type(stmt->type_meta, stmt);
+		resolve_type(stmt->type, stmt);
 	}
 
 	// var x = E
 	if (stmt->initializer != nullptr)
 	{
-		stmt->initializer = visit_expr(nullptr, stmt->initializer, new_ctx(stmt, ctx, stmt->type));
+		stmt->initializer = visit_expr(nullptr, stmt->initializer, new_ctx(stmt, ctx, stmt->type.ptr));
 
 		// var x = {}
 		if (stmt->initializer->type == nullptr)
@@ -243,20 +245,20 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 			stmt->type = stmt->initializer->type;
 		}
 
-		if (stmt->type_meta.type == nullptr)
+		if (stmt->type.is_null())
 		{
-			auto top_level_mut = stmt->type_meta.mut_set.test(0);
+			auto top_level_mut = stmt->type.mut_set.test(0);
 
-			stmt->type_meta.mut_set = stmt->initializer->mut_set;
+			stmt->type.mut_set = stmt->initializer->mut_set;
 
 			if (top_level_mut)
 			{
-				stmt->type_meta.mut_set.set(0);
+				stmt->type.mut_set.set(0);
 			}
 		}
 	}
 
-	if (auto *array = produce_type<Array>(stmt->type))
+	if (auto *array = stmt->type.produce<Array>())
 	{
 		if (array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
 		{
@@ -269,7 +271,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	}
 
 	// var x: T = E
-	if (stmt->initializer != nullptr && stmt->is_explicitly_typed() && !is_assignable_from(stmt->initializer->type, stmt->type))
+	if (stmt->initializer != nullptr && stmt->is_explicitly_typed() && !is_assignable_from(stmt->initializer->type, stmt->type.ptr))
 	{
 		throw FrontendError
 		{
@@ -280,7 +282,6 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 				stmt->symbol.name, stmt->type->get_type_name(), stmt->initializer->type->get_type_name()
 			)
 		};
-
 	}
 
 	// if (stmt->initializer != nullptr)
@@ -358,7 +359,7 @@ pars::Node* pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 
 	auto *fn = get_current_fn();
 
-	stmt->expr->accept(this, {fn->signature.return_type});
+	stmt->expr->accept(this, {.type = fn->signature.return_type.ptr});
 
 	if (!fn->signature.return_type->is_equal(stmt->expr->type))
 	{
@@ -559,7 +560,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 		if (self_param != nullptr && !has_flag(self_param->flags, VarFlags::Mutated))
 		{
-			self_param->type_meta.mut_set.set(0);
+			self_param->type.mut_set.set(0);
 		}
 	}
 
@@ -568,7 +569,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
-	alias->type = resolve_type(alias->meta, alias);
+	resolve_type(alias->type, alias);
 
 	m_ctx->scope_table.add_to_scope(alias->symbol, alias, false);
 
@@ -617,8 +618,8 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 		if (auto *var = dynamic_cast<VarDeclStmt*>(sym_node))
 		{
 			var->flags |= VarFlags::Used;
-			expr->mut_set = var->type_meta.mut_set;
-			expr->type = var->type;
+			expr->mut_set = var->type.mut_set;
+			expr->type = var->type.ptr;
 		}
 		else if (auto *collection = dynamic_cast<FnCollection*>(sym_node))
 		{
@@ -821,9 +822,9 @@ pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 {
 	ctx = new_ctx(expr, ctx);
 
-	expr->cast_type.type = resolve_type(expr->cast_type, expr);
+	resolve_type(expr->cast_type, expr);
 
-	expr->type = expr->cast_type.type;
+	expr->type = expr->cast_type.ptr;
 	expr->mut_set = expr->cast_type.mut_set;
 
 	ctx.type = expr->type;
@@ -954,7 +955,7 @@ namespace pars
 			return named_expr->name == field.symbol.name;
 		};
 
-		auto get_type_fn = [](const StructFieldInfo &field) { return field.type; };
+		auto get_type_fn = [](const StructFieldInfo &field) { return field.type.ptr; };
 
 		assign_named_indices(type->fields, find_fn, get_type_fn, analyzer, initializers);
 	}
@@ -1104,7 +1105,6 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 					StructFieldInfo
 					{
 						{named->name},
-						{},
 						named->value->type
 					});
 			}
@@ -1234,19 +1234,17 @@ pars::FnType * pars::Analyzer::get_current_fn()
 	return m_function_stack.back();
 }
 
-pars::Type* pars::Analyzer::resolve_type(TypeMeta &meta, Node *node)
+void pars::Analyzer::resolve_type(TypeMeta &meta, Node *node)
 {
-	if (meta.type != nullptr)
+	if (meta.ptr != nullptr)
 	{
-		meta.type->accept(this, {.result = (Node**)&meta.type});
+		meta.ptr->accept(this, {.result = (Node**)&meta.ptr});
 	}
 
-	if (auto *alias = dynamic_cast<AliasType*>(meta.type))
+	if (auto *alias = dynamic_cast<AliasType*>(meta.ptr))
 	{
-		meta.mut_set = alias->meta.mut_set;
+		meta.mut_set = alias->type.mut_set;
 	}
-
-	return meta.type;
 }
 
 void pars::Analyzer::add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task)

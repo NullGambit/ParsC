@@ -2,9 +2,11 @@
     -if expecting expression but got eof will make the compiler get stuck
         even doing checks for eof seems to not work unless the file ended with a line feed
     - a statement such as 'var my_slice: []i32 = [1, 2, 3]' will actually compile to an array instead of a slice.
-    - inside of anon_structs.pars test the same llvm type is generated 5 times instead of 1.
+        - this should just throw a compile error as assigning array to struct. only other way around should be allowed.
 
 - current roadmap:
+    - generics
+    - traits
     - enum payloads
     - sum types
     - match expr and other pattern matching
@@ -13,7 +15,6 @@
     - user defined attributes
 
 - tech debt:
-    - fn and var structs have redundant type information
     - lots of types dont return correct type names such as arrays or pointers
     - some types dont return correct sizes
     - theres a lot of allocations made when using stl containers. replace them with custom allocators and reuse memory more often
@@ -23,13 +24,8 @@
         - once a module is compiled a lot of local nodes can be erased and reused by the node arena.
             only nodes that can be seen from other modules must be kept.
         - some types should be cached.
-    - aliases often cause bugs because dynamic casts are used heavily. stop using dynamic casts in favor of functions such as produce type.
     - pointer arithmetic type mismatch
-    - the way i currently handle function calls and name mangling is terrible spaghetti code that causes many bugs. pls fix.
-        - one possible way could be to get the fn collection first then resolve.
     - function parameter mutability testing is very wonky right now. can pass a imut T to a function expecting T.
-    - the api and the usage of type parsing and TypeMeta feels quite hacky. refactor everything related to it.
-        - this is mostly due to the fact that how types were parsed and stored changed drastically.
     - the analysis for member access has become extremely messy. same with symbol analysis.
 
 - design issues:
@@ -128,6 +124,10 @@
     - types
     - uuid
     - digest
+
+- pars package/project manager:
+    - init projects
+    - add ability to install apps from a git repo.
 
 - misc:
     - currently type coercion is unreliable. perhaps implement type coercion inside the analyzer so when a node is visited

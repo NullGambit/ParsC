@@ -22,6 +22,16 @@
 
 void init_global_symbols();
 
+struct Wrapper
+{
+	pars::Type *type;
+
+	pars::Type* operator->() const
+	{
+		return type;
+	}
+};
+
 int main(int argc, char **argv)
 {
 	// TODO: if entry file is not provided parse and compile all files in dir

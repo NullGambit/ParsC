@@ -106,7 +106,7 @@ pars::Node* pars::AST::declaration()
 	{
 		return parse_fn();
 	}
-	if (m_lexer.match(TokenType::Struct))
+	if (m_lexer.match(Struct))
 	{
 		return parse_struct();
 	}
@@ -363,12 +363,12 @@ pars::VarDeclStmt* pars::AST::parse_var()
 
 	if (m_lexer.match(Colon))
 	{
-		stmt->type_meta = parse_type_meta();
+		stmt->type = parse_type_meta();
 	}
 
 	if (is_let)
 	{
-		stmt->type_meta.mut_set.set(0);
+		stmt->type.mut_set.set(0);
 	}
 
 	if (m_lexer.match(Equal))
@@ -394,7 +394,7 @@ pars::VarDeclStmt * pars::AST::parse_fn_param(bool parse_name)
 		m_lexer.expect(Colon);
 	}
 
-	stmt->type_meta = parse_type_meta();
+	stmt->type = parse_type_meta();
 
 	if (m_lexer.match(Equal))
 	{
@@ -430,7 +430,7 @@ pars::Node* pars::AST::parse_return()
 
 	auto *stmt = new_node<ReturnStmt>();
 
-	if (!fn->signature.return_type_meta.type->is_equal(&VoidType))
+	if (!fn->signature.return_type.ptr->is_equal(&VoidType))
 	{
 		stmt->expr = expression();
 	}
@@ -549,11 +549,11 @@ pars::FnSignature pars::AST::parse_fn_signature(bool parse_names, std::span<VarD
 
 	if (m_lexer.match(Colon))
 	{
-		signature.return_type_meta = parse_type_meta();
+		signature.return_type = parse_type_meta();
 	}
 	else
 	{
-		signature.return_type_meta.type = const_cast<Void*>(&VoidType);
+		signature.return_type.ptr = const_cast<Void*>(&VoidType);
 	}
 
 	return signature;
@@ -682,7 +682,7 @@ pars::StructType* pars::AST::parse_struct(bool skip_signature)
 
 		m_lexer.expect(Colon);
 
-		field.type_meta = parse_type_meta();
+		field.type = parse_type_meta();
 
 		type->fields.emplace_back(field);
 	});
@@ -763,7 +763,7 @@ pars::AliasType * pars::AST::parse_alias()
 
 	alias->is_distinct = m_lexer.match(Distinct);
 
-	alias->meta = parse_type_meta();
+	alias->type = parse_type_meta();
 
 	auto is_private = has_keyword_attribute(alias->symbol, Private);
 
@@ -1085,7 +1085,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 		auto *expr = new_node<CastExpr>();
 
-		expr->cast_type.type = parse_type(expr->cast_type);
+		expr->cast_type.ptr = parse_type(expr->cast_type);
 
 		m_lexer.expect(RightParen);
 
@@ -1189,9 +1189,9 @@ pars::TypeMeta pars::AST::parse_type_meta()
 {
 	TypeMeta meta {};
 
-	meta.type = parse_type(meta);
+	meta.ptr = parse_type(meta);
 
-	if (meta.type == nullptr)
+	if (meta.ptr == nullptr)
 	{
 		throw FrontendError{m_lexer.peek_last(), "Expected type"};
 	}
@@ -1199,7 +1199,7 @@ pars::TypeMeta pars::AST::parse_type_meta()
 	return meta;
 }
 
-pars::Type * pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_override)
+pars::Type* pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_override)
 {
 	if (m_lexer.match(Imut) || imut_override)
 	{
