@@ -75,6 +75,7 @@ namespace pars
 		virtual Type* get_real_type() const { return const_cast<Type*>(this); }
 
 		virtual std::string_view get_type_name() const = 0;
+		// currently useless but should be reused for comp_eval
 		virtual u32 get_size() { return 1; }
 		virtual llvm::Value* get_default_value(llvm::LLVMContext *ctx) const = 0;
 		virtual llvm::Value* get_property(llvm::LLVMContext *ctx, std::string_view name);

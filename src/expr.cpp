@@ -274,8 +274,18 @@ llvm::Value * pars::GroupExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	auto value = llvm::APInt(32, expr->type->get_size());
-	return llvm::ConstantInt::get(*ctx.llvm_ctx, value);
+	auto *type = expr->type->get_llvm_type(ctx.llvm_ctx);
+
+	if (!type->isSized())
+	{
+		return ctx.builder.getInt32(1);
+	}
+
+	auto dl = ctx.module->getDataLayout();
+
+	auto size = dl.getTypeAllocSize(type).getFixedValue();
+
+	return ctx.builder.getInt32(size);
 }
 
 llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)

@@ -5,7 +5,15 @@ fn take_n(n: i16)
 
 }
 
+struct Test
+{
+    s: str
+    n: i32
+}
+
 fn main()
 {
-    take_n(10)
+    let size = sizeof(Test)
+
+    printf("%d\n", size)
 }
