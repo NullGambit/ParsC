@@ -157,7 +157,7 @@ namespace pars
 #define DEFAULT_INTEGRAL_EQUAL(T)												\
 virtual bool is_equal(Type const *other) const override							\
 {																				\
-	auto other_int = types_match<T>(this, other);								\
+	auto other_int = produce_type<T>(other);								\
 																				\
 	if (other_int != nullptr)													\
 	{																			\

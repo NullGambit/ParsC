@@ -154,7 +154,12 @@ llvm::Value * pars::Integral::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *
 
 bool pars::Integral::can_coerce_into(Type const *desired_type) const
 {
-	auto *other_type = dynamic_cast<const Integral*>(desired_type);
+	const auto *other_type = produce_type<const Integral>(desired_type);
+
+	if (other_type == nullptr)
+	{
+		return false;
+	}
 
 	return bits > other_type->bits || (bits == other_type->bits && is_signed == other_type->is_signed);
 }

@@ -15,7 +15,6 @@
     - user defined attributes
 
 - tech debt:
-    - lots of types dont return correct type names such as arrays or pointers
     - theres a lot of allocations made when using stl containers. replace them with custom allocators and reuse memory more often
     - the compeval is currently very incomplete
     - theres too much repeated work between the ast and analyzer

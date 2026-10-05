@@ -1245,7 +1245,7 @@ pars::Node * pars::Analyzer::visit(LiteralExpr *expr, VisitCtx ctx)
 {
 	expr->flags |= ExprFlags::ResolvedInternal;
 
-	if (ctx.type)
+	if (ctx.type != nullptr && expr->type->can_coerce_into(ctx.type))
 	{
 		expr->type = ctx.type;
 	}
