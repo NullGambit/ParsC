@@ -9,7 +9,7 @@ bool pars::Config::should_compile() const
 	return !do_not_compile && command == CompileCommand::Build || command == CompileCommand::Run;
 }
 
-void pars::init_config()
+const pars::Config& pars::init_config()
 {
 #define CMD(C) .index = (u32)C, .buffer = (u32*)&g_config.command
 
@@ -83,6 +83,8 @@ void pars::init_config()
 		.description = "Will not emit any errors on failure",
 		.buffer = &g_config.silent_errors
 	});
+
+	return g_config;
 }
 
 const pars::Config & pars::get_config()

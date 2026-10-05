@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 		fmt::panic("Must provide an entry file\n");
 	}
 
-	pars::init_config();
+	auto &config = pars::init_config();
 
 	auto result = pars::parse_cli_args(argc, argv,
 	{
@@ -51,8 +51,6 @@ int main(int argc, char **argv)
 	{
 		fmt::panic("{}", result.message);
 	}
-
-	auto &config = pars::get_config();
 
 	if (config.command == pars::CompileCommand::Help)
 	{

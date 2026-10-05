@@ -24,7 +24,7 @@ namespace pars
 		bool should_compile() const;
 	};
 
-	void init_config();
+	const Config& init_config();
 
 	const Config& get_config();
 }
