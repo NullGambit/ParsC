@@ -473,8 +473,6 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct BaseArray : Type
 	{
-		Type *element_type;
-
 		ACCEPT
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
@@ -483,7 +481,10 @@ virtual bool is_equal(Type const *other) const override							\
 
 		std::optional<MemberInfo> get_member(std::string_view symbol) const override;
 
+		void set_inner(Type *type, bool no_name = false);
+
 		Type *get_inner() const override;
+		Type*& get_inner_ref();
 
 		bool is_array() const override
 		{
@@ -497,10 +498,19 @@ virtual bool is_equal(Type const *other) const override							\
 			return true;
 		}
 
+		std::string_view get_type_name() const override;
+
 		std::span<Type*> get_iter_bindings() const override;
 		llvm::Value *iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
 		llvm::Value *iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
 		llvm::Value *iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const override;
+
+	protected:
+		Type *m_element_type {};
+		std::string_view m_name;
+
+		// will be called when writing to the name buffer to generate [<this>]T
+		virtual void write_to_name_buffer() {};
 	};
 
 	constexpr auto UNSIZED_ARRAY = UINT32_MAX;
@@ -520,8 +530,6 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Constant* get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const override;
 
-		std::string_view get_type_name() const override;
-
 		bool is_equal(Type const *other) const override;
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
@@ -535,13 +543,14 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start, llvm::Value *end) const override;
 
 		int get_member_index(std::string_view member) const;
+
+	protected:
+		void write_to_name_buffer() override;
 	};
 
 	struct Slice : BaseArray
 	{
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
-
-		std::string_view get_type_name() const override;
 
 		bool is_equal(Type const *other) const override;
 

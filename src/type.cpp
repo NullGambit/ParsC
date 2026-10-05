@@ -1,5 +1,6 @@
 #include "type.hpp"
 
+#include <charconv>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -648,7 +649,7 @@ llvm::Value * pars::BaseArray::op_index(EmitCtx &ctx, llvm::Value *target, llvm:
 	auto *ptr = ctx.builder.CreateInBoundsGEP(get_llvm_type(ctx.llvm_ctx), target,
 		{ctx.builder.getInt32(0), index}, "array.op_index");
 
-	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
+	return ctx.builder.CreateLoad(m_element_type->get_llvm_type(ctx.llvm_ctx), ptr);
 }
 
 std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view symbol) const
@@ -661,7 +662,7 @@ std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view sym
 	{
 		auto *ptr = new_node<Pointer>();
 
-		ptr->set_inner(element_type);
+		ptr->set_inner(m_element_type);
 
 		return MemberInfo{"ptr", ptr, MemberAccess::Readonly};
 	}
@@ -669,14 +670,44 @@ std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view sym
 	return {};
 }
 
+void pars::BaseArray::set_inner(Type *type, bool no_name)
+{
+	m_element_type = type;
+
+	if (!no_name)
+	{
+		auto start = g_type_name_buffer.occupied;
+
+		g_type_name_buffer.write("[");
+
+		write_to_name_buffer();
+
+		g_type_name_buffer.write("]");
+
+		g_type_name_buffer.write(type->get_type_name());
+
+		m_name = g_type_name_buffer.get_slice(start);
+	}
+}
+
 pars::Type * pars::BaseArray::get_inner() const
 {
-	return element_type;
+	return m_element_type;
+}
+
+pars::Type *& pars::BaseArray::get_inner_ref()
+{
+	return m_element_type;
+}
+
+std::string_view pars::BaseArray::get_type_name() const
+{
+	return m_name;
 }
 
 std::span<pars::Type *> pars::BaseArray::get_iter_bindings() const
 {
-	return std::span{const_cast<Type**>(&element_type), 1};
+	return std::span{const_cast<Type**>(&m_element_type), 1};
 }
 
 llvm::Value * pars::BaseArray::iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
@@ -707,22 +738,17 @@ llvm::Value * pars::BaseArray::iter_emit_update(EmitCtx &ctx, Expr *iterable, st
 
 u32 pars::Array::get_size()
 {
-	return size * element_type->get_size();
+	return size * m_element_type->get_size();
 }
 
 llvm::Type * pars::Array::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return llvm::ArrayType::get(element_type->get_llvm_type(ctx), size);
+	return llvm::ArrayType::get(m_element_type->get_llvm_type(ctx), size);
 }
 
 llvm::Constant* pars::Array::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
 {
 	return llvm::ConstantArray::get((llvm::ArrayType*)get_llvm_type(ctx.llvm_ctx), init_list);
-}
-
-std::string_view pars::Array::get_type_name() const
-{
-	return "array";
 }
 
 bool pars::Array::is_equal(Type const *other) const
@@ -734,7 +760,7 @@ bool pars::Array::is_equal(Type const *other) const
 		return false;
 	}
 
-	return other_array->size == size || other_array->size == UNSIZED_ARRAY && other_array->element_type->is_equal(element_type);
+	return other_array->size == size || other_array->size == UNSIZED_ARRAY && other_array->m_element_type->is_equal(m_element_type);
 }
 
 llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
@@ -748,7 +774,7 @@ llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
 
 	const auto ALIGNMENT = llvm::Align(16);
 
-	auto *vec_type = llvm::FixedVectorType::get(element_type->get_llvm_type(ctx.llvm_ctx), size);
+	auto *vec_type = llvm::FixedVectorType::get(m_element_type->get_llvm_type(ctx.llvm_ctx), size);
 
 	auto *aalloca = llvm::dyn_cast<llvm::AllocaInst>(lhs);
 	auto *balloca = llvm::dyn_cast<llvm::AllocaInst>(rhs);
@@ -773,7 +799,7 @@ llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
     //
     // return ctx.builder.CreateLoad(get_llvm_type(ctx.llvm_ctx), temp);
 
-	return element_type->op_binary(ctx, op, a, b);
+	return m_element_type->op_binary(ctx, op, a, b);
 }
 
 llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm::Value *accessor,
@@ -809,7 +835,7 @@ std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol)
 		return std::nullopt;
 	}
 
-	return MemberInfo{symbol, element_type};
+	return MemberInfo{symbol, m_element_type};
 }
 
 bool pars::Array::can_coerce_into(Type const *desired_type) const
@@ -872,30 +898,37 @@ int pars::Array::get_member_index(std::string_view member) const
 	return index;
 }
 
+void pars::Array::write_to_name_buffer()
+{
+	constexpr auto buff_size = 10;
+	char buff[buff_size]{};
+
+	auto result = std::to_chars(buff, buff + buff_size, size);
+
+	auto char_size = static_cast<size_t>(result.ptr - buff);
+
+	g_type_name_buffer.write(reinterpret_cast<u8*>(buff), char_size);
+}
+
 llvm::Type * pars::Slice::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return get_slice_struct(ctx);
 }
 
-std::string_view pars::Slice::get_type_name() const
-{
-	return "slice";
-}
-
 bool pars::Slice::is_equal(Type const *other) const
 {
-	return other->is_array() && element_type->is_equal(other->get_inner());
+	return other->is_array() && m_element_type->is_equal(other->get_inner());
 }
 
 llvm::Value * pars::Slice::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
 {
 	auto *base_ptr = ctx.builder.CreateConstInBoundsGEP2_32(get_llvm_type(ctx.llvm_ctx), target, 0, 0, "slice.ptr");
-	auto *ptr_type = llvm::PointerType::get(element_type->get_llvm_type(ctx.llvm_ctx), 0);
+	auto *ptr_type = llvm::PointerType::get(m_element_type->get_llvm_type(ctx.llvm_ctx), 0);
 	auto *array = ctx.builder.CreateLoad(ptr_type, base_ptr);
 
-	auto *ptr = ctx.builder.CreateGEP(element_type->get_llvm_type(ctx.llvm_ctx), array, {index}, "array.op_index");
+	auto *ptr = ctx.builder.CreateGEP(m_element_type->get_llvm_type(ctx.llvm_ctx), array, {index}, "array.op_index");
 
-	return ctx.builder.CreateLoad(element_type->get_llvm_type(ctx.llvm_ctx), ptr);
+	return ctx.builder.CreateLoad(m_element_type->get_llvm_type(ctx.llvm_ctx), ptr);
 }
 
 llvm::Value * pars::Slice::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,

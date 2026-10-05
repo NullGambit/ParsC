@@ -11,9 +11,17 @@ struct Test
     n: i32
 }
 
+fn take_array(array: [3]i32)
+{
+
+}
+
 fn main()
 {
     let x = 10
+    //var array = [1, 2, 3]
+
+    //take_array(Test{})
 
     printf("%s\n", nameof(x))
     printf("%s\n", nameof(^Test))

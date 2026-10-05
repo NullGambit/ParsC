@@ -131,6 +131,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 	for (auto *param : fn->signature.parameters)
 	{
 		param->accept(this, {});
+		param->type->accept(this, {});
 	}
 
 	if (!fn->symbol.name.empty())
@@ -997,14 +998,20 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 	if (expr->type_specifier != nullptr)
 	{
-		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
+		auto *type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
 
-		auto *real = produce_type<Array>(array_type->element_type);
+		array_type->set_inner(type);
+
+		auto *real = produce_type<Array>(array_type->get_inner());
 
 		if (real != nullptr)
 		{
 			array_type = real;
 		}
+	}
+	else if (auto *array_ctx = produce_type<BaseArray>(ctx.type))
+	{
+		array_type->set_inner(array_ctx->get_inner());
 	}
 
 	expr->type = array_type;
@@ -1016,7 +1023,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 			return named_expr->name == name;
 		};
 
-		auto get_type_fn = [array_type](const std::string_view &name) { return array_type->element_type; };
+		auto get_type_fn = [array_type](const std::string_view &name) { return array_type->get_inner(); };
 
 		assign_named_indices(array_type->members, find_fn, get_type_fn, this, expr->initializers);
 
@@ -1025,26 +1032,17 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 	array_type->size = expr->initializers.size();
 
-	if (expr->type_specifier != nullptr)
-	{
-		array_type->element_type = get_type(expr->type_specifier->get_symbol(), expr->type_specifier->token);
-	}
-
-	if (auto *array_ctx = produce_type<BaseArray>(ctx.type))
-	{
-		array_type->element_type = array_ctx->element_type;
-	}
 
 	for (auto i = 0; auto &[element, pos] : expr->initializers)
 	{
-		element = visit_expr(expr, element, {.type = array_type->element_type});
+		element = visit_expr(expr, element, {.type = array_type->get_inner()});
 
-		if (array_type->element_type == nullptr)
+		if (array_type->get_inner() == nullptr)
 		{
-			array_type->element_type = element->type;
+			array_type->set_inner(element->type);
 		}
 
-		if (!array_type->element_type->is_equal(element->type))
+		if (!array_type->get_inner()->is_equal(element->type))
 		{
 			throw FrontendError{element->token, "array literal element types dont all match"};
 		}
@@ -1052,7 +1050,6 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		pos = i;
 		i += 1;
 	}
-
 
 	if (auto *ctx_array = produce_type<Array>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
 	{
@@ -1174,7 +1171,7 @@ pars::Node* pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 
 	auto *slice_type = new_node<Slice>();
 
-	slice_type->element_type = expr->lhs->type->get_inner();
+	slice_type->set_inner(expr->lhs->type->get_inner());
 
 	expr->type = slice_type;
 
@@ -1201,19 +1198,27 @@ pars::Node* pars::Analyzer::visit(Pointer *type, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(BaseArray *type, VisitCtx ctx)
 {
-	type->element_type->accept(this, {.result = (Node**)&type->element_type});
+	auto &inner = type->get_inner_ref();
+
+	type->get_inner()->accept(this, {.result = (Node**)&inner});
+
+	type->set_inner(inner);
 
 	return type;
 }
 
 pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 {
-	type->element_type->accept(this, {.result = (Node**)&type->element_type});
+	auto &inner = type->get_inner_ref();
+
+	type->get_inner()->accept(this, {.result = (Node**)&inner});
 
 	type->size_expr = visit_expr(nullptr, type->size_expr, {});
 
 	if (type->size_expr == nullptr)
 	{
+		type->set_inner(inner);
+
 		return type;
 	}
 
@@ -1226,6 +1231,8 @@ pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 		if (literal_value.has_value())
 		{
 			type->size = literal_value.value();
+
+			type->set_inner(inner);
 
 			return type;
 		}

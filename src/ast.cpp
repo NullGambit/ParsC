@@ -1252,7 +1252,7 @@ pars::Type* pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overri
 		if (m_lexer.match(RightBracket))
 		{
 			base = new_node<Slice>();
-			base->element_type = parse_type(meta, position);
+			base->set_inner(parse_type(meta, position), /*no_name=*/true);
 		}
 		else
 		{
@@ -1271,7 +1271,7 @@ pars::Type* pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overri
 
 			m_lexer.expect(RightBracket);
 
-			base->element_type = parse_type(meta, position);
+			base->set_inner(parse_type(meta, position), /*no_name=*/true);
 
 			if (m_lexer.match(LeftBrace))
 			{
