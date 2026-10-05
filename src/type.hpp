@@ -389,7 +389,6 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct Pointer : Integer
 	{
-		Type *inner {};
 
 		ACCEPT
 
@@ -399,8 +398,10 @@ virtual bool is_equal(Type const *other) const override							\
 
 		explicit Pointer(Type *inner) :
 			Integer{64, IS_SIGNED, "pointer"},
-			inner{inner}
+			m_inner{inner}
 		{}
+
+		void set_inner(Type *type, bool no_name = false);
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
@@ -427,7 +428,12 @@ virtual bool is_equal(Type const *other) const override							\
 
 		Type *get_inner() const override
 		{
-			return inner;
+			return m_inner;
+		}
+
+		Type*& get_inner_ref()
+		{
+			return m_inner;
 		}
 
 		bool is_equal(Type const *other) const override;
@@ -441,6 +447,10 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return false;
 		}
+
+	private:
+		Type *m_inner {};
+		std::string m_name;
 	};
 
 	struct Packed : Type

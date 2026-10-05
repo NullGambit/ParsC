@@ -1229,7 +1229,9 @@ pars::Type* pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overri
 	{
 		auto *ptr = new_node<Pointer>();
 
-		ptr->inner = parse_type(meta, position);
+		auto *type = parse_type(meta, position);
+
+		ptr->set_inner(type, /*no_name=*/true);
 
 		return ptr;
 	}

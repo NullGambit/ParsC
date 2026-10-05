@@ -540,7 +540,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 	auto *self = new_node<Pointer>();
 
-	self->inner = type;
+	self->set_inner(type);
 
 	auto scope = m_ctx->scope_table.new_scope();
 
@@ -794,7 +794,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 			auto *self = new_node<Pointer>();
 
-			self->inner = produce_type(expr->target->type);
+			self->set_inner(produce_type(expr->target->type));
 
 			expr->target->type = self;
 
@@ -876,7 +876,7 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 		{
 			auto *p = new_node<Pointer>();
 
-			p->inner = expr->target->type;
+			p->set_inner(expr->target->type);
 
 			expr->type = p;
 
@@ -1167,7 +1167,11 @@ pars::Node* pars::Analyzer::visit(UnresolvedSymbol *type, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(Pointer *type, VisitCtx ctx)
 {
-	type->inner->accept(this, {.result = (Node**)&type->inner});
+	auto &inner = type->get_inner_ref();
+
+	type->get_inner()->accept(this, {.result = (Node**)&inner});
+
+	type->set_inner(inner);
 
 	return type;
 }

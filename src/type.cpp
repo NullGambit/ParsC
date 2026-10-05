@@ -552,26 +552,35 @@ llvm::Type * pars::Char::get_llvm_type(llvm::LLVMContext *ctx) const
 	return Integral::get_llvm_type(ctx);
 }
 
+void pars::Pointer::set_inner(Type *type, bool no_name)
+{
+	m_inner = type;
+
+	if (!no_name)
+	{
+		m_name = fmt::format("^{}", type->get_type_name());
+	}
+}
+
 llvm::Type * pars::Pointer::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return llvm::PointerType::get(inner->get_llvm_type(ctx), 0);
+	return llvm::PointerType::get(m_inner->get_llvm_type(ctx), 0);
 }
 
 std::string_view pars::Pointer::get_type_name() const
 {
-	// TODO improve name to include inner type name as well
-	return "pointer";
+	return m_name;
 }
 
 std::optional<pars::MemberInfo> pars::Pointer::get_member(std::string_view symbol) const
 {
-	return inner->get_member(symbol);
+	return m_inner->get_member(symbol);
 }
 
 llvm::Value * pars::Pointer::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
 	std::string_view symbol) const
 {
-	return inner->access_member(ctx, ptr, accessor, symbol);
+	return m_inner->access_member(ctx, ptr, accessor, symbol);
 }
 
 llvm::Value * pars::Pointer::get_default_value(llvm::LLVMContext *ctx) const
@@ -586,8 +595,8 @@ llvm::Value * pars::Pointer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *
 
 	switch (op)
 	{
-		case Plus: return ctx.builder.CreateGEP(inner->get_llvm_type(ctx.llvm_ctx), lhs, rhs);
-		case Minus: return ctx.builder.CreateGEP(inner->get_llvm_type(ctx.llvm_ctx), lhs, ctx.builder.CreateNeg(rhs));
+		case Plus: return ctx.builder.CreateGEP(m_inner->get_llvm_type(ctx.llvm_ctx), lhs, rhs);
+		case Minus: return ctx.builder.CreateGEP(m_inner->get_llvm_type(ctx.llvm_ctx), lhs, ctx.builder.CreateNeg(rhs));
 	}
 	return Integer::op_binary(ctx, op, lhs, rhs);
 }
@@ -599,9 +608,9 @@ bool pars::Pointer::is_equal(Type const *other) const
 	return
 	other_ptr != nullptr
 	&&
-	(inner->is_equal(other_ptr->inner)
+	(m_inner->is_equal(other_ptr->m_inner)
 	||
-	other_ptr->inner->is_equal(&VoidType) || inner->is_equal(&VoidType));
+	other_ptr->m_inner->is_equal(&VoidType) || m_inner->is_equal(&VoidType));
 }
 
 std::string_view pars::Packed::get_type_name() const
@@ -637,7 +646,7 @@ std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view sym
 	{
 		auto *ptr = new_node<Pointer>();
 
-		ptr->inner = element_type;
+		ptr->set_inner(element_type);
 
 		return MemberInfo{"ptr", ptr, MemberAccess::Readonly};
 	}
