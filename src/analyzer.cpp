@@ -1215,30 +1215,31 @@ pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
 
 	type->size_expr = visit_expr(nullptr, type->size_expr, {});
 
+	Node *value {};
+
 	if (type->size_expr == nullptr)
 	{
-		type->set_inner(inner);
-
-		return type;
+		goto ret;
 	}
 
-	auto *value = type->size_expr->accept(&m_comp_eval, {});
+	value = type->size_expr->accept(&m_comp_eval, {});
 
-	if (auto *literal = dynamic_cast<LiteralExpr*>(value))
+	if (auto *literal = dynamic_cast<LiteralExpr*>(value); auto literal_value = literal->get_int())
 	{
-		auto literal_value = literal->get_int();
-
 		if (literal_value.has_value())
 		{
 			type->size = literal_value.value();
 
-			type->set_inner(inner);
-
-			return type;
+			goto ret;
 		}
 	}
 
 	throw FrontendError{type->token, "Array size must be known at compile time"};
+
+	// goto haters seethe!!
+ret:
+	type->set_inner(inner);
+	return type;
 }
 
 pars::Node * pars::Analyzer::visit(LiteralExpr *expr, VisitCtx ctx)
