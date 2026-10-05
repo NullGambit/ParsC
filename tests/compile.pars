@@ -20,7 +20,7 @@ impl User
         self.score *= 2
     }
 }
-// hello
+
 fn main()
 {
     var default_user = User::new()

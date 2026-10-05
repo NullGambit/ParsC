@@ -6,10 +6,15 @@
 namespace pars
 {
 	template<class Params, class GetTypeFn>
-	void mangle(std::string_view symbol, const Params &params, std::string &buffer, GetTypeFn get_type_fn)
+	void mangle(std::string_view symbol, const Params &params, Type *parent_type, std::string &buffer, GetTypeFn get_type_fn)
 	{
-		// TODO add parent name (methods type)
 		buffer += "?";
+
+		if (parent_type != nullptr)
+		{
+			buffer += parent_type->get_type_name();
+			buffer += "::";
+		}
 
 		buffer += symbol;
 

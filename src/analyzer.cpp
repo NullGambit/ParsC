@@ -138,7 +138,14 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 	{
 		if (!has_flag(fn->flags, FnFlags::Extern) && fn->symbol.name != "main")
 		{
-			mangle(fn->symbol.name, fn->signature.parameters, fn->mangled_name, [](VarDeclStmt *param)
+			Type *parent_type {};
+
+			if (auto *impl = dynamic_cast<ImplStmt*>(ctx.invoker))
+			{
+				parent_type = impl->type;
+			}
+
+			mangle(fn->symbol.name, fn->signature.parameters, parent_type, fn->mangled_name, [](VarDeclStmt *param)
 			{
 				return param->type.ptr;
 			});
@@ -528,24 +535,24 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 {
 	auto *symbol = m_ctx->scope_table.find_local_symbol(stmt->type_symbol.name);
-	auto *type = dynamic_cast<UserDefType*>(symbol);
+	stmt->type  = dynamic_cast<UserDefType*>(symbol);
 
-	if (type == nullptr)
+	if (stmt->type == nullptr)
 	{
 		throw FrontendError{stmt->token, "type does not support methods or is not in the same module as the impl statement"};
 	}
 
-	type->accept(this, {});
+	stmt->type->accept(this, {});
 
-	type->impl = stmt;
+	stmt->type->impl = stmt;
 
 	auto *self = new_node<Pointer>();
 
-	self->set_inner(type);
+	self->set_inner(stmt->type);
 
 	auto scope = m_ctx->scope_table.new_scope();
 
-	m_ctx->scope_table.add_to_scope({.name = "Self"}, type);
+	m_ctx->scope_table.add_to_scope({.name = "Self"}, stmt->type);
 
 	for (auto *method : stmt->methods)
 	{
@@ -557,7 +564,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 			self_param->type = self;
 		}
 
-		method->accept(this, {});
+		method->accept(this, {.invoker = stmt});
 
 		if (self_param != nullptr && !has_flag(self_param->flags, VarFlags::Mutated))
 		{

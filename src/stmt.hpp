@@ -165,6 +165,7 @@ namespace pars
 	struct ImplStmt : Stmt
 	{
 		Symbol type_symbol;
+		UserDefType *type;
 		std::vector<FnType*> methods;
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params) override;
