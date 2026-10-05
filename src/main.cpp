@@ -47,10 +47,9 @@ int main(int argc, char **argv)
 		.needs_command = true,
 	});
 
-	if (!result.message.empty())
+	if (result.has_error())
 	{
-		fmt::println("{}", result.message);
-		return -1;
+		fmt::panic("{}", result.message);
 	}
 
 	auto &config = pars::get_config();

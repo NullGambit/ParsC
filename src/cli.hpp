@@ -31,6 +31,12 @@ namespace pars
 	{
 		std::string message;
 		std::vector<std::string_view> args;
+
+		[[nodiscard]]
+		bool has_error() const
+		{
+			return !message.empty();
+		}
 	};
 
 	struct CliCommandInfo
