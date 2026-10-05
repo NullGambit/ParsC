@@ -1,34 +1,22 @@
 import core.stdc.stdio
 
-fn take_n(n: i16)
+fn sum_numbers(numbers: imut []i32): i32
 {
+    var out: i32 
 
-}
+    for n in numbers 
+    {
+        out += n
+    }
 
-struct Test
-{
-    s: str
-    n: i32
-}
-
-fn take_array(array: [3]i32)
-{
-
+    return out
 }
 
 fn main()
 {
-    let x = 10
-    var array = [1, 2, 3]
-    var b = true
-    var d = 1 + 2
-    var c: i32 = 10
+    let numbers = [1, 2, 3, 4, 8, 12]
 
-    var user: User = {s: "hello", n: 10}
+    let sum = sum_numbers(numbers[:])
 
-    take_array(array)
-
-    printf("%s\n", nameof(x))
-    printf("%s\n", nameof(^Test))
-    printf("%s\n", nameof(5))
+    printf("%d\n", sum) 
 }
