@@ -121,8 +121,6 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 
 	auto ctx = module->make_ctx();
 
-	ctx.builder.SetInsertPoint((llvm::BasicBlock*)nullptr);
-
 	// compile the entire module
 	for (auto *node : nodes)
 	{
