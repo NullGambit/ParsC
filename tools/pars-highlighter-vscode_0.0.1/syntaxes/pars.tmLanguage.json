@@ -6,6 +6,9 @@
 			"include": "#keywords"
 		},
 		{
+			"include": "#comments"
+		},
+		{
 			"include": "#strings"
 		},
 		{
@@ -38,6 +41,15 @@
 				"match": "\\b(true|false|nil)\\b"
 			}
 		]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.double-slash.pars",
+					"begin": "//",
+					"end": "\n"
+				}
+			]
 		},
 		"strings": {
 			"name": "string.quoted.double.pars",

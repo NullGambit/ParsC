@@ -1,22 +1,37 @@
 import core.stdc.stdio
 
-fn sum_numbers(numbers: imut []i32): i32
+struct User
 {
-    var out: i32 
-
-    for n in numbers 
-    {
-        out += n
-    }
-
-    return out
+    name: str
+    score: i32
 }
 
+impl User
+{
+    @static
+    fn new() => Self{name: "unnamed", score: 10}
+
+    // self is imut here because it does not mutate
+    fn print() => printf("name: %s, score: %d\n", self.name, self.score)
+
+    // self is not imut here because it is mutated
+    fn double_score()
+    {
+        self.score *= 2
+    }
+}
+// hello
 fn main()
 {
-    let numbers = [1, 2, 3, 4, 8, 12]
+    var default_user = User::new()
 
-    let sum = sum_numbers(numbers[:])
+    default_user.print()
 
-    printf("%d\n", sum) 
+    default_user.double_score()
+
+    let user = User{name: "john", score: 100}
+
+    // user.double_score() this will fail
+
+    user.print()
 }
