@@ -31,3 +31,12 @@ void pars::Arena::write(std::string_view sv)
 {
 	write(reinterpret_cast<const u8*>(sv.data()), sv.size());
 }
+
+std::string_view pars::Arena::get_slice(u64 start) const
+{
+	return std::string_view
+	{
+		reinterpret_cast<const char *>(memory + start),
+		occupied - start
+	};
+}

@@ -1,15 +1,6 @@
 import core.stdc.stdio
 
-fn take_n(n: i16)
-{
-
-}
-
 struct Test
-{
-    s: str
-    n: i32
-}
 
 fn main()
 {

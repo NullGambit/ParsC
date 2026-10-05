@@ -389,7 +389,6 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct Pointer : Integer
 	{
-
 		ACCEPT
 
 		Pointer() :
@@ -450,7 +449,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 	private:
 		Type *m_inner {};
-		std::string m_name;
+		std::string_view m_name;
 	};
 
 	struct Packed : Type

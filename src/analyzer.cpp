@@ -704,6 +704,15 @@ pars::Node* pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 	return expr;
 }
 
+pars::Node * pars::Analyzer::visit(NameofExpr *expr, VisitCtx ctx)
+{
+	expr->type = const_cast<Str*>(&StrType);
+
+	expr->expr = visit_expr(expr, expr->expr, new_ctx(expr, ctx));
+
+	return expr;
+}
+
 pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 {
 	// my_import.func()
@@ -863,6 +872,20 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 	{
 		case Caret:
 		{
+			// in case target is actually a type this might be a pointer type.
+			// useful in cases of nameof expressions.
+			if (auto *symbol = dynamic_cast<SymbolExpr*>(expr->target);
+				auto *type = dynamic_cast<Type*>(symbol->symbol_node))
+			{
+				auto *ptr = new_node<Pointer>();
+
+				ptr->set_inner(type);
+
+				symbol->type = ptr;
+
+				return symbol;
+			}
+
 			if (!expr->target->type->is_ptr())
 			{
 				throw FrontendError{expr->token, "Dereference target is not a pointer"};

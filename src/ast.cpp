@@ -928,6 +928,8 @@ pars::Expr* pars::AST::parse_primary()
 			fmt::format("Expected expression but got {}", m_lexer.peek().lexeme), literal};
 	}
 
+	literal->token = m_lexer.peek_last();
+
 	return literal;
 }
 
@@ -1074,6 +1076,14 @@ pars::Expr * pars::AST::parse_primary_inner()
 	if (m_lexer.match(Sizeof))
 	{
 		auto *expr = new_node<SizeofExpr>();
+
+		expr->expr = expression();
+
+		return expr;
+	}
+	if (m_lexer.match(Nameof))
+	{
+		auto *expr = new_node<NameofExpr>();
 
 		expr->expr = expression();
 

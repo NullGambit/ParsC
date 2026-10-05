@@ -23,6 +23,22 @@ llvm::Constant * pars::Expr::emit_constant(EmitCtx &ctx, EmitParams params)
 	return llvm::dyn_cast<llvm::Constant>(emit(ctx, params));
 }
 
+llvm::GlobalVariable* get_global_string(pars::EmitCtx &ctx, std::string_view str)
+{
+	auto iter = g_static_strings.find(str);
+
+	if (iter != g_static_strings.end())
+	{
+		return iter->second;
+	}
+
+	auto *global = ctx.builder.CreateGlobalString(str, ".str", 0, ctx.module);
+
+	g_static_strings[str] = global;
+
+	return global;
+}
+
 llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 {
 	return std::visit(overload
@@ -37,18 +53,7 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 		},
 		[&ctx](std::string_view str) -> llvm::Value*
 		{
-			auto iter = g_static_strings.find(str);
-
-			if (iter != g_static_strings.end())
-			{
-				return iter->second;
-			}
-
-			auto *global = ctx.builder.CreateGlobalString(str, ".str", 0, ctx.module);
-
-			g_static_strings[str] = global;
-
-			return global;
+			return get_global_string(ctx, str);
 		},
 		[&ctx](bool _bool) -> llvm::Value*
 		{
@@ -161,6 +166,16 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 {
 	return ctx.named_values[symbol];
+}
+
+std::string_view pars::SymbolExpr::get_symbol()
+{
+	if (dynamic_cast<Type*>(symbol_node))
+	{
+		return type->get_type_name();
+	}
+
+	return symbol;
 }
 
 llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
@@ -286,6 +301,18 @@ llvm::Value * pars::SizeofExpr::emit(EmitCtx &ctx, EmitParams params)
 	auto size = dl.getTypeAllocSize(type).getFixedValue();
 
 	return ctx.builder.getInt32(size);
+}
+
+llvm::Value * pars::NameofExpr::emit(EmitCtx &ctx, EmitParams params)
+{
+	auto symbol = expr->get_symbol();
+
+	if (symbol.empty())
+	{
+		throw CompileError{this, "Cannot get name of expression"};
+	}
+
+	return get_global_string(ctx, symbol);
 }
 
 llvm::Value* pars::MemberAccessExpr::emit(EmitCtx& ctx, EmitParams params)

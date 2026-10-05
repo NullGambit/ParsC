@@ -14,5 +14,7 @@ namespace pars
 
 		u8* write(const u8 *bytes, u64 size);
 		void write(std::string_view sv);
+
+		std::string_view get_slice(u64 start) const;
 	};
 }

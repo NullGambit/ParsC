@@ -18,6 +18,16 @@
 #include "util/fmt.hpp"
 #include "util/llvm_utils.hpp"
 
+static pars::Arena g_type_name_buffer;
+
+#define TYPE_NAME_BUFFER_SIZE MB(512)
+
+__attribute__((constructor))
+static void init_type_name_buffer()
+{
+	g_type_name_buffer.init(TYPE_NAME_BUFFER_SIZE);
+}
+
 llvm::Value * pars::Type::get_property(llvm::LLVMContext *ctx, std::string_view name)
 {
 	if (name == "init")
@@ -558,7 +568,12 @@ void pars::Pointer::set_inner(Type *type, bool no_name)
 
 	if (!no_name)
 	{
-		m_name = fmt::format("^{}", type->get_type_name());
+		auto start = g_type_name_buffer.occupied;
+
+		g_type_name_buffer.write("^");
+		g_type_name_buffer.write(type->get_type_name());
+
+		m_name = g_type_name_buffer.get_slice(start);
 	}
 }
 

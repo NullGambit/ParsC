@@ -73,6 +73,11 @@ namespace pars
 			return has_flag(flags, ExprFlags::ResolvedInternal);
 		}
 
+		std::string_view get_symbol() override
+		{
+			return token.lexeme;
+		}
+
 		ACCEPT
 	};
 
@@ -117,10 +122,7 @@ namespace pars
 
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 
-		std::string_view get_symbol() override
-		{
-			return symbol;
-		}
+		std::string_view get_symbol() override;
 
 		bool is_ctx_sensitive() override
 		{
@@ -168,6 +170,15 @@ namespace pars
 	};
 
 	struct SizeofExpr : Expr
+	{
+		Expr *expr;
+
+		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
+
+		ACCEPT
+	};
+
+	struct NameofExpr : Expr
 	{
 		Expr *expr;
 

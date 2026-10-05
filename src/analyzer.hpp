@@ -39,6 +39,7 @@ namespace pars
 		Node* visit(UnaryExpr *expr, VisitCtx ctx) override;
 		Node* visit(GroupExpr* expr, VisitCtx ctx) override;
 		Node* visit(SizeofExpr* expr, VisitCtx ctx) override;
+		Node* visit(NameofExpr* expr, VisitCtx ctx) override;
 		Node* visit(MemberAccessExpr* expr, VisitCtx ctx) override;
 		Node* visit(CastExpr* expr, VisitCtx ctx) override;
 		Node* visit(AnonInitExpr* expr, VisitCtx ctx) override;

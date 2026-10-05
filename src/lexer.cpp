@@ -54,6 +54,7 @@ namespace pars
         {"fn", TokenType::Fn},
         {"cast", TokenType::Cast},
         {"nil", TokenType::Nil},
+        {"nameof", TokenType::Nameof},
     };
 }
 
