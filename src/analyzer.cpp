@@ -345,12 +345,12 @@ pars::Node* pars::Analyzer::visit(ImportStmt *stmt, VisitCtx ctx)
 	}
 	else if (stmt->selective_imports.empty())
 	{
-		m_ctx->scope_table.add_import(stmt->module->ast.get_file_id());
+		m_ctx->scope_table.add_import(stmt->module->source_file.id);
 	}
 
 	for (auto [import_name, symbol_name] : stmt->selective_imports)
 	{
-		auto *symbol = stmt->module->ast.get_ctx()->scope_table.find_local_symbol(import_name);
+		auto *symbol = stmt->module->scope_table->find_local_symbol(import_name);
 
 		m_ctx->scope_table.add_to_scope(Symbol{symbol_name}, symbol, PRIVATE_SYMBOL);
 	}
@@ -616,9 +616,9 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 		ScopeTable *table_override {};
 
-		if (ctx.parse_ctx_override != nullptr)
+		if (ctx.scope_table_override != nullptr)
 		{
-			table_override = &ctx.parse_ctx_override->scope_table;
+			table_override = ctx.scope_table_override;
 		}
 
 		auto *sym_node = find_symbol(expr->symbol, expr->token, table_override);
@@ -736,7 +736,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 	if (auto *import = dynamic_cast<ImportStmt*>(symbol_node))
 	{
-		ctx.parse_ctx_override = import->module->ast.get_ctx();
+		ctx.scope_table_override = import->module->scope_table;
 
 		expr->accessor = visit_expr(expr, expr->accessor, new_ctx(expr, ctx));
 	}

@@ -12,5 +12,5 @@ pars::EmitCtx pars::Module::make_ctx()
 
 bool pars::Module::is_equal(const Module &other) const
 {
-	return ast.get_file_id() == other.ast.get_file_id();
+	return source_file.id == other.source_file.id;
 }

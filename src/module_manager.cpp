@@ -92,7 +92,11 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 		return nullptr;
 	}
 
+	auto source = maybe_source.value();
+
 	auto *module = new Module{potential_path.c_str(), &g_llvm_ctx};
+
+	module->source_file = source;
 
 	g_modules.emplace_back(module);
 	g_modules_table.emplace(potential_path, module);
@@ -100,12 +104,16 @@ pars::Module* pars::get_module(std::filesystem::path &path)
 	auto *parse_ctx = new ParseCtx
 	{
 		.scope_table = {},
-		.source_file = maybe_source.value(),
+		.source_file = source,
 	};
 
 	parse_ctx->scope_table.set_file_id(parse_ctx->source_file.id);
 
-	auto &nodes = module->ast.parse(parse_ctx);
+	module->scope_table = &parse_ctx->scope_table;
+
+	AST ast;
+
+	auto &nodes = ast.parse(parse_ctx);
 
 	auto analyzer = Analyzer{parse_ctx};
 

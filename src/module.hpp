@@ -15,7 +15,8 @@ namespace pars
 	{
 		llvm::LLVMContext *ctx;
 		llvm::Module *module;
-		AST ast;
+		SourceFile source_file;
+		ScopeTable *scope_table {};
 
 		Module(std::string_view name, llvm::LLVMContext *ctx);
 

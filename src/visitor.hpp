@@ -4,6 +4,7 @@
 
 namespace pars
 {
+	class ScopeTable;
 	struct NameofExpr;
 	struct ImplStmt;
 	struct FnPtrType;
@@ -58,7 +59,7 @@ namespace pars
 		Node **result {};
 		bool member {};
 		u8 depth {};
-		ParseCtx *parse_ctx_override {};
+		ScopeTable *scope_table_override {};
 	};
 
 	struct Visitor

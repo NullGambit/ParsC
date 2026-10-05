@@ -16,6 +16,6 @@ pars::VisitCtx pars::Visitor::new_ctx(Node *invoker, const VisitCtx &ctx, Type *
 	{
 		.type = type_override != nullptr ? type_override : nullptr,
 		.invoker = invoker,
-		.parse_ctx_override = ctx.parse_ctx_override,
+		.scope_table_override = ctx.scope_table_override,
 	};
 }
