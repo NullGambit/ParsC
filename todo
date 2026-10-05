@@ -22,7 +22,7 @@
         - once a module is compiled a lot of local nodes can be erased and reused by the node arena.
             only nodes that can be seen from other modules must be kept.
         - some types should be cached.
-    - pointer arithmetic type mismatch
+    - pointer arithmetic type mismatch. coercion sucks right now.
     - function parameter mutability testing is very wonky right now. can pass a imut T to a function expecting T.
     - the analysis for member access has become extremely messy. same with symbol analysis.
 
@@ -56,6 +56,8 @@
     - operator overloading
     - mixins
     - move and copy system
+    - private fields
+    - class object that makes all fields private
     - allow initialization of structs without braces (maybe bad idea?)
     - static fields
     - allow passing of anon structs to functions. currently only issue is llvm not equating the types.

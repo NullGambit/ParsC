@@ -1,0 +1,25 @@
+{
+  "name": "pars-highlighter",
+  "displayName": "pars_highlighter",
+  "description": "Syntax highlighter for the pars programming language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.140.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "pars",
+      "aliases": ["pars", "pars"],
+      "extensions": [".pars"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "pars",
+      "scopeName": "main.pars",
+      "path": "./syntaxes/pars.tmLanguage.json"
+    }]
+  }
+}

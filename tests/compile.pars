@@ -20,6 +20,11 @@ fn main()
 {
     let x = 10
     var array = [1, 2, 3]
+    var b = true
+    var d = 1 + 2
+    var c: i32 = 10
+
+    var user: User = {s: "hello", n: 10}
 
     take_array(array)
 

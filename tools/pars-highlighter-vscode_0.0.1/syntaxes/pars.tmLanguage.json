@@ -1,0 +1,85 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "pars",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#operators"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"include": "#identifiers"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": 
+		[
+			{
+				"name": "keyword.control.pars",
+				"match": "\\b(if|while|for|return|loop|in|imut|alias|struct|enum|impl|import|fn|cast|sizeof|nameof)\\b"
+			},
+			{
+				"name": "storage.type.pars",
+				"match": "\\b(var|let|const)\\b"
+			},
+			{
+				"name": "constant.language.pars",
+				"match": "\\b(true|false|null|nil)\\b"
+			}
+		]
+		},
+		"strings": {
+			"name": "string.quoted.double.pars",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.pars",
+					"match": "\\\\."
+				}
+			]
+		},
+		"numbers": {
+			"name": "constant.numeric.pars",
+			"match": "\\b\\d+(\\.\\d+)?\\b"
+    	},
+		"operators": {
+			"name": "keyword.operator.pars",
+			"match": "[+\\-*/=<>!&|:,.]+"
+		},
+		"identifiers": {
+			"patterns": [
+			{
+				"name": "entity.name.type.pars",
+				"match": "\\b([A-Z][a-zA-Z0-9_]*)\\b"
+			},
+			{
+				"name": "entity.name.type.pars",
+				"match": "\\b(i32|u32|bool|i8|u8|i16|u16|u64|i64|str|f32|f64)\\b"
+			},
+			{
+				"name": "variable.other.pars",
+				"match": "\\b([a-z_][a-zA-Z0-9_]*)\\b"
+			}
+  		]
+		},
+		"functions": {
+			"match": "\\b([a-zA-Z_][\\w]*)\\s*(?=\\()",
+			"captures": {
+				"1": { "name": "entity.name.function.pars" }
+			}
+		}
+	},
+	"scopeName": "main.pars"
+}
