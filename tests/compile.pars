@@ -19,9 +19,9 @@ fn take_array(array: [3]i32)
 fn main()
 {
     let x = 10
-    //var array = [1, 2, 3]
+    var array = [1, 2, 3]
 
-    take_array(5)
+    take_array(array)
 
     printf("%s\n", nameof(x))
     printf("%s\n", nameof(^Test))
