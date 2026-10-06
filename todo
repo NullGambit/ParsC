@@ -37,6 +37,12 @@
 
 - warnings to add:
 
+- cli parser:
+    - add the desired switch argument type to the help command.
+    - add verifier functions so i can verify if a value is in a certain range.
+    - add variants as buffer values so a switch can use either a variant as its buffer.
+    - add an array as a switch buffer. so switches like -lm -ld and so on can work.
+
 - arrays:
     - named element swizzling
     - convert str to be '[]imut char' slice
@@ -152,6 +158,9 @@
         so the memory allocated will be cheap and predictable.
         alternatively i can just make a custom frame allocator for std::vector but i have to see which is more ideal.
     - implement destructuring of all aggregate types.
+    - add a way for modules to declare information about themselves:
+        - one useful thing can be a module specifying that it needs a certain link flag if it is ever imported.
+        - useful for cmath so it can only link against it if it is used.
     - implement arithmetic operations for nested arrays such as [4][4]f32.
     - currently a lot of types have wonky sizes. implement more accurate sizes.
     - pure functions with the pure attribute. perhaps even automatic pure detection.

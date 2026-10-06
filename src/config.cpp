@@ -84,6 +84,14 @@ const pars::Config& pars::init_config()
 		.buffer = &g_config.silent_errors
 	});
 
+	add_cli_switch
+	({
+		.name = "optimize",
+		.alias = "opt",
+		.description = "sets the optimization level. level 0 will disable many optimizations. 1 to 3 will optimize speed. 4 will optimize size over speed. 5 optimizes size at any cost.",
+		.buffer = &g_config.opt_level
+	});
+
 	return g_config;
 }
 

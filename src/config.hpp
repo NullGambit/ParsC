@@ -20,6 +20,7 @@ namespace pars
 		bool fail_on_warning;
 		bool silent_errors;
 		std::string_view out;
+		i32 opt_level {};
 
 		bool should_compile() const;
 	};

@@ -1,6 +1,7 @@
 #include "compiler.hpp"
 
 #include "compile_error.hpp"
+#include "config.hpp"
 #include "module.hpp"
 #include "module_manager.hpp"
 #include "llvm/IR/LegacyPassManager.h"
@@ -46,21 +47,22 @@ void pars::compile_exe(std::string_view output_path)
 		target->createTargetMachine(target_triple, cpu, features, opt, rm)
 	};
 
-	llvm::LoopAnalysisManager lam;
-	llvm::FunctionAnalysisManager fam;
-	llvm::CGSCCAnalysisManager cgam;
-	llvm::ModuleAnalysisManager mam;
 
-	// Create PassBuilder with the TargetMachine
-	llvm::PassBuilder pb(machine.get());
 
-	pb.registerModuleAnalyses(mam);
-	pb.registerFunctionAnalyses(fam);
-	pb.registerCGSCCAnalyses(cgam);
-	pb.registerLoopAnalyses(lam);
-	pb.crossRegisterProxies(lam, fam, cgam, mam);
+	auto &config = get_config();
 
-	auto mpm = pb.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O0);
+	llvm::OptimizationLevel opt_level;
+
+	switch (config.opt_level)
+	{
+		case 0: opt_level = llvm::OptimizationLevel::O0; break;
+		case 1: opt_level = llvm::OptimizationLevel::O1; break;
+		case 2: opt_level = llvm::OptimizationLevel::O2; break;
+		case 3: opt_level = llvm::OptimizationLevel::O3; break;
+		case 4: opt_level = llvm::OptimizationLevel::Os; break;
+		case 5: opt_level = llvm::OptimizationLevel::Oz; break;
+	}
+
 
 	std::vector<llvm::StringRef> linker_args =
 	{
@@ -76,6 +78,22 @@ void pars::compile_exe(std::string_view output_path)
 	for (auto *module : get_all_modules())
 	{
 		auto *llvm_module = module->module;
+
+		llvm::LoopAnalysisManager lam;
+		llvm::FunctionAnalysisManager fam;
+		llvm::CGSCCAnalysisManager cgam;
+		llvm::ModuleAnalysisManager mam;
+
+		// Create PassBuilder with the TargetMachine
+		llvm::PassBuilder pb(machine.get());
+
+		pb.registerModuleAnalyses(mam);
+		pb.registerFunctionAnalyses(fam);
+		pb.registerCGSCCAnalyses(cgam);
+		pb.registerLoopAnalyses(lam);
+		pb.crossRegisterProxies(lam, fam, cgam, mam);
+
+		auto mpm = pb.buildPerModuleDefaultPipeline(opt_level);
 
 		// llvm_module->setTargetTriple(target_triple);
 		llvm_module->setDataLayout(machine->createDataLayout());
