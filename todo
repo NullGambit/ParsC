@@ -191,6 +191,7 @@
     - auto references
     - cuda support
     - openmp support
+    - take for loop element as a pointer or reference
     - implement a safety analyzer that has to be switched that will throw warnings on possible safety issues found:
         - this analyzer could hopefully do rust level safety checks but as an optional stage before shipping a new version of software,
         - analysis to see if a pointer to stack memory is escaping its scope.

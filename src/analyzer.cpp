@@ -774,9 +774,12 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	}
 	else
 	{
-		if (expr->type == nullptr)
+		ctx = new_ctx(expr, ctx);
+
+		if (expr->type == nullptr || ctx.member)
 		{
-			expr->target = visit_expr(expr, expr->target, {});
+			expr->target->type = expr->type;
+			expr->target = visit_expr(expr, expr->target, ctx);
 		}
 		else
 		{
@@ -1093,7 +1096,7 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 	expr->lhs = visit_expr(expr, expr->lhs, new_ctx(expr, ctx));
 	expr->index = visit_expr(expr, expr->index, {});
 
-	if (dynamic_cast<Integer*>(expr->index->type) == nullptr)
+	if (!expr->index->type->is_int())
 	{
 		throw FrontendError{expr->index->token, "Array index must be an integer"};
 	}

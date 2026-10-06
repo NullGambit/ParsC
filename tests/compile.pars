@@ -1,16 +1,23 @@
 import core.stdc.stdio
 
-fn make_ptr(): ^i32 
+struct Nested 
 {
-    let value = 10
-
-    return &value
+    value: i32
 }
+
+struct Data 
+{
+    array: [3]Nested
+}
+
 
 fn main()
 {
-    let ptr = make_ptr()
-    let x = 30
+    let data = Data{}
 
-    printf("%d\n", ^ptr)
+    let element = &data.array[0]
+
+    element.value = 10
+
+    printf("%d\n", data.array[0].value)
 }

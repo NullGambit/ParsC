@@ -799,18 +799,6 @@ pars::Expr* pars::AST::parse_primary()
 
 	if (inner != nullptr)
 	{
-		if (m_lexer.match(Dot) || m_lexer.match(ColonColon))
-		{
-			auto *expr = new_node<MemberAccessExpr>();
-
-			expr->is_static_access = m_lexer.peek_last(ColonColon);
-
-			expr->target = inner;
-			expr->accessor = parse_primary();
-
-			return expr;
-		}
-
 		Expr *lhs {};
 
 		while (m_lexer.match(LeftBracket))
@@ -861,6 +849,18 @@ pars::Expr* pars::AST::parse_primary()
 
 				lhs = index_op;
 			}
+		}
+
+		if (m_lexer.match(Dot) || m_lexer.match(ColonColon))
+		{
+			auto *expr = new_node<MemberAccessExpr>();
+
+			expr->is_static_access = m_lexer.peek_last(ColonColon);
+
+			expr->target = lhs != nullptr ? lhs : inner;
+			expr->accessor = parse_primary();
+
+			return expr;
 		}
 
 		if (m_lexer.match(LeftParen))
