@@ -22,16 +22,7 @@ llvm::Value * pars::VarDeclStmt::emit(EmitCtx &ctx, EmitParams params)
 
 llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 {
-	if (!has_flag(flags, VarFlags::Used))
-	{
-		warn(fmt::format("variable '{}' declared but not used", symbol.name), token);
-	}
 
-	if (has_flag(flags, VarFlags::Var) && !has_flag(flags, VarFlags::Mutated))
-	{
-		warn(fmt::format("'{}' is declared as var but does not mutate. replace with let to improve readability.",
-			symbol.name), token);
-	}
 
 	if (has_flag(flags, VarFlags::Const))
 	{
@@ -108,6 +99,25 @@ llvm::Value * pars::VarDeclStmt::init(EmitCtx &ctx, llvm::Value *value)
 	ctx.named_values[symbol.name] = inst;
 
 	return inst;
+}
+
+void pars::VarDeclStmt::handle_warnings() const
+{
+	if (has_flag(flags, VarFlags::NoDiagnostics))
+	{
+		return;
+	}
+
+	if (!has_flag(flags, VarFlags::Used))
+	{
+		warn(fmt::format("variable '{}' declared but not used", symbol.name), token);
+	}
+
+	if (has_flag(flags, VarFlags::Var) && !has_flag(flags, VarFlags::Mutated))
+	{
+		warn(fmt::format("'{}' is declared as var but does not mutate. replace with let to improve readability.",
+			symbol.name), token);
+	}
 }
 
 bool pars::VarDeclStmt::is_explicitly_typed() const
@@ -393,6 +403,7 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 		auto *index_binding = new_node<VarDeclStmt>();
 
 		index_binding->symbol.name = "index";
+		index_binding->flags |= VarFlags::NoDiagnostics;
 
 		index_binding->type = const_cast<Integer*>(&U32Type);
 

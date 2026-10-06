@@ -21,7 +21,7 @@ namespace pars
 
 	};
 
-	enum class VarFlags : u8
+	enum class VarFlags : u32
 	{
 		// TODO actually implement static
 		Static = 1 << 1,
@@ -31,6 +31,8 @@ namespace pars
 		Mutated = 1 << 5,
 		Used = 1 << 6,
 		Var = 1 << 7,
+		// if NoDiagnostics is set this variable should not participate in diagnostics such as warnings
+		NoDiagnostics = 1 << 8,
 	};
 
 	PARS_FLAGIFY(VarFlags);
@@ -45,6 +47,8 @@ namespace pars
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *init(EmitCtx &ctx, llvm::Value *value = nullptr);
+
+		void handle_warnings() const;
 
 		bool is_explicitly_typed() const;
 		bool is_type_inferred() const;
