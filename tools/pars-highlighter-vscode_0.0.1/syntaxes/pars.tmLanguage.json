@@ -73,6 +73,10 @@
 		"identifiers": {
 			"patterns": [
 			{
+				"name": "variable.other.constant.pars",
+				"match": "\\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*\\b"
+    		},
+			{
 				"name": "entity.name.type.pars",
 				"match": "\\b([A-Z][a-zA-Z0-9_]*)\\b"
 			},

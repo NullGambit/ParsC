@@ -1073,7 +1073,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 {
-	auto *left_symbol = find_symbol(expr->lhs->get_symbol(), expr->lhs->token);
+	auto *left_symbol = find_symbol(expr->lhs->get_symbol(), expr->lhs->token, nullptr, /*permissive=*/true);
 
 	if (dynamic_cast<Type*>(left_symbol))
 	{
@@ -1085,7 +1085,9 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 		return visit_expr(expr, literal, {});
 	}
 
-	expr->lhs = visit_expr(expr, expr->lhs, {});
+	// incase this came from somewhere like a member access
+	expr->lhs->type = expr->type;
+	expr->lhs = visit_expr(expr, expr->lhs, new_ctx(expr, ctx));
 	expr->index = visit_expr(expr, expr->index, {});
 
 	if (dynamic_cast<Integer*>(expr->index->type) == nullptr)
@@ -1301,12 +1303,12 @@ void pars::Analyzer::add_symbol_task(Type *type, std::string_view symbol, Symbol
 	}
 }
 
-pars::Node* pars::Analyzer::find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override)
+pars::Node* pars::Analyzer::find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override, bool permissive)
 {
 	auto *scope_table = table_override != nullptr ? table_override : &m_ctx->scope_table;
 	auto *symbol = scope_table->find_symbol(name);
 
-	if (symbol == nullptr)
+	if (symbol == nullptr && !permissive)
 	{
 		throw FrontendError{error_token, fmt::format("unknown symbol '{}'", name)};
 	}

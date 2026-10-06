@@ -47,8 +47,6 @@ void pars::compile_exe(std::string_view output_path)
 		target->createTargetMachine(target_triple, cpu, features, opt, rm)
 	};
 
-
-
 	auto &config = get_config();
 
 	llvm::OptimizationLevel opt_level;
@@ -62,7 +60,6 @@ void pars::compile_exe(std::string_view output_path)
 		case 4: opt_level = llvm::OptimizationLevel::Os; break;
 		case 5: opt_level = llvm::OptimizationLevel::Oz; break;
 	}
-
 
 	std::vector<llvm::StringRef> linker_args =
 	{

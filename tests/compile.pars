@@ -1,37 +1,17 @@
 import core.stdc.stdio
 
-struct User
+fn make_ptr(): ^i32 
 {
-    name: str
-    score: i32
-}
+    let value = 10
 
-impl User
-{
-    @static
-    fn new() => Self{name: "unnamed", score: 10}
-
-    // self is imut here because it does not mutate
-    fn print() => printf("name: %s, score: %d\n", self.name, self.score)
-
-    // self is not imut here because it is mutated
-    fn double_score()
-    {
-        self.score *= 2
-    }
+    return &value
 }
 
 fn main()
 {
-    var default_user = User::new()
+    const HELLO_CONST = 10
+    let ptr = make_ptr()
+    let x = 30
 
-    default_user.print()
-
-    default_user.double_score()
-
-    let user = User{name: "john", score: 100}
-
-    // user.double_score() this will fail
-
-    user.print()
+    printf("%d\n", ^ptr)
 }

@@ -81,7 +81,7 @@ namespace pars
 
 		void add_symbol_task(Type *type, std::string_view symbol, SymbolTask &&task);
 
-		Node* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr);
+		Node* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr, bool permissive = false);
 
 		template<IsNode T>
 		T* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr)

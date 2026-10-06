@@ -627,6 +627,12 @@ llvm::Value * pars::IndexOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	auto *array = lhs->emit_ptr(ctx);
 	auto *index_value = index->emit(ctx);
 
+	if (array == nullptr)
+	{
+		// maybe its a member access?
+		array = params.predecessor_ptr;
+	}
+
 	auto *result = ctx.builder.CreateInBoundsGEP(lhs->type->get_llvm_type(ctx.llvm_ctx), array,
 		{ctx.builder.getInt64(0), index_value});
 
