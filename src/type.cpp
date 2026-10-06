@@ -598,6 +598,11 @@ std::optional<pars::MemberInfo> pars::Pointer::get_member(std::string_view symbo
 	return m_inner->get_member(symbol);
 }
 
+std::optional<pars::MemberInfo> pars::Pointer::get_method(std::string_view symbol) const
+{
+	return m_inner->get_method(symbol);
+}
+
 llvm::Value * pars::Pointer::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
 	std::string_view symbol) const
 {

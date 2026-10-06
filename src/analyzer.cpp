@@ -809,11 +809,14 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		{
 			expr->target->flags |= ExprFlags::AlwaysPtr;
 
-			auto *self = new_node<Pointer>();
+			if (!is_type_same<Pointer>(expr->target->type))
+			{
+				auto *self = new_node<Pointer>();
 
-			self->set_inner(produce_type(expr->target->type));
+				self->set_inner(produce_type(expr->target->type));
 
-			expr->target->type = self;
+				expr->target->type = self;
+			}
 
 			call->arguments.insert(call->arguments.begin(), expr->target);
 		}
