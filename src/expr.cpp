@@ -410,65 +410,7 @@ llvm::Value* pars::CastExpr::emit(EmitCtx& ctx, EmitParams params)
 
 llvm::Value * pars::NamedExpr::emit(EmitCtx &ctx, EmitParams params)
 {
-	return value->emit(ctx);
-}
-
-namespace pars
-{
-	llvm::Value * emit_initializers(EmitCtx &ctx, EmitParams params, Expr *expr, const InitializerList &initializers)
-	{
-		auto *llvm_type = expr->type->get_llvm_type(ctx.llvm_ctx);
-
-		auto *block = ctx.builder.GetInsertBlock();
-
-		if (block == nullptr)
-		{
-			std::vector<llvm::Constant*> constants;
-
-			constants.reserve(initializers.size());
-
-			for (auto [element, _] : initializers)
-			{
-				auto *value = element->emit(ctx);
-
-				auto *constant = llvm::dyn_cast<llvm::Constant>(value);
-
-				if (constant == nullptr)
-				{
-					throw CompileError{expr, "All global array elements must be known at compile time"};
-				}
-
-				constants.emplace_back(constant);
-			}
-
-			return expr->type->get_aggregate_constant(ctx, constants);
-		}
-
-		auto should_return = false;
-
-		if (params.target_ptr == nullptr)
-		{
-			params.target_ptr = create_alloca(ctx, llvm_type);
-			should_return = true;
-		}
-
-		ctx.builder.CreateStore(expr->type->get_default_value(ctx.llvm_ctx), params.target_ptr);
-
-		for (auto [initializer, pos] : initializers)
-		{
-			auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
-				{ctx.builder.getInt32(0), ctx.builder.getInt32(pos)});
-
-			auto *result = initializer->emit(ctx, {.target_ptr = field});
-
-			if (result != nullptr)
-			{
-				ctx.builder.CreateStore(result, field);
-			}
-		}
-
-		return should_return ? ctx.builder.CreateLoad(llvm_type, params.target_ptr) : nullptr;
-	}
+	return value->emit(ctx, params);
 }
 
 llvm::Value * pars::AbsExpr::emit(EmitCtx &ctx, EmitParams params)

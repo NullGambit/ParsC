@@ -856,7 +856,7 @@ pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(NamedExpr *expr, VisitCtx ctx)
 {
-	expr->value = visit_expr(expr, expr->value, new_ctx(expr, ctx));
+	expr->value = visit_expr(expr, expr->value, new_ctx(expr, ctx, ctx.type));
 	expr->type = expr->value->type;
 
 	return expr;
