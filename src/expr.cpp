@@ -152,7 +152,15 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 			ctx.builder.CreateStore(fn, params.target_ptr);
 		}
 
-		return fn;
+		if (fn != nullptr)
+		{
+			return fn;
+		}
+	}
+
+	if (value == nullptr)
+	{
+		return params.predecessor_ptr;
 	}
 
 	if (value->getType()->isPointerTy() && !has_flag(flags, ExprFlags::AlwaysPtr))
@@ -236,7 +244,7 @@ llvm::Value * pars::CallExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		// 	value = arg->emit(ctx);
 		// }
 
-		argv.emplace_back(arg->emit(ctx));
+		argv.emplace_back(arg->emit(ctx, params));
 
 		index++;
 	}

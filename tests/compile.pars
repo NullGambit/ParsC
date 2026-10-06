@@ -9,7 +9,6 @@ fn make_ptr(): ^i32
 
 fn main()
 {
-    const HELLO_CONST = 10
     let ptr = make_ptr()
     let x = 30
 
