@@ -1058,7 +1058,7 @@ llvm::Value * pars::StructType::access_member(EmitCtx &ctx, llvm::Value *ptr, ll
 		return const_aggregate->getAggregateElement(index);
 	}
 
-	return ctx.builder.CreateGEP(get_llvm_type(ctx.llvm_ctx), ptr, {ctx.builder.getInt32(0), ctx.builder.getInt32(index)});
+	return ctx.builder.CreateGEP(get_llvm_type(ctx.llvm_ctx), ptr, {ctx.builder.getInt64(0), ctx.builder.getInt32(index)});
 }
 
 std::optional<pars::MemberInfo> pars::StructType::get_member(std::string_view symbol) const

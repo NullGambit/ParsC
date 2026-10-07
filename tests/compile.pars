@@ -7,7 +7,7 @@ struct Nested
 
 struct Data 
 {
-    array: [3]Nested
+    array: [6]Nested
 }
 
 
@@ -15,9 +15,15 @@ fn main()
 {
     let data = Data{}
 
-    let element = &data.array[0]
+    for element, i in data.array 
+    {
+        if element.value == 0 
+        {
+            data.array[i] = Nested{100}
 
-    element.value = 10
+            printf("%d\n", i)
+        }
+    }
 
     printf("%d\n", data.array[0].value)
 }

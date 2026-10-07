@@ -517,7 +517,7 @@ llvm::Value * pars::AggregateExpr::emit(EmitCtx &ctx, EmitParams params)
 	for (auto [initializer, pos] : initializers)
 	{
 		auto *field = ctx.builder.CreateGEP(llvm_type, params.target_ptr,
-			{ctx.builder.getInt32(0), ctx.builder.getInt32(pos)});
+			{ctx.builder.getInt64(0), ctx.builder.getInt32(pos)});
 
 		auto *result = initializer->emit(ctx, {.target_ptr = field});
 
