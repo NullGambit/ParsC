@@ -810,18 +810,24 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		if (expr->is_method && !expr->is_static_access)
 		{
-			expr->target->flags |= ExprFlags::AlwaysPtr;
+			auto *self_arg = expr->target;
 
 			if (!is_type_same<Pointer>(expr->target->type))
 			{
+				expr->target->flags |= ExprFlags::AlwaysPtr;
+
 				auto *self = new_node<Pointer>();
 
 				self->set_inner(produce_type(expr->target->type));
 
-				expr->target->type = self;
+				self_arg->type = self;
+			}
+			else
+			{
+				expr->target->flags |= ExprFlags::AlwaysLoad;
 			}
 
-			call->arguments.insert(call->arguments.begin(), expr->target);
+			call->arguments.insert(call->arguments.begin(), self_arg);
 		}
 
 		if (call != nullptr)

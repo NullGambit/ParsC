@@ -25,6 +25,7 @@ namespace pars
 		AlwaysPtr = 1 << 1,
 		// a flag for the expression to decide internally if its been resolved or not.
 		ResolvedInternal = 1 << 2,
+		AlwaysLoad = 1 << 3,
 	};
 
 	PARS_FLAGIFY(ExprFlags);

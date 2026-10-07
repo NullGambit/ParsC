@@ -3,11 +3,21 @@ import core.stdc.stdio
 struct Nested 
 {
     value: i32
+    valid: bool
 }
 
 struct Data 
 {
+    yes: i32
     array: [6]Nested
+}
+
+impl Data
+{
+    fn test()
+    {
+        self.array[0] = {}
+    }
 }
 
 
@@ -15,15 +25,7 @@ fn main()
 {
     let data = Data{}
 
-    for element, i in data.array 
-    {
-        if element.value == 0 
-        {
-            data.array[i] = Nested{100}
-
-            printf("%d\n", i)
-        }
-    }
+    data.test()
 
     printf("%d\n", data.array[0].value)
 }
