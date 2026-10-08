@@ -16,7 +16,7 @@ impl Data
 {
     fn test()
     {
-        self.array[0] = {}
+        self.array[0] = {100, true}
     }
 }
 

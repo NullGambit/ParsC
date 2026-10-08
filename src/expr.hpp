@@ -37,6 +37,36 @@ namespace pars
 		std::bitset<32> mut_set;
 		Type *type;
 
+		enum class Kind : u8
+		{
+			Literal,
+			Binary,
+			Unary,
+			Symbol,
+			Call,
+			Group,
+			Type,
+			Sizeof,
+			Nameof,
+			MemberAccess,
+			TypeProp,
+			Cast,
+			Named,
+			Abs,
+			PtrOp,
+			Aggregate,
+			AnonInit,
+			ArrayLiteral,
+			IndexOp,
+			StructLiteral,
+			SliceLiteral,
+			EnumLiteral,
+		} kind;
+
+		Expr(Kind kind) :
+			kind{kind}
+		{}
+
 		virtual llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }
 		virtual llvm::Constant* emit_constant(EmitCtx &ctx, EmitParams params = {});
 
@@ -59,6 +89,15 @@ namespace pars
 	struct LiteralExpr : Expr
 	{
 		LiteralExprValue value;
+
+		LiteralExpr() :
+			Expr{Kind::Literal}
+		{}
+
+		explicit LiteralExpr(LiteralExprValue value) :
+			Expr{Kind::Literal},
+			value{value}
+		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -88,6 +127,17 @@ namespace pars
 		TokenType op;
 		Expr *right;
 
+		BinaryExpr() :
+			Expr{Kind::Binary}
+		{}
+
+		BinaryExpr(Expr *left, TokenType op, Expr *right) :
+			Expr{Kind::Binary},
+			left{left},
+			op{op},
+			right{right}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		bool is_ctx_sensitive() override
@@ -107,6 +157,16 @@ namespace pars
 	{
 		char op;
 		Expr *right;
+
+		UnaryExpr() :
+			Expr{Kind::Unary}
+		{}
+
+		UnaryExpr(char op, Expr *right) :
+			Expr{Kind::Unary},
+			op{op},
+			right{right}
+		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 

@@ -1,4 +1,3 @@
 
 @extern
-
 fn time(arg: ^void): u32

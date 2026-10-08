@@ -30,7 +30,7 @@
 		[
 			{
 				"name": "keyword.control.pars",
-				"match": "\\b(if|else|while|for|return|loop|in|imut|alias|struct|enum|impl|import|fn|cast|sizeof|nameof)\\b"
+				"match": "\\b(if|else|while|for|return|break|continue|loop|in|imut|alias|struct|enum|impl|import|fn|cast|sizeof|nameof)\\b"
 			},
 			{
 				"name": "storage.type.pars",

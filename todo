@@ -15,9 +15,11 @@
     - user defined attributes
 
 - tech debt:
-    - theres a lot of allocations made when using stl containers. replace them with custom allocators and reuse memory more often
-    - the compeval is currently very incomplete
-    - theres too much repeated work between the ast and analyzer
+    - replace as many instances of dynamic_cast with alternatives. 1) use enums for all nodes such as STMT::VarDecl. 2) use virtual methods where possible.
+    - change many expression types into unary and postfix expressions instead of doing them within parse_primary.
+    - theres a lot of allocations made when using stl containers. replace them with custom allocators and reuse memory more often.
+    - the compeval is currently very incomplete.
+    - theres too much repeated work between the ast and analyzer.
     - the compiler wastes too much memory:
         - once a module is compiled a lot of local nodes can be erased and reused by the node arena.
             only nodes that can be seen from other modules must be kept.
@@ -136,6 +138,12 @@
     - init projects
     - add ability to install apps from a git repo.
 
+- lsp features:
+    - next to import show which symbols are used from these imports
+    - annotate if self is imut in methods
+    - annotate the number of usages in functions
+    - annotate context related info in functions such as allocations or logs.
+
 - misc:
     - currently type coercion is unreliable. perhaps implement type coercion inside the analyzer so when a node is visited
         it will check the context type and if it is not equal to its own type it will do a coercion.
@@ -192,6 +200,7 @@
     - cuda support
     - openmp support
     - take for loop element as a pointer or reference
+    - alow cast to only cast to a qualifier. such as cast(imut).
     - implement a safety analyzer that has to be switched that will throw warnings on possible safety issues found:
         - this analyzer could hopefully do rust level safety checks but as an optional stage before shipping a new version of software,
         - analysis to see if a pointer to stack memory is escaping its scope.
