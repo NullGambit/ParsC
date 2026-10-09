@@ -64,10 +64,12 @@ namespace pars
 			Str,
 			Fn,
 			Enum,
+			Range,
 		} kind;
 
-		Type() :
-			Node{BaseKind::Type}
+		Type(Kind kind) :
+			Node{BaseKind::Type},
+			kind{kind}
 		{}
 
 		virtual bool is_equal(Type const *other) const = 0;
@@ -200,6 +202,10 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		std::string_view symbol;
 
+		UnresolvedSymbolType() :
+			Type{Kind::Unresolved}
+		{}
+
 		bool is_equal(Type const *other) const override { return false; }
 
 		llvm::Type * get_llvm_type(llvm::LLVMContext *ctx) const override { return nullptr; }
@@ -214,6 +220,10 @@ virtual bool is_equal(Type const *other) const override							\
 	struct VoidType : Type
 	{
 		DEFAULT_TYPE_EQUAL(VoidType)
+
+		VoidType() :
+			Type{Kind::Void}
+		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
@@ -234,6 +244,10 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		ImplStmt *impl {};
 
+		UserDefType(Kind kind) :
+			Type{kind}
+		{}
+
 		std::optional<MemberInfo> get_method(std::string_view symbol) const;
 	};
 
@@ -243,7 +257,8 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_signed;
 		std::string_view type_name;
 
-		IntegralType(u8 bits, bool is_signed, std::string_view type_name) :
+		IntegralType(Kind kind, u8 bits, bool is_signed, std::string_view type_name) :
+			Type{kind},
 			bits{bits},
 			is_signed{is_signed},
 			type_name{type_name}
@@ -279,6 +294,10 @@ virtual bool is_equal(Type const *other) const override							\
 		Symbol symbol;
 		TypeMeta type;
 		bool is_distinct = false;
+
+		AliasType() :
+			UserDefType{Kind::Alias}
+		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 		std::string_view get_type_name() const override;
@@ -345,7 +364,11 @@ virtual bool is_equal(Type const *other) const override							\
 	struct IntegerType : IntegralType
 	{
 		IntegerType(u8 bits, bool is_signed, std::string_view type_name) :
-			IntegralType{bits, is_signed, type_name}
+			IntegralType{Kind::Integer, bits, is_signed, type_name}
+		{}
+
+		IntegerType(Kind kind, u8 bits, bool is_signed, std::string_view type_name) :
+			IntegralType{kind, bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -370,7 +393,7 @@ virtual bool is_equal(Type const *other) const override							\
 	struct FloatType : IntegralType
 	{
 		FloatType(u8 bits, bool is_signed, std::string_view type_name) :
-			IntegralType{bits, is_signed, type_name}
+			IntegralType{Kind::Float, bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -390,7 +413,7 @@ virtual bool is_equal(Type const *other) const override							\
 	struct BoolType : IntegralType
 	{
 		BoolType(u8 bits, bool is_signed, std::string_view type_name) :
-			IntegralType{bits, is_signed, type_name}
+			IntegralType{Kind::Bool, bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -404,7 +427,7 @@ virtual bool is_equal(Type const *other) const override							\
 	struct CharType : IntegralType
 	{
 		CharType(u8 bits, bool is_signed, std::string_view type_name) :
-			IntegralType{bits, is_signed, type_name}
+			IntegralType{Kind::Char, bits, is_signed, type_name}
 		{}
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
@@ -419,11 +442,16 @@ virtual bool is_equal(Type const *other) const override							\
 		ACCEPT
 
 		PointerType() :
-			IntegerType{64, IS_SIGNED, "pointer"}
+			IntegerType{Kind::Pointer, 64, IS_SIGNED, "pointer"}
 		{}
 
 		explicit PointerType(Type *inner) :
 			IntegerType{64, IS_SIGNED, "pointer"},
+			m_inner{inner}
+		{}
+
+		explicit PointerType(Kind kind, Type *inner) :
+			IntegerType{kind, 64, IS_SIGNED, "pointer"},
 			m_inner{inner}
 		{}
 
@@ -482,6 +510,10 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct PackedType : Type
 	{
+		PackedType() :
+			Type{Kind::Packed}
+		{}
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override
 		{
 			return nullptr;
@@ -502,6 +534,10 @@ virtual bool is_equal(Type const *other) const override							\
 	struct BaseArrayType : Type
 	{
 		ACCEPT
+
+		BaseArrayType(Kind kind) :
+			Type{kind}
+		{}
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
@@ -550,6 +586,10 @@ virtual bool is_equal(Type const *other) const override							\
 		Expr *size_expr {};
 		u32 size {};
 
+		ArrayType() :
+			BaseArrayType{Kind::Array}
+		{}
+
 		ACCEPT
 
 		u32 get_size() override;
@@ -578,6 +618,10 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct SliceType : BaseArrayType
 	{
+		SliceType() :
+			BaseArrayType{Kind::Slice}
+		{}
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		bool is_equal(Type const *other) const override;
@@ -606,6 +650,10 @@ virtual bool is_equal(Type const *other) const override							\
 		std::vector<StructFieldInfo> fields;
 		llvm::StructType *llvm_type {};
 		StructFlags flags;
+
+		StructType() :
+			UserDefType{Kind::Struct}
+		{}
 
 		u32 get_size() override;
 
@@ -651,7 +699,7 @@ virtual bool is_equal(Type const *other) const override							\
 		DEFAULT_TYPE_EQUAL(StrType)
 
 		StrType() :
-			PointerType{const_cast<CharType*>(&CHAR_TYPE)}
+			PointerType{Kind::Str, const_cast<CharType*>(&CHAR_TYPE)}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -674,6 +722,10 @@ virtual bool is_equal(Type const *other) const override							\
 	struct RangeType : Type
 	{
 		DEFAULT_TYPE_EQUAL(RangeType)
+
+		RangeType() :
+			Type{Kind::Range}
+		{}
 
 		llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const override { return nullptr; }
 
@@ -731,6 +783,10 @@ virtual bool is_equal(Type const *other) const override							\
 		FnFlags flags {};
 		FnCollection *collection;
 
+		FnType() :
+			Type{Kind::Fn}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		std::string_view get_fn_name() const;
@@ -782,6 +838,10 @@ virtual bool is_equal(Type const *other) const override							\
 		Symbol symbol;
 		u64 default_value = UINT64_MAX;
 		HashMap<std::string_view, EnumVariant> variants;
+
+		EnumType() :
+			UserDefType{Kind::Enum}
+		{}
 
 		std::string_view get_type_name() const override;
 
