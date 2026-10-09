@@ -46,10 +46,10 @@ namespace pars
 	template<class T>
 	concept IsNode = std::is_base_of_v<Node, T>;
 
-	template<IsNode T>
-	T* new_node()
+	template<IsNode T, class ...Args>
+	T* new_node(Args &&...args)
 	{
 		auto *node = alloc_node(sizeof(T));
-		return new (node) T;
+		return new (node) T {std::forward<Args>(args)...};
 	}
 }

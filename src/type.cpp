@@ -1348,7 +1348,7 @@ bool pars::EnumType::is_equal(Type const *other) const
 	return this == other;
 }
 
-pars::EnumLiteral * pars::EnumType::get_literal(std::string_view name) const
+pars::EnumLiteralExpr * pars::EnumType::get_literal(std::string_view name) const
 {
 	auto maybe_value = get_value(name);
 
@@ -1357,7 +1357,7 @@ pars::EnumLiteral * pars::EnumType::get_literal(std::string_view name) const
 		return nullptr;
 	}
 
-	auto *literal = new_node<EnumLiteral>();
+	auto *literal = new_node<EnumLiteralExpr>();
 
 	literal->type = const_cast<EnumType*>(this);
 

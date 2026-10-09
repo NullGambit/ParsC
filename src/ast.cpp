@@ -865,10 +865,7 @@ pars::Expr* pars::AST::parse_primary()
 
 		if (m_lexer.match(LeftParen))
 		{
-			auto *expr = new_node<CallExpr>();
-
-			expr->callable = lhs != nullptr ? lhs : inner;
-			expr->arguments = collect_call_arguments();
+			auto *expr = new_node<CallExpr>(lhs != nullptr ? lhs : inner, collect_call_arguments());
 
 			m_lexer.expect(RightParen);
 
@@ -1067,11 +1064,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 			return expr;
 		}
 
-		auto *expr = new_node<SymbolExpr>();
-
-		expr->symbol = identifier;
-
-		return expr;
+		return new_node<SymbolExpr>(identifier);
 	}
 	if (m_lexer.match(Sizeof))
 	{

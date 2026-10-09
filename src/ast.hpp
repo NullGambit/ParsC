@@ -94,10 +94,10 @@ namespace pars
 
 		void collect_attributes();
 
-		template<IsNode T>
-		T* new_node()
+		template<IsNode T, class ...Args>
+		T* new_node(Args &&...args)
 		{
-			auto *node = pars::new_node<T>();
+			auto *node = pars::new_node<T>(std::forward<Args>(args)...);
 
 			node->token = m_lexer.peek_last();
 

@@ -61,6 +61,9 @@ namespace pars
 			StructLiteral,
 			SliceLiteral,
 			EnumLiteral,
+			Slice,
+			Keyword,
+			Packed,
 		} kind;
 
 		Expr(Kind kind) :
@@ -179,6 +182,15 @@ namespace pars
 		Node *symbol_node;
 		std::string_view symbol;
 
+		SymbolExpr() :
+			Expr{Kind::Symbol}
+		{}
+
+		SymbolExpr(std::string_view symbol) :
+			Expr{Kind::Unary},
+			symbol{symbol}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
@@ -198,6 +210,16 @@ namespace pars
 		Expr *callable;
 		std::vector<Expr*> arguments;
 
+		CallExpr() :
+			Expr{Kind::Call}
+		{}
+
+		CallExpr(Expr *callable, std::vector<Expr*> &&arguments) :
+			Expr{Kind::Unary},
+			callable{callable},
+			arguments{arguments}
+		{}
+
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -212,6 +234,15 @@ namespace pars
 	struct GroupExpr : Expr
 	{
 		Expr* inner;
+
+		GroupExpr() :
+			Expr{Kind::Group}
+		{}
+
+		GroupExpr(Expr *inner) :
+			Expr{Kind::Unary},
+			inner{inner}
+		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -228,11 +259,24 @@ namespace pars
 	struct TypeExpr : Expr
 	{
 		ACCEPT
+
+		TypeExpr() :
+			Expr{Kind::Type}
+		{}
 	};
 
 	struct SizeofExpr : Expr
 	{
 		Expr *expr;
+
+		SizeofExpr() :
+			Expr{Kind::Sizeof}
+		{}
+
+		SizeofExpr(Expr *expr) :
+			Expr{Kind::Sizeof},
+			expr{expr}
+		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -243,6 +287,15 @@ namespace pars
 	{
 		Expr *expr;
 
+		NameofExpr() :
+			Expr{Kind::Nameof}
+		{}
+
+		NameofExpr(Expr *expr) :
+			Expr{Kind::Nameof},
+			expr{expr}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -252,6 +305,9 @@ namespace pars
 	// empty because all nodes store a token already
 	struct KeywordExpr : Expr
 	{
+		KeywordExpr() :
+			Expr{Kind::Keyword}
+		{}
 	};
 
 	struct MemberAccessExpr : Expr
@@ -260,6 +316,10 @@ namespace pars
 		Expr *accessor;
 		bool is_static_access {};
 		bool is_method {};
+
+		MemberAccessExpr() :
+			Expr{Kind::MemberAccess}
+		{}
 
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
@@ -273,6 +333,10 @@ namespace pars
 	{
 		std::string_view property_name;
 
+		TypePropExpr() :
+			Expr{Kind::TypeProp}
+		{}
+
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 	};
 
@@ -283,6 +347,10 @@ namespace pars
 		// useful for correct integer casting when doing code gen
 		Type *original_type;
 
+		CastExpr() :
+			Expr{Kind::Cast}
+		{}
+
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -292,6 +360,10 @@ namespace pars
 	{
 		std::string_view name;
 		Expr *value;
+
+		NamedExpr() :
+			Expr{Kind::Named}
+		{}
 
 		ACCEPT
 
@@ -308,6 +380,10 @@ namespace pars
 	{
 		Expr *value;
 
+		AbsExpr() :
+			Expr{Kind::Abs}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -318,6 +394,10 @@ namespace pars
 		TokenType op;
 		Expr *target;
 
+		PtrOpExpr() :
+			Expr{Kind::PtrOp}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
@@ -327,6 +407,10 @@ namespace pars
 
 	struct PackedExpr : Expr
 	{
+		PackedExpr() :
+			Expr{Kind::Packed}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -341,6 +425,14 @@ namespace pars
 	{
 		InitializerList initializers;
 
+		AggregateExpr() :
+			Expr{Kind::Aggregate}
+		{}
+
+		AggregateExpr(Kind kind) :
+			Expr{kind}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;
 
@@ -350,6 +442,10 @@ namespace pars
 	// represents any brace initialized value. also used for default value initializations
 	struct AnonInitExpr : AggregateExpr
 	{
+		AnonInitExpr() :
+			AggregateExpr{Kind::AnonInit}
+		{}
+
 		bool is_ctx_sensitive() override
 		{
 			return true;
@@ -361,6 +457,10 @@ namespace pars
 	struct ArrayLiteralExpr : AggregateExpr
 	{
 		Expr *type_specifier {};
+
+		ArrayLiteralExpr() :
+			AggregateExpr{Kind::ArrayLiteral}
+		{}
 
 		bool is_ctx_sensitive() override
 		{
@@ -374,6 +474,10 @@ namespace pars
 	{
 		Expr *lhs;
 		Expr *index;
+
+		IndexOpExpr() :
+			Expr{Kind::IndexOp}
+		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -392,6 +496,10 @@ namespace pars
 	{
 		std::string_view name;
 
+		StructLiteral() :
+			AggregateExpr{Kind::StructLiteral}
+		{}
+
 		ACCEPT
 	};
 
@@ -400,6 +508,10 @@ namespace pars
 		Expr *lhs {};
 		Expr *start {};
 		Expr *end {};
+
+		SliceExpr() :
+			Expr{Kind::Slice}
+		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
@@ -410,9 +522,13 @@ namespace pars
 		llvm::Value *m_cached_result {};
 	};
 
-	struct EnumLiteral : Expr
+	struct EnumLiteralExpr : Expr
 	{
 		u32 value {};
+
+		EnumLiteralExpr() :
+			Expr{Kind::EnumLiteral}
+		{}
 
 		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params) override;
