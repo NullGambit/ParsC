@@ -50,6 +50,7 @@
     - convert str to be '[]imut char' slice
     - enum indexed arrays
     - type cache
+    - negative array indices that will index from the end of the array
 
 - structs:
     - structural struct equality. eg: fn take_structure(s: {x: i32, s: str}). then can pass any struct that even partially matches this structure
@@ -71,6 +72,11 @@
     - static fields
     - allow passing of anon structs to functions. currently only issue is llvm not equating the types.
         - possibly only allow passing pointers or automatically turning them into pointers.
+    - default self constructors
+        self
+        {
+            self.x = 10
+        }
 
 - enums:
     - allow setting the value of an enum variant
@@ -104,6 +110,10 @@
     - tuples and destructuring
     - string interpolation
     - module initializers. and per thread module initializers
+    - coroutines https://llvm.org/docs/Coroutines.html
+    - async await
+    - type registry
+    - atomics https://llvm.org/docs/MemoryModelRelaxationAnnotations.html
 
 - standard library:
     - list

@@ -18,8 +18,29 @@ namespace pars
 
 	struct Stmt : Node
 	{
+		enum class Kind
+		{
+			VarDecl,
+			Assignment,
+			Block,
+			Import,
+			Return,
+			Break,
+			Continue,
+			If,
+			CompIf,
+			While,
+			For,
+			Impl,
+		} kind;
 
+		Stmt(Kind kind) :
+			Node{BaseKind::Node},
+			kind{kind}
+		{}
 	};
+
+#define STMT_AS(S, T) ((S) != nullptr && (S)->kind == Stmt::Kind::T ? static_cast<T##Stmt*>((S)) : nullptr)
 
 	enum class VarFlags : u32
 	{
@@ -44,6 +65,10 @@ namespace pars
 		Expr *initializer {};
 		VarFlags flags {};
 
+		VarDeclStmt() :
+			Stmt{Kind::VarDecl}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		llvm::Value *init(EmitCtx &ctx, llvm::Value *value = nullptr);
@@ -65,6 +90,10 @@ namespace pars
 		Expr *rhs;
 		TokenType op;
 
+		AssignmentStmt() :
+			Stmt{Kind::Assignment}
+		{}
+
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -73,6 +102,10 @@ namespace pars
 	struct BlockStmt : Stmt
 	{
 		std::vector<Node*> nodes;
+
+		BlockStmt() :
+			Stmt{Kind::Block}
+		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -92,6 +125,10 @@ namespace pars
 		std::string_view alias;
 		std::vector<NamedSymbol> selective_imports;
 
+		ImportStmt() :
+			Stmt{Kind::Import}
+		{}
+
 		ACCEPT
 	};
 
@@ -104,6 +141,10 @@ namespace pars
 	{
 		Expr* expr {};
 
+		ReturnStmt() :
+			Stmt{Kind::Return}
+		{}
+
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -111,6 +152,10 @@ namespace pars
 
 	struct BreakStmt : Stmt, TerminatorStmt
 	{
+		BreakStmt() :
+			Stmt{Kind::Break}
+		{}
+
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -118,6 +163,10 @@ namespace pars
 
 	struct ContinueStmt : Stmt, TerminatorStmt
 	{
+		ContinueStmt() :
+			Stmt{Kind::Continue}
+		{}
+
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -129,6 +178,10 @@ namespace pars
 		BlockStmt *body;
 		Node *else_br {};
 
+		IfStmt() :
+			Stmt{Kind::If}
+		{}
+
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -137,6 +190,10 @@ namespace pars
 	struct CompIfStmt : Stmt
 	{
 		IfStmt *stmt;
+
+		CompIfStmt() :
+			Stmt{Kind::CompIf}
+		{}
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -148,6 +205,10 @@ namespace pars
 		Expr* condition;
 		BlockStmt *body;
 
+		WhileStmt() :
+			Stmt{Kind::While}
+		{}
+
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
@@ -158,6 +219,10 @@ namespace pars
 		std::vector<VarDeclStmt*> bindings;
 		Expr *iterable;
 		BlockStmt *body;
+
+		ForStmt() :
+			Stmt{Kind::For}
+		{}
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -172,9 +237,12 @@ namespace pars
 		UserDefType *type;
 		std::vector<FnType*> methods;
 
+		ImplStmt() :
+			Stmt{Kind::Impl}
+		{}
+
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params) override;
 
 		ACCEPT
 	};
-
 }

@@ -32,6 +32,7 @@ namespace pars
 
 	struct Expr : Node
 	{
+		// The purpose of this enum is to be able to identify any expressions type without reliance on RTTI by using dynamic_cast
 		enum class Kind : u8
 		{
 			Literal,
@@ -65,8 +66,6 @@ namespace pars
 		// represents a positional mutability set. directly mirrors mutability on the type tree this belongs to
 		std::bitset<32> mut_set;
 		Type *type;
-
-		// The purpose of this enum is to be able to identify any expressions type without reliance on RTTI by using dynamic_cast
 
 		Expr(Kind kind) :
 			Node{BaseKind::Expr},
