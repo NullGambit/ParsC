@@ -1028,14 +1028,9 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 	if (m_lexer.match(LeftParen))
 	{
-		auto *group = new_node<GroupExpr>();
-
-		auto *expr = expression();
+		auto *group = new_node<GroupExpr>(expression());
 
 		m_lexer.expect(RightParen);
-
-		group->inner = expr;
-		group->type = expr->type;
 
 		return group;
 	}
@@ -1045,13 +1040,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 
 		if (m_lexer.match(Colon))
 		{
-			auto *expr = new_node<NamedExpr>();
-
-			expr->name = identifier;
-
-			expr->value = expression();
-
-			return expr;
+			return new_node<NamedExpr>(identifier, expression());
 		}
 		if (can_initialize() && m_lexer.match(LeftBrace))
 		{
@@ -1068,19 +1057,11 @@ pars::Expr * pars::AST::parse_primary_inner()
 	}
 	if (m_lexer.match(Sizeof))
 	{
-		auto *expr = new_node<SizeofExpr>();
-
-		expr->expr = expression();
-
-		return expr;
+		return new_node<SizeofExpr>(expression());
 	}
 	if (m_lexer.match(Nameof))
 	{
-		auto *expr = new_node<NameofExpr>();
-
-		expr->expr = expression();
-
-		return expr;
+		return new_node<NameofExpr>(expression());
 	}
 	if (m_lexer.match(Cast))
 	{
@@ -1112,9 +1093,7 @@ pars::Expr * pars::AST::parse_primary_inner()
 	}
 	if (m_lexer.match(Pipe))
 	{
-		auto *expr = new_node<AbsExpr>();
-
-		expr->value = expression();
+		auto *expr = new_node<AbsExpr>(expression());
 
 		m_lexer.expect(Pipe);
 
@@ -1127,11 +1106,6 @@ pars::Expr * pars::AST::parse_primary_inner()
 		expr->op = m_lexer.peek_last().type;
 
 		expr->target = parse_primary();
-
-		// if (expr->symbol == nullptr)
-		// {
-		// 	throw FrontendError{expr->token, "Cannot perform pointer operation on a temporary"};
-		// }
 
 		return expr;
 	}

@@ -370,6 +370,12 @@ namespace pars
 			Expr{Kind::Named}
 		{}
 
+		NamedExpr(std::string_view name, Expr *value) :
+			Expr{Kind::Named},
+			name{name},
+			value{value}
+		{}
+
 		ACCEPT
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
@@ -387,6 +393,11 @@ namespace pars
 
 		AbsExpr() :
 			Expr{Kind::Abs}
+		{}
+
+		AbsExpr(Expr *value) :
+			Expr{Kind::Abs},
+			value{value}
 		{}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;

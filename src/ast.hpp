@@ -117,13 +117,7 @@ namespace pars
 
 				auto *right = std::invoke(rule, this);
 
-				auto *bin = new_node<BinaryExpr>();
-
-				bin->left = expr;
-				bin->right = right;
-				bin->op = op.type;
-
-				expr = bin;
+				expr = new_node<BinaryExpr>(expr, op.type, right);
 			}
 
 			return expr;
