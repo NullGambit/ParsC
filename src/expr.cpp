@@ -468,7 +468,7 @@ llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 	auto *value = target->emit_ptr(ctx);
 
-	if (!value->getType()->isPointerTy())
+	if (value == nullptr || !value->getType()->isPointerTy())
 	{
 		throw CompileError{this, fmt::format("Cannot take address of {}", target->get_symbol())};
 	}

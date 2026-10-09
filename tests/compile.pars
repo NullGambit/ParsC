@@ -23,9 +23,5 @@ impl Data
 
 fn main()
 {
-    let data = Data{}
-
-    data.test()
-
-    printf("%d\n", data.array[0].value)
+    let x = &10
 }
