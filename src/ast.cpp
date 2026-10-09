@@ -907,7 +907,7 @@ pars::Expr* pars::AST::parse_primary()
 	else if (m_lexer.match(StringLiteral))
 	{
 		literal->value = m_lexer.peek_last().lexeme;
-		literal->type = const_cast<StrType*>(&StrType);
+		literal->type = const_cast<StrType*>(&STR_TYPE);
 	}
 	else if (m_lexer.match(CharLiteral))
 	{

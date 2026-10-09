@@ -137,7 +137,7 @@ void init_global_symbols()
 	declare_global_type(&pars::I64_TYPE);
 	declare_global_type(&pars::U64_TYPE);
 	declare_global_type(&pars::BOOL_TYPE);
-	declare_global_type(&pars::StrType);
+	declare_global_type(&pars::STR_TYPE);
 	declare_global_type(&pars::CHAR_TYPE);
 	declare_global_type(&pars::UCHAR_TYPE);
 	declare_global_type(&pars::F32_TYPE);

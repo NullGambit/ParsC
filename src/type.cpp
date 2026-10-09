@@ -135,7 +135,7 @@ llvm::Value * pars::IntegralType::op_cast(EmitCtx &ctx, llvm::Value *value, Type
 {
 	auto *target_type = desired_type->get_llvm_type(ctx.llvm_ctx);
 
-	auto *other_type = produce_type<IntegralType>(desired_type);
+	auto *other_type = dynamic_cast<IntegralType*>(desired_type->get_real_type());
 
 	if (other_type == nullptr)
 	{
@@ -154,7 +154,7 @@ llvm::Value * pars::IntegralType::op_coerce(EmitCtx &ctx, llvm::Value *value, Ty
 
 bool pars::IntegralType::can_coerce_into(Type const *desired_type) const
 {
-	const auto *other_type = produce_type<const IntegralType>(desired_type);
+	const auto *other_type = dynamic_cast<IntegralType*>(desired_type->get_real_type());
 
 	if (other_type == nullptr)
 	{
@@ -188,7 +188,7 @@ bool pars::AliasType::is_equal(Type const *other) const
 		return false;
 	}
 
-	return type->is_equal(produce_type(other));
+	return type->is_equal(other->get_real_type());
 }
 
 pars::Type * pars::AliasType::get_real_type() const
@@ -763,7 +763,7 @@ llvm::Constant* pars::ArrayType::get_aggregate_constant(EmitCtx &ctx, llvm::Arra
 
 bool pars::ArrayType::is_equal(Type const *other) const
 {
-	auto *other_array = produce_type<ArrayType>(other);
+	auto *other_array = TYPE_AS(other, Array);
 
 	if (other_array == nullptr)
 	{
@@ -1008,7 +1008,7 @@ llvm::Value * pars::StructType::get_default_value(llvm::LLVMContext *ctx) const
 
 bool pars::StructType::is_equal(Type const *other) const
 {
-	auto *other_struct = produce_type<StructType>(other);
+	const auto *other_struct = TYPE_AS(other, Struct);
 
 	// do structural equality matching of either one is anon
 	if (other_struct != nullptr && (symbol.name.empty() || other_struct->symbol.name.empty()))
@@ -1398,12 +1398,12 @@ llvm::Value * pars::EnumType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value 
 	return nullptr;
 }
 
-pars::Type* pars::produce_type(Type const *type)
+pars::Type * pars::produce_type(Type *type)
 {
 	if (type == nullptr)
 	{
 		return nullptr;
 	}
-	
+
 	return type->get_real_type();
 }

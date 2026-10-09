@@ -137,56 +137,21 @@ namespace pars
 		virtual llvm::Value* iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const { return nullptr; }
 	};
 
-#define TYPE_AS(TV, T) ((TV) != nullptr && (TV)->kind == Type::Kind::T ? static_cast<T##Type*>((TV)) : nullptr)
+#define TYPE_AS(TV, T) ((TV) != nullptr && (TV)->kind == Type::Kind::T ? static_cast<T##Type*>((TV)->get_real_type()) : nullptr)
 
-	Type* produce_type(Type const *type);
-
-	template<class T>
-	T* produce_type(Type const *type)
-	{
-		return dynamic_cast<T*>(produce_type(type));
-	}
-
-	template<class T>
-	T* produce_type(Type *type)
-	{
-		return dynamic_cast<T*>(produce_type(type));
-	}
-
-	template<class T>
-	bool is_type_same(Type const *type)
-	{
-		auto *real = produce_type<T>(type);
-
-		return real != nullptr;
-	}
+#define IS_TYPE(TV, T) TYPE_AS(TV, T) != nullptr
 
 	bool check_type_equality(Type const *a_type, Type  const *b_type);
 
 	bool is_assignable_from(Type const *from, Type  const *to);
 
-	template<class T>
-	T const * types_match(Type const *a_type, Type  const *b_type)
-	{
-		auto *a = produce_type<const T>(a_type);
-		auto *b = produce_type<const T>(b_type);
 
-		if (a != nullptr && b != nullptr)
-		{
-			return b;
-		}
-
-		return nullptr;
-	}
-
-
-
-#define DEFAULT_TYPE_EQUAL(T) bool is_equal(Type const *other) const override { return types_match<T>(this, other); }
+#define DEFAULT_TYPE_EQUAL(T) bool is_equal(Type const *other) const override { return TYPE_AS(this, T) && TYPE_AS(other, T); }
 
 #define DEFAULT_INTEGRAL_EQUAL(T)												\
 virtual bool is_equal(Type const *other) const override							\
 {																				\
-	auto other_int = produce_type<T>(other);								\
+	auto other_int = TYPE_AS(other, T);											\
 																				\
 	if (other_int != nullptr)													\
 	{																			\
@@ -219,7 +184,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct VoidType : Type
 	{
-		DEFAULT_TYPE_EQUAL(VoidType)
+		DEFAULT_TYPE_EQUAL(Void)
 
 		VoidType() :
 			Type{Kind::Void}
@@ -286,7 +251,7 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 		bool can_coerce_into(Type const *desired_type) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(IntegralType)
+		DEFAULT_INTEGRAL_EQUAL(Integral)
 	};
 
 	struct AliasType : UserDefType
@@ -387,7 +352,7 @@ virtual bool is_equal(Type const *other) const override							\
 			return true;
 		}
 
-		DEFAULT_INTEGRAL_EQUAL(IntegerType)
+		DEFAULT_INTEGRAL_EQUAL(Integer)
 	};
 
 	struct FloatType : IntegralType
@@ -407,7 +372,7 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, f64 n) const override;
 		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, i64 n) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(FloatType)
+		DEFAULT_INTEGRAL_EQUAL(Float)
 	};
 
 	struct BoolType : IntegralType
@@ -421,7 +386,7 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(BoolType)
+		DEFAULT_INTEGRAL_EQUAL(Bool)
 	};
 
 	struct CharType : IntegralType
@@ -434,7 +399,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(CharType)
+		DEFAULT_INTEGRAL_EQUAL(Char)
 	};
 
 	struct PointerType : IntegerType
@@ -554,8 +519,6 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return true;
 		}
-
-		llvm::Value *do_op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index, llvm::Type *type) const;
 
 		bool is_iterable() const override
 		{
@@ -696,7 +659,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct StrType : PointerType
 	{
-		DEFAULT_TYPE_EQUAL(StrType)
+		DEFAULT_TYPE_EQUAL(Str)
 
 		StrType() :
 			PointerType{Kind::Str, const_cast<CharType*>(&CHAR_TYPE)}
@@ -717,11 +680,11 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 	};
 
-	static const StrType StrType {};
+	static const StrType STR_TYPE {};
 
 	struct RangeType : Type
 	{
-		DEFAULT_TYPE_EQUAL(RangeType)
+		DEFAULT_TYPE_EQUAL(Range)
 
 		RangeType() :
 			Type{Kind::Range}
@@ -857,4 +820,6 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 	};
+
+	Type* produce_type(Type *type);
 }

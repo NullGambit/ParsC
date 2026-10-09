@@ -183,7 +183,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		{
 			for (auto i = 0; auto *node : fn->body->nodes)
 			{
-				if (auto *expr = dynamic_cast<Expr*>(node))
+				if (auto *expr = NODE_AS(node, Expr))
 				{
 					fn->body->nodes[i] = visit_expr(nullptr, expr, {});
 				}
@@ -271,7 +271,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 	}
 
-	if (auto *array = stmt->type.produce<ArrayType>())
+	if (auto *array = TYPE_AS(stmt->type.ptr, Array))
 	{
 		if (array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
 		{
@@ -279,7 +279,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 		if (stmt->initializer != nullptr)
 		{
-			array->size = produce_type<ArrayType>(stmt->initializer->type)->size;
+			array->size = TYPE_AS(stmt->initializer->type, Array)->size;
 		}
 	}
 
@@ -321,7 +321,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 
 		auto *result = stmt->initializer->accept(&m_comp_eval, {});
 
-		stmt->initializer = dynamic_cast<Expr*>(result);
+		stmt->initializer = NODE_AS(result, Expr);
 
 		if (stmt->initializer == nullptr)
 		{
@@ -393,7 +393,7 @@ pars::Node* pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 
 	for (auto i = 0; auto *node : stmt->nodes)
 	{
-		if (auto *expr = dynamic_cast<Expr*>(node))
+		if (auto *expr = NODE_AS(node, Expr))
 		{
 			stmt->nodes[i] = visit_expr(nullptr, expr, ctx);
 		}
@@ -604,7 +604,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	}
 	else
 	{
-		if (auto *enum_type = dynamic_cast<EnumType*>(ctx.type))
+		if (auto *enum_type = TYPE_AS(ctx.type, Enum))
 		{
 			auto *literal = enum_type->get_literal(expr->symbol);
 
@@ -627,8 +627,9 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 		}
 
 		auto *sym_node = find_symbol(expr->symbol, expr->token, table_override);
+		auto *stmt_node = NODE_AS(sym_node, Stmt);
 
-		if (auto *var = dynamic_cast<VarDeclStmt*>(sym_node))
+		if (auto *var = STMT_AS(stmt_node, VarDecl))
 		{
 			var->flags |= VarFlags::Used;
 			expr->mut_set = var->type.mut_set;
@@ -641,7 +642,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 			expr->type = collection->get_fn(args, this);
 		}
-		else if (auto *type = dynamic_cast<Type*>(sym_node))
+		else if (auto *type = NODE_AS(sym_node, Type))
 		{
 			expr->type = type;
 		}
@@ -719,7 +720,7 @@ pars::Node* pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(NameofExpr *expr, VisitCtx ctx)
 {
-	expr->type = const_cast<StrType*>(&StrType);
+	expr->type = const_cast<StrType*>(&STR_TYPE);
 
 	expr->expr = visit_expr(expr, expr->expr, new_ctx(expr, ctx));
 
@@ -738,14 +739,16 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	auto symbol = expr->target->get_symbol();
 
 	auto *symbol_node = ctx.member ? nullptr : find_symbol(symbol, expr->token);
+	auto *stmt_node = NODE_AS(symbol_node, Stmt);
+	auto *type_node = NODE_AS(symbol_node, Type);
 
-	if (auto *import = dynamic_cast<ImportStmt*>(symbol_node))
+	if (auto *import = STMT_AS(stmt_node, Import))
 	{
 		ctx.scope_table_override = import->module->scope_table;
 
 		expr->accessor = visit_expr(expr, expr->accessor, new_ctx(expr, ctx));
 	}
-	else if (auto *enum_type = produce_type<EnumType>(dynamic_cast<Type const *>(symbol_node)))
+	else if (auto *enum_type = TYPE_AS(type_node, Enum))
 	{
 		auto *literal = enum_type->get_literal(expr->accessor->get_symbol());
 
@@ -759,7 +762,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		return literal;
 	}
-	else if (auto *type = dynamic_cast<Type*>(symbol_node); type && !expr->is_static_access)
+	else if (type_node != nullptr && !expr->is_static_access)
 	{
 		auto *prop_expr = new_node<TypePropExpr>();
 
@@ -772,7 +775,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		prop_expr->property_name = prop_symbol->symbol;
 
-		prop_expr->type = type;
+		prop_expr->type = type_node;
 
 		expr->accessor = prop_expr;
 		prop_expr->token = expr->token;
@@ -799,7 +802,6 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 				subsymbol, expr->target->get_symbol())};
 		};
 
-		//auto *call = as_call(expr->accessor);
 		auto *call = EXPR_AS(expr->accessor, Call);
 
 		expr->is_method = call != nullptr;
@@ -819,13 +821,13 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		{
 			auto *self_arg = expr->target;
 
-			if (!is_type_same<PointerType>(expr->target->type))
+			if (!TYPE_AS(expr->target->type, Pointer))
 			{
 				expr->target->flags |= ExprFlags::AlwaysPtr;
 
 				auto *self = new_node<PointerType>();
 
-				self->set_inner(produce_type(expr->target->type));
+				self->set_inner(expr->target->type->get_real_type());
 
 				self_arg->type = self;
 			}
@@ -902,7 +904,7 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 			// in case target is actually a type this might be a pointer type.
 			// useful in cases of nameof expressions.
 			if (auto *symbol = EXPR_AS(expr->target, Symbol);
-				auto *type = dynamic_cast<Type*>(symbol->symbol_node))
+				auto *type = NODE_AS(symbol->symbol_node, Type))
 			{
 				auto *ptr = new_node<PointerType>();
 
@@ -1028,14 +1030,14 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 		array_type->set_inner(type);
 
-		auto *real = produce_type<ArrayType>(array_type->get_inner());
+		auto *real = TYPE_AS(array_type->get_inner(), Array);
 
 		if (real != nullptr)
 		{
 			array_type = real;
 		}
 	}
-	else if (auto *array_ctx = produce_type<BaseArrayType>(ctx.type))
+	else if (auto *array_ctx = dynamic_cast<BaseArrayType*>(produce_type(ctx.type)))
 	{
 		array_type->set_inner(array_ctx->get_inner());
 	}
@@ -1058,7 +1060,6 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 	array_type->size = expr->initializers.size();
 
-
 	for (auto i = 0; auto &[element, pos] : expr->initializers)
 	{
 		element = visit_expr(expr, element, {.type = array_type->get_inner()});
@@ -1077,7 +1078,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		i += 1;
 	}
 
-	if (auto *ctx_array = produce_type<ArrayType>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
+	if (auto *ctx_array = TYPE_AS(ctx.type, Array); ctx_array && ctx_array->size != UNSIZED_ARRAY)
 	{
 		if (ctx_array->size < array_type->size)
 		{
@@ -1094,7 +1095,7 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 {
 	auto *left_symbol = find_symbol(expr->lhs->get_symbol(), expr->lhs->token, nullptr, /*permissive=*/true);
 
-	if (dynamic_cast<Type*>(left_symbol))
+	if (NODE_AS(left_symbol, Type))
 	{
 		auto *literal = new_node<ArrayLiteralExpr>();
 
@@ -1128,7 +1129,7 @@ pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
 	expr->type = get_type(expr->name, expr->token);
 
-	auto *struct_type = dynamic_cast<StructType*>(expr->type);
+	auto *struct_type = TYPE_AS(expr->type, Struct);
 
 	assign_struct_indices(struct_type, this, expr->initializers);
 
@@ -1168,9 +1169,9 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 		return expr;
 	}
 
-	expr->type = ctx.type;
+	expr->type = produce_type(ctx.type);
 
-	if (auto *struct_type = produce_type<StructType>(expr->type))
+	if (auto *struct_type = TYPE_AS(expr->type, Struct))
 	{
 		assign_struct_indices(struct_type, this, expr->initializers);
 	}
@@ -1243,16 +1244,16 @@ pars::Node* pars::Analyzer::visit(ArrayType *type, VisitCtx ctx)
 
 	type->size_expr = visit_expr(nullptr, type->size_expr, {});
 
-	Node *value {};
+	Expr *value {};
 
 	if (type->size_expr == nullptr)
 	{
 		goto ret;
 	}
 
-	value = type->size_expr->accept(&m_comp_eval, {});
+	value = NODE_AS(type->size_expr->accept(&m_comp_eval, {}), Expr);
 
-	if (auto *literal = dynamic_cast<LiteralExpr*>(value); auto literal_value = literal->get_int())
+	if (auto *literal = EXPR_AS(value, Literal); auto literal_value = literal->get_int())
 	{
 		if (literal_value.has_value())
 		{

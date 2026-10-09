@@ -35,7 +35,7 @@ namespace pars
 		} kind;
 
 		Stmt(Kind kind) :
-			Node{BaseKind::Node},
+			Node{BaseKind::Stmt},
 			kind{kind}
 		{}
 	};

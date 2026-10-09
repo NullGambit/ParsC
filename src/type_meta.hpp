@@ -8,8 +8,6 @@ namespace pars
 
 	using MutSet = std::bitset<32>;
 
-	Type* produce_type(Type const *type);
-
 	// stores a type packed with information such as mutability
 	struct TypeMeta
 	{
@@ -37,12 +35,6 @@ namespace pars
 		bool is_null() const
 		{
 			return ptr == nullptr;
-		}
-
-		template<class T>
-		T* produce()
-		{
-			return dynamic_cast<T*>(produce_type(ptr));
 		}
 	};
 }
