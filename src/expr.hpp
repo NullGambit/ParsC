@@ -32,12 +32,6 @@ namespace pars
 
 	struct Expr : Node
 	{
-		ExprFlags flags;
-		// represents a positional mutability set. directly mirrors mutability on the type tree this belongs to
-		std::bitset<32> mut_set;
-		Type *type;
-
-		// The purpose of this enum is to be able to identify any expressions type without reliance on RTTI by using dynamic_cast
 		enum class Kind : u8
 		{
 			Literal,
@@ -66,6 +60,13 @@ namespace pars
 			Keyword,
 			Packed,
 		} kind;
+
+		ExprFlags flags;
+		// represents a positional mutability set. directly mirrors mutability on the type tree this belongs to
+		std::bitset<32> mut_set;
+		Type *type;
+
+		// The purpose of this enum is to be able to identify any expressions type without reliance on RTTI by using dynamic_cast
 
 		Expr(Kind kind) :
 			Node{BaseKind::Expr},
@@ -130,8 +131,8 @@ namespace pars
 
 	struct BinaryExpr : Expr
 	{
-		Expr *left;
 		TokenType op;
+		Expr *left;
 		Expr *right;
 
 		BinaryExpr() :
@@ -140,8 +141,8 @@ namespace pars
 
 		BinaryExpr(Expr *left, TokenType op, Expr *right) :
 			Expr{Kind::Binary},
-			left{left},
 			op{op},
+			left{left},
 			right{right}
 		{}
 
