@@ -37,6 +37,7 @@ namespace pars
 		std::bitset<32> mut_set;
 		Type *type;
 
+		// The purpose of this enum is to be able to identify any expressions type without reliance on RTTI by using dynamic_cast
 		enum class Kind : u8
 		{
 			Literal,
@@ -67,6 +68,7 @@ namespace pars
 		} kind;
 
 		Expr(Kind kind) :
+			Node{BaseKind::Expr},
 			kind{kind}
 		{}
 
@@ -78,6 +80,8 @@ namespace pars
 		virtual bool is_ctx_sensitive() { return false; }
 		virtual bool is_resolved() { return type != nullptr; }
 	};
+
+#define EXPR_AS(E, T) ((E) != nullptr && (E)->kind == Expr::Kind::T ? static_cast<T##Expr*>((E)) : nullptr)
 
 	using LiteralExprValue = std::variant
 	<
@@ -187,7 +191,7 @@ namespace pars
 		{}
 
 		SymbolExpr(std::string_view symbol) :
-			Expr{Kind::Unary},
+			Expr{Kind::Symbol},
 			symbol{symbol}
 		{}
 
@@ -215,7 +219,7 @@ namespace pars
 		{}
 
 		CallExpr(Expr *callable, std::vector<Expr*> &&arguments) :
-			Expr{Kind::Unary},
+			Expr{Kind::Call},
 			callable{callable},
 			arguments{arguments}
 		{}
@@ -240,7 +244,7 @@ namespace pars
 		{}
 
 		GroupExpr(Expr *inner) :
-			Expr{Kind::Unary},
+			Expr{Kind::Group},
 			inner{inner}
 		{}
 

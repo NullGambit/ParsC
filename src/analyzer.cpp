@@ -75,7 +75,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 			arg = visit_expr(expr, arg, {ctx_type});
 		}
 
-		if (auto *named_param = dynamic_cast<NamedExpr*>(arg))
+		if (auto *named_param = EXPR_AS(arg, Named))
 		{
 			// this would not scale well but for the average number of function arguments it should still be fairly fast
 			for (auto i = 0; auto *param : call_info.parameters)
@@ -92,7 +92,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto [named_expr, position] : named_replace_list)
 	{
-		auto *named = dynamic_cast<NamedExpr*>(expr->arguments[position]);
+		auto *named = EXPR_AS(expr->arguments[position], Named);
 
 		if (named == nullptr)
 		{
@@ -163,12 +163,17 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 
 	if (has_flag(fn->flags, FnFlags::ArrowFn))
 	{
-		auto *expr = dynamic_cast<Expr*>(fn->body->nodes.front());
+		auto *front = fn->body->nodes.front();
 
-		// TODO resolve return type if manually typed
-		expr->accept(this, {.type = fn->signature.return_type.ptr});
+		if (front->base_kind == Node::BaseKind::Expr)
+		{
+			auto *expr = static_cast<Expr*>(front);
 
-		fn->signature.return_type = expr->type;
+			// TODO resolve return type if manually typed
+			expr->accept(this, {.type = fn->signature.return_type.ptr});
+
+			fn->signature.return_type = expr->type;
+		}
 	}
 	else
 	{
@@ -758,7 +763,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	{
 		auto *prop_expr = new_node<TypePropExpr>();
 
-		auto *prop_symbol = dynamic_cast<SymbolExpr*>(expr->accessor);
+		auto *prop_symbol = EXPR_AS(expr->accessor, Symbol);
 
 		if (prop_symbol == nullptr)
 		{
@@ -794,7 +799,9 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 				subsymbol, expr->target->get_symbol())};
 		};
 
-		auto *call = dynamic_cast<CallExpr*>(expr->accessor);
+		//auto *call = as_call(expr->accessor);
+		auto *call = EXPR_AS(expr->accessor, Call);
+
 		expr->is_method = call != nullptr;
 
 		auto maybe_member = expr->is_method ? expr->target->type->get_method(subsymbol) : expr->target->type->get_member(subsymbol);
@@ -894,7 +901,7 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 		{
 			// in case target is actually a type this might be a pointer type.
 			// useful in cases of nameof expressions.
-			if (auto *symbol = dynamic_cast<SymbolExpr*>(expr->target);
+			if (auto *symbol = EXPR_AS(expr->target, Symbol);
 				auto *type = dynamic_cast<Type*>(symbol->symbol_node))
 			{
 				auto *ptr = new_node<Pointer>();
@@ -957,7 +964,7 @@ namespace pars
 
 			auto &[initializer, pos] = initializers[i];
 
-			if (auto *named_expr = dynamic_cast<NamedExpr*>(initializer))
+			if (auto *named_expr = EXPR_AS(initializer, Named))
 			{
 				auto it = std::ranges::find_if(fields, [&](const auto &element) { return find_fn(element, named_expr); });
 
@@ -1138,7 +1145,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 
 		for (auto i = 0; auto &[expr, pos] : expr->initializers)
 		{
-			if (auto *named = dynamic_cast<NamedExpr*>(expr))
+			if (auto *named = EXPR_AS(expr, Named))
 			{
 				named->value->accept(this, {});
 
@@ -1363,7 +1370,7 @@ pars::Expr* pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
 
 	m_expr_depth--;
 
-	return dynamic_cast<Expr*>(result);
+	return NODE_AS(result, Expr);
 }
 
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)

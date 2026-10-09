@@ -24,12 +24,30 @@ namespace pars
 		// mainly useful for error reporting
 		Token token;
 
+		enum class BaseKind
+		{
+			Node,
+			Expr,
+			Stmt,
+			Type,
+		} base_kind;
+
+		Node() :
+			base_kind{BaseKind::Node}
+		{}
+
+		Node(BaseKind kind) :
+			base_kind{kind}
+		{}
+
 		virtual llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }
 
 		virtual ~Node() = default;
 
 		virtual Node* accept(Visitor *visitor, VisitCtx ctx) { return nullptr; }
 	};
+
+#define NODE_AS(N, T) ((N) != nullptr && (N)->base_kind == Node::BaseKind::T ? static_cast<T*>((N)) : nullptr)
 
 #define ACCEPT pars::Node* accept(Visitor *visitor, VisitCtx ctx) override { return visitor->visit(this, ctx); }
 
