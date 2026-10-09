@@ -9,10 +9,10 @@ namespace pars
 	struct ImplStmt;
 	struct FnPtrType;
 	struct AggregateExpr;
-	struct Array;
-	struct BaseArray;
-	struct Pointer;
-	struct UnresolvedSymbol;
+	struct ArrayType;
+	struct BaseArrayType;
+	struct PointerType;
+	struct UnresolvedSymbolType;
 	struct SliceExpr;
 	struct StructLiteral;
 	struct StructType;
@@ -103,10 +103,10 @@ namespace pars
 		virtual Node* visit(BlockStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(AssignmentStmt *stmt, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(ImplStmt *stmt, VisitCtx ctx) { return nullptr; }
-		virtual Node* visit(UnresolvedSymbol *type, VisitCtx ctx) { return nullptr; }
-		virtual Node* visit(Pointer *type, VisitCtx ctx) { return nullptr; }
-		virtual Node* visit(BaseArray *type, VisitCtx ctx) { return nullptr; }
-		virtual Node* visit(Array *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(UnresolvedSymbolType *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(PointerType *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(BaseArrayType *type, VisitCtx ctx) { return nullptr; }
+		virtual Node* visit(ArrayType *type, VisitCtx ctx) { return nullptr; }
 		virtual Node* visit(FnPtrType *type, VisitCtx ctx) { return nullptr; }
 
 		void visit_nodes(const std::vector<Node*> &nodes);

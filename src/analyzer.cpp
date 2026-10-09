@@ -199,7 +199,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		auto flags = m_ctx->scope_table.get_scope_data(m_ctx->scope_table.get_level()).flags;
 
 		if (
-			!fn->signature.return_type->is_equal(&VoidType)
+			!fn->signature.return_type->is_equal(&VOID_TYPE)
 			&&
 			!has_flag(flags, ScopeFlags::HasReturn)
 			&&
@@ -271,7 +271,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 	}
 
-	if (auto *array = stmt->type.produce<Array>())
+	if (auto *array = stmt->type.produce<ArrayType>())
 	{
 		if (array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
 		{
@@ -279,7 +279,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 		if (stmt->initializer != nullptr)
 		{
-			array->size = produce_type<Array>(stmt->initializer->type)->size;
+			array->size = produce_type<ArrayType>(stmt->initializer->type)->size;
 		}
 	}
 
@@ -447,7 +447,7 @@ pars::Node* pars::Analyzer::visit(IfStmt *stmt, VisitCtx ctx)
 
 	stmt->condition = visit_expr(nullptr, stmt->condition, {});
 
-	if (!stmt->condition->type->is_equal(&BoolType))
+	if (!stmt->condition->type->is_equal(&BOOL_TYPE))
 	{
 		throw FrontendError{stmt->condition->token, "if statement condition must be a bool type"};
 	}
@@ -529,7 +529,7 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 	{
 		auto *last = stmt->bindings.back();
 
-		bind(last, const_cast<Integer*>(&I32Type));
+		bind(last, const_cast<IntegerType*>(&I32_TYPE));
 	}
 
 	stmt->body->accept(this, {});
@@ -551,7 +551,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 	stmt->type->impl = stmt;
 
-	auto *self = new_node<Pointer>();
+	auto *self = new_node<PointerType>();
 
 	self->set_inner(stmt->type);
 
@@ -663,7 +663,7 @@ pars::Node* pars::Analyzer::visit(BinaryExpr *expr, VisitCtx ctx)
 
 	if (expr->op > _ComparisonStart && expr->op < _ComparisonEnd)
 	{
-		expr->type = const_cast<Bool*>(&BoolType);
+		expr->type = const_cast<BoolType*>(&BOOL_TYPE);
 	}
 	// range
 	else if (expr->op == DotDot || expr->op == DotDotEqual)
@@ -690,7 +690,7 @@ pars::Node* pars::Analyzer::visit(UnaryExpr *expr, VisitCtx ctx)
 
 	if (expr->op == '!')
 	{
-		expr->type = const_cast<Bool*>(&BoolType);
+		expr->type = const_cast<BoolType*>(&BOOL_TYPE);
 	}
 	else
 	{
@@ -710,7 +710,7 @@ pars::Node* pars::Analyzer::visit(GroupExpr* expr, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 {
-	expr->type = const_cast<Integer*>(&I32Type);
+	expr->type = const_cast<IntegerType*>(&I32_TYPE);
 
 	expr->expr = visit_expr(expr, expr->expr, new_ctx(expr, ctx));
 
@@ -719,7 +719,7 @@ pars::Node* pars::Analyzer::visit(SizeofExpr* expr, VisitCtx ctx)
 
 pars::Node * pars::Analyzer::visit(NameofExpr *expr, VisitCtx ctx)
 {
-	expr->type = const_cast<Str*>(&StrType);
+	expr->type = const_cast<StrType*>(&StrType);
 
 	expr->expr = visit_expr(expr, expr->expr, new_ctx(expr, ctx));
 
@@ -819,11 +819,11 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		{
 			auto *self_arg = expr->target;
 
-			if (!is_type_same<Pointer>(expr->target->type))
+			if (!is_type_same<PointerType>(expr->target->type))
 			{
 				expr->target->flags |= ExprFlags::AlwaysPtr;
 
-				auto *self = new_node<Pointer>();
+				auto *self = new_node<PointerType>();
 
 				self->set_inner(produce_type(expr->target->type));
 
@@ -904,7 +904,7 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 			if (auto *symbol = EXPR_AS(expr->target, Symbol);
 				auto *type = dynamic_cast<Type*>(symbol->symbol_node))
 			{
-				auto *ptr = new_node<Pointer>();
+				auto *ptr = new_node<PointerType>();
 
 				ptr->set_inner(type);
 
@@ -924,7 +924,7 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 		}
 		case Ampersand:
 		{
-			auto *p = new_node<Pointer>();
+			auto *p = new_node<PointerType>();
 
 			p->set_inner(expr->target->type);
 
@@ -1020,7 +1020,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 	ctx = new_ctx(expr, ctx, ctx.type);
 
-	auto *array_type = new_node<Array>();
+	auto *array_type = new_node<ArrayType>();
 
 	if (expr->type_specifier != nullptr)
 	{
@@ -1028,14 +1028,14 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 		array_type->set_inner(type);
 
-		auto *real = produce_type<Array>(array_type->get_inner());
+		auto *real = produce_type<ArrayType>(array_type->get_inner());
 
 		if (real != nullptr)
 		{
 			array_type = real;
 		}
 	}
-	else if (auto *array_ctx = produce_type<BaseArray>(ctx.type))
+	else if (auto *array_ctx = produce_type<BaseArrayType>(ctx.type))
 	{
 		array_type->set_inner(array_ctx->get_inner());
 	}
@@ -1077,7 +1077,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		i += 1;
 	}
 
-	if (auto *ctx_array = produce_type<Array>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
+	if (auto *ctx_array = produce_type<ArrayType>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
 	{
 		if (ctx_array->size < array_type->size)
 		{
@@ -1197,7 +1197,7 @@ pars::Node* pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 		throw FrontendError{expr->token, fmt::format("type of {} cannot be sliced", expr->type->get_type_name())};
 	}
 
-	auto *slice_type = new_node<Slice>();
+	auto *slice_type = new_node<SliceType>();
 
 	slice_type->set_inner(expr->lhs->type->get_inner());
 
@@ -1206,14 +1206,14 @@ pars::Node* pars::Analyzer::visit(SliceExpr *expr, VisitCtx ctx)
 	return expr;
 }
 
-pars::Node* pars::Analyzer::visit(UnresolvedSymbol *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(UnresolvedSymbolType *type, VisitCtx ctx)
 {
 	*ctx.result = get_type(type->symbol, type->token);
 
 	return type;
 }
 
-pars::Node* pars::Analyzer::visit(Pointer *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(PointerType *type, VisitCtx ctx)
 {
 	auto &inner = type->get_inner_ref();
 
@@ -1224,7 +1224,7 @@ pars::Node* pars::Analyzer::visit(Pointer *type, VisitCtx ctx)
 	return type;
 }
 
-pars::Node* pars::Analyzer::visit(BaseArray *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(BaseArrayType *type, VisitCtx ctx)
 {
 	auto &inner = type->get_inner_ref();
 
@@ -1235,7 +1235,7 @@ pars::Node* pars::Analyzer::visit(BaseArray *type, VisitCtx ctx)
 	return type;
 }
 
-pars::Node* pars::Analyzer::visit(Array *type, VisitCtx ctx)
+pars::Node* pars::Analyzer::visit(ArrayType *type, VisitCtx ctx)
 {
 	auto &inner = type->get_inner_ref();
 

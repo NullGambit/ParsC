@@ -49,12 +49,12 @@ bool pars::is_assignable_from(Type const *from, Type const *to)
 	return check_type_equality(from, to) || to->can_coerce_into(from) || from->can_coerce_into(to);
 }
 
-llvm::Type * pars::Void::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::VoidType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::Type::getVoidTy(*ctx);
 }
 
-llvm::Value * pars::Void::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::VoidType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::UndefValue::get(get_llvm_type(ctx));
 }
@@ -77,17 +77,17 @@ std::optional<pars::MemberInfo> pars::UserDefType::get_method(std::string_view s
 	return MemberInfo{.type = *iter};
 }
 
-llvm::Type * pars::Integral::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::IntegralType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::IntegerType::get(*ctx, bits);
 }
 
-llvm::Value * pars::Integral::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::IntegralType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, 0, is_signed));
 }
 
-llvm::Value* pars::Integral::get_property(llvm::LLVMContext* ctx, std::string_view name)
+llvm::Value* pars::IntegralType::get_property(llvm::LLVMContext* ctx, std::string_view name)
 {
 	if (auto *value = Type::get_property(ctx, name))
 	{
@@ -126,16 +126,16 @@ llvm::Value* pars::Integral::get_property(llvm::LLVMContext* ctx, std::string_vi
 	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, value, is_signed));
 }
 
-u32 pars::Integral::get_size()
+u32 pars::IntegralType::get_size()
 {
 	return bits / 8;
 }
 
-llvm::Value * pars::Integral::op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+llvm::Value * pars::IntegralType::op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
 {
 	auto *target_type = desired_type->get_llvm_type(ctx.llvm_ctx);
 
-	auto *other_type = produce_type<Integral>(desired_type);
+	auto *other_type = produce_type<IntegralType>(desired_type);
 
 	if (other_type == nullptr)
 	{
@@ -147,14 +147,14 @@ llvm::Value * pars::Integral::op_cast(EmitCtx &ctx, llvm::Value *value, Type *de
 	return ctx.builder.CreateCast(op, value, target_type);
 }
 
-llvm::Value * pars::Integral::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+llvm::Value * pars::IntegralType::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
 {
 	return op_cast(ctx, value, desired_type);
 }
 
-bool pars::Integral::can_coerce_into(Type const *desired_type) const
+bool pars::IntegralType::can_coerce_into(Type const *desired_type) const
 {
-	const auto *other_type = produce_type<const Integral>(desired_type);
+	const auto *other_type = produce_type<const IntegralType>(desired_type);
 
 	if (other_type == nullptr)
 	{
@@ -375,12 +375,12 @@ llvm::Constant * pars::AliasType::get_constant_from_literal(EmitCtx &ctx, f64 n)
 	return type->get_constant_from_literal(ctx, n);
 }
 
-llvm::Type * pars::Integer::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::IntegerType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return Integral::get_llvm_type(ctx);
+	return IntegralType::get_llvm_type(ctx);
 }
 
-llvm::Value * pars::Integer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+llvm::Value * pars::IntegerType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
 	using enum TokenType;
 
@@ -436,7 +436,7 @@ llvm::Value * pars::Integer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *
 	}
 }
 
-llvm::Value * pars::Integer::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
+llvm::Value * pars::IntegerType::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
 {
 	if (op == TokenType::Minus)
 	{
@@ -446,38 +446,38 @@ llvm::Value * pars::Integer::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *r
 	return nullptr;
 }
 
-llvm::Constant * pars::Integer::get_constant_from_literal(EmitCtx &ctx, i64 n) const
+llvm::Constant * pars::IntegerType::get_constant_from_literal(EmitCtx &ctx, i64 n) const
 {
 	auto ap = llvm::APInt(bits, n, true);
 
 	return llvm::ConstantInt::get(*ctx.llvm_ctx, ap);
 }
 
-llvm::Constant * pars::Integer::get_constant_from_literal(EmitCtx &ctx, u64 n) const
+llvm::Constant * pars::IntegerType::get_constant_from_literal(EmitCtx &ctx, u64 n) const
 {
 	auto ap = llvm::APInt(bits, n, false);
 
 	return llvm::ConstantInt::get(*ctx.llvm_ctx, ap);
 }
 
-llvm::Constant * pars::Integer::get_constant_from_literal(EmitCtx &ctx, f64 n) const
+llvm::Constant * pars::IntegerType::get_constant_from_literal(EmitCtx &ctx, f64 n) const
 {
 	return get_constant_from_literal(ctx, (i64)n);
 }
 
-llvm::Value * pars::Integer::op_abs(EmitCtx &ctx, llvm::Value *value) const
+llvm::Value * pars::IntegerType::op_abs(EmitCtx &ctx, llvm::Value *value) const
 {
 	auto *is_poison = ctx.builder.getInt1(true);
 
 	return ctx.builder.CreateIntrinsic(llvm::Intrinsic::abs, get_llvm_type(ctx.llvm_ctx), {value, is_poison});
 }
 
-llvm::Type * pars::Float::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::FloatType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::Type::getFloatTy(*ctx);
 }
 
-llvm::Value * pars::Float::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+llvm::Value * pars::FloatType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
 	using enum TokenType;
 
@@ -499,7 +499,7 @@ llvm::Value * pars::Float::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
 	}
 }
 
-llvm::Value * pars::Float::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
+llvm::Value * pars::FloatType::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
 {
 	if (op == TokenType::Minus)
 	{
@@ -509,34 +509,34 @@ llvm::Value * pars::Float::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs
 	return nullptr;
 }
 
-llvm::Value * pars::Float::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::FloatType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::ConstantFP::get(get_llvm_type(ctx), 0.0f);
 }
 
-llvm::Value * pars::Float::op_abs(EmitCtx &ctx, llvm::Value *value) const
+llvm::Value * pars::FloatType::op_abs(EmitCtx &ctx, llvm::Value *value) const
 {
 	return ctx.builder.CreateIntrinsic(llvm::Intrinsic::fabs, get_llvm_type(ctx.llvm_ctx), {value});
 }
 
-llvm::Constant* pars::Float::get_constant_from_literal(EmitCtx &ctx, f64 n) const
+llvm::Constant* pars::FloatType::get_constant_from_literal(EmitCtx &ctx, f64 n) const
 {
 	auto ap = llvm::APFloat(n);
 
 	return llvm::ConstantFP::get(*ctx.llvm_ctx, ap);
 }
 
-llvm::Constant * pars::Float::get_constant_from_literal(EmitCtx &ctx, i64 n) const
+llvm::Constant * pars::FloatType::get_constant_from_literal(EmitCtx &ctx, i64 n) const
 {
 	return get_constant_from_literal(ctx, (f64)n);
 }
 
-llvm::Type * pars::Bool::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::BoolType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return Integral::get_llvm_type(ctx);
+	return IntegralType::get_llvm_type(ctx);
 }
 
-llvm::Value * pars::Bool::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+llvm::Value * pars::BoolType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
 	using enum TokenType;
 
@@ -548,7 +548,7 @@ llvm::Value * pars::Bool::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs
 	}
 }
 
-llvm::Value * pars::Bool::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
+llvm::Value * pars::BoolType::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const
 {
 	if (op == TokenType::Bang)
 	{
@@ -558,17 +558,17 @@ llvm::Value * pars::Bool::op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs)
 	return nullptr;
 }
 
-llvm::Value * pars::Char::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+llvm::Value * pars::CharType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
-	return Integer{bits, is_signed, "char"}.op_binary(ctx, op, lhs, rhs);
+	return IntegerType{bits, is_signed, "char"}.op_binary(ctx, op, lhs, rhs);
 }
 
-llvm::Type * pars::Char::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::CharType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return Integral::get_llvm_type(ctx);
+	return IntegralType::get_llvm_type(ctx);
 }
 
-void pars::Pointer::set_inner(Type *type, bool no_name)
+void pars::PointerType::set_inner(Type *type, bool no_name)
 {
 	m_inner = type;
 
@@ -583,39 +583,39 @@ void pars::Pointer::set_inner(Type *type, bool no_name)
 	}
 }
 
-llvm::Type * pars::Pointer::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::PointerType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(m_inner->get_llvm_type(ctx), 0);
 }
 
-std::string_view pars::Pointer::get_type_name() const
+std::string_view pars::PointerType::get_type_name() const
 {
 	return m_name;
 }
 
-std::optional<pars::MemberInfo> pars::Pointer::get_member(std::string_view symbol) const
+std::optional<pars::MemberInfo> pars::PointerType::get_member(std::string_view symbol) const
 {
 	return m_inner->get_member(symbol);
 }
 
-std::optional<pars::MemberInfo> pars::Pointer::get_method(std::string_view symbol) const
+std::optional<pars::MemberInfo> pars::PointerType::get_method(std::string_view symbol) const
 {
 	return m_inner->get_method(symbol);
 }
 
-llvm::Value * pars::Pointer::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
+llvm::Value * pars::PointerType::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
 	std::string_view symbol) const
 {
 	return m_inner->access_member(ctx, ptr, accessor, symbol);
 }
 
-llvm::Value * pars::Pointer::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::PointerType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	auto *type = static_cast<llvm::PointerType*>(get_llvm_type(ctx));
 	return llvm::ConstantPointerNull::get(type);
 }
 
-llvm::Value * pars::Pointer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+llvm::Value * pars::PointerType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
 	using enum TokenType;
 
@@ -624,37 +624,37 @@ llvm::Value * pars::Pointer::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *
 		case Plus: return ctx.builder.CreateGEP(m_inner->get_llvm_type(ctx.llvm_ctx), lhs, rhs);
 		case Minus: return ctx.builder.CreateGEP(m_inner->get_llvm_type(ctx.llvm_ctx), lhs, ctx.builder.CreateNeg(rhs));
 	}
-	return Integer::op_binary(ctx, op, lhs, rhs);
+	return IntegerType::op_binary(ctx, op, lhs, rhs);
 }
 
-bool pars::Pointer::is_equal(Type const *other) const
+bool pars::PointerType::is_equal(Type const *other) const
 {
-	auto *other_ptr = dynamic_cast<const Pointer*>(other);
+	auto *other_ptr = dynamic_cast<const PointerType*>(other);
 
 	return
 	other_ptr != nullptr
 	&&
 	(m_inner->is_equal(other_ptr->m_inner)
 	||
-	other_ptr->m_inner->is_equal(&VoidType) || m_inner->is_equal(&VoidType));
+	other_ptr->m_inner->is_equal(&VOID_TYPE) || m_inner->is_equal(&VOID_TYPE));
 }
 
-std::string_view pars::Packed::get_type_name() const
+std::string_view pars::PackedType::get_type_name() const
 {
 	return "packed";
 }
 
-llvm::Value * pars::Packed::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::PackedType::get_default_value(llvm::LLVMContext *ctx) const
 {
-	return VoidType.get_default_value(ctx);
+	return VOID_TYPE.get_default_value(ctx);
 }
 
-llvm::Value * pars::BaseArray::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::BaseArrayType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	return llvm::ConstantAggregateZero::get(get_llvm_type(ctx));
 }
 
-llvm::Value * pars::BaseArray::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
+llvm::Value * pars::BaseArrayType::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
 {
 	auto *ptr = ctx.builder.CreateInBoundsGEP(get_llvm_type(ctx.llvm_ctx), target,
 		{ctx.builder.getInt32(0), index}, "array.op_index");
@@ -662,15 +662,15 @@ llvm::Value * pars::BaseArray::op_index(EmitCtx &ctx, llvm::Value *target, llvm:
 	return ctx.builder.CreateLoad(m_element_type->get_llvm_type(ctx.llvm_ctx), ptr);
 }
 
-std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view symbol) const
+std::optional<pars::MemberInfo> pars::BaseArrayType::get_member(std::string_view symbol) const
 {
 	if (symbol == "length")
 	{
-		return MemberInfo{"length", const_cast<Integer*>(&U32Type), MemberAccess::Readonly};
+		return MemberInfo{"length", const_cast<IntegerType*>(&U32_TYPE), MemberAccess::Readonly};
 	}
 	if (symbol == "ptr")
 	{
-		auto *ptr = new_node<Pointer>();
+		auto *ptr = new_node<PointerType>();
 
 		ptr->set_inner(m_element_type);
 
@@ -680,7 +680,7 @@ std::optional<pars::MemberInfo> pars::BaseArray::get_member(std::string_view sym
 	return {};
 }
 
-void pars::BaseArray::set_inner(Type *type, bool no_name)
+void pars::BaseArrayType::set_inner(Type *type, bool no_name)
 {
 	m_element_type = type;
 
@@ -700,70 +700,70 @@ void pars::BaseArray::set_inner(Type *type, bool no_name)
 	}
 }
 
-pars::Type * pars::BaseArray::get_inner() const
+pars::Type * pars::BaseArrayType::get_inner() const
 {
 	return m_element_type;
 }
 
-pars::Type *& pars::BaseArray::get_inner_ref()
+pars::Type *& pars::BaseArrayType::get_inner_ref()
 {
 	return m_element_type;
 }
 
-std::string_view pars::BaseArray::get_type_name() const
+std::string_view pars::BaseArrayType::get_type_name() const
 {
 	return m_name;
 }
 
-std::span<pars::Type *> pars::BaseArray::get_iter_bindings() const
+std::span<pars::Type *> pars::BaseArrayType::get_iter_bindings() const
 {
 	return std::span{const_cast<Type**>(&m_element_type), 1};
 }
 
-llvm::Value * pars::BaseArray::iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+llvm::Value * pars::BaseArrayType::iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
 {
 	iter_emit_update(ctx, iterable, vars);
 
 	return nullptr;
 }
 
-llvm::Value * pars::BaseArray::iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+llvm::Value * pars::BaseArrayType::iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
 {
 	using enum TokenType;
 
-	auto *index = ctx.builder.CreateLoad(U32Type.get_llvm_type(ctx.llvm_ctx), vars[1]);
+	auto *index = ctx.builder.CreateLoad(U32_TYPE.get_llvm_type(ctx.llvm_ctx), vars[1]);
 	auto *size = access_member(ctx, iterable->emit_ptr(ctx), nullptr, "length");
 
-	return U32Type.op_binary(ctx, Less, index, size);
+	return U32_TYPE.op_binary(ctx, Less, index, size);
 }
 
-llvm::Value * pars::BaseArray::iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
+llvm::Value * pars::BaseArrayType::iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
 {
-	auto *index = ctx.builder.CreateLoad(U32Type.get_llvm_type(ctx.llvm_ctx), vars[1]);
+	auto *index = ctx.builder.CreateLoad(U32_TYPE.get_llvm_type(ctx.llvm_ctx), vars[1]);
 
 	auto *value = op_index(ctx, iterable->emit_ptr(ctx), index);
 
 	return ctx.builder.CreateStore(value, vars[0]);
 }
 
-u32 pars::Array::get_size()
+u32 pars::ArrayType::get_size()
 {
 	return size * m_element_type->get_size();
 }
 
-llvm::Type * pars::Array::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::ArrayType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::ArrayType::get(m_element_type->get_llvm_type(ctx), size);
 }
 
-llvm::Constant* pars::Array::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
+llvm::Constant* pars::ArrayType::get_aggregate_constant(EmitCtx &ctx, llvm::ArrayRef<llvm::Constant *> init_list) const
 {
 	return llvm::ConstantArray::get((llvm::ArrayType*)get_llvm_type(ctx.llvm_ctx), init_list);
 }
 
-bool pars::Array::is_equal(Type const *other) const
+bool pars::ArrayType::is_equal(Type const *other) const
 {
-	auto *other_array = produce_type<Array>(other);
+	auto *other_array = produce_type<ArrayType>(other);
 
 	if (other_array == nullptr)
 	{
@@ -773,7 +773,7 @@ bool pars::Array::is_equal(Type const *other) const
 	return other_array->size == size || other_array->size == UNSIZED_ARRAY && other_array->m_element_type->is_equal(m_element_type);
 }
 
-llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
+llvm::Value * pars::ArrayType::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const
 {
 	using enum TokenType;
 
@@ -812,7 +812,7 @@ llvm::Value * pars::Array::op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lh
 	return m_element_type->op_binary(ctx, op, a, b);
 }
 
-llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm::Value *accessor,
+llvm::Value * pars::ArrayType::access_member(EmitCtx &ctx, llvm::Value *target, llvm::Value *accessor,
 	std::string_view symbol) const
 {
 	if (symbol == "length")
@@ -829,9 +829,9 @@ llvm::Value * pars::Array::access_member(EmitCtx &ctx, llvm::Value *target, llvm
 	return op_index(ctx, target, ctx.builder.getInt32(index));
 }
 
-std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol) const
+std::optional<pars::MemberInfo> pars::ArrayType::get_member(std::string_view symbol) const
 {
-	auto maybe_member = BaseArray::get_member(symbol);
+	auto maybe_member = BaseArrayType::get_member(symbol);
 
 	if (maybe_member.has_value())
 	{
@@ -848,25 +848,25 @@ std::optional<pars::MemberInfo> pars::Array::get_member(std::string_view symbol)
 	return MemberInfo{symbol, m_element_type};
 }
 
-bool pars::Array::can_coerce_into(Type const *desired_type) const
+bool pars::ArrayType::can_coerce_into(Type const *desired_type) const
 {
-	return dynamic_cast<const Slice*>(desired_type);
+	return dynamic_cast<const SliceType*>(desired_type);
 }
 
 llvm::StructType* get_slice_struct(llvm::LLVMContext *ctx)
 {
 	auto *ptr_type = llvm::PointerType::get(*ctx, 0);
-	return llvm::StructType::get(*ctx, {ptr_type, pars::U32Type.get_llvm_type(ctx)});
+	return llvm::StructType::get(*ctx, {ptr_type, pars::U32_TYPE.get_llvm_type(ctx)});
 }
 
-llvm::Value * pars::Array::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
+llvm::Value * pars::ArrayType::op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
 {
 	auto *ptr = ctx.builder.CreateAlloca(get_slice_struct(ctx.llvm_ctx));
 
 	return op_slice(ctx, value, ptr, ctx.builder.getInt64(0), ctx.builder.getInt32(size));
 }
 
-llvm::Value * pars::Array::op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start,
+llvm::Value * pars::ArrayType::op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Value *target, llvm::Value *start,
 	llvm::Value *end) const
 {
 	auto *slice_struct = get_slice_struct(ctx.llvm_ctx);
@@ -886,7 +886,7 @@ llvm::Value * pars::Array::op_slice(EmitCtx &ctx, llvm::Value *array, llvm::Valu
 	return ctx.builder.CreateLoad(slice_struct, target);
 }
 
-int pars::Array::get_member_index(std::string_view member) const
+int pars::ArrayType::get_member_index(std::string_view member) const
 {
 	auto iter = std::ranges::find_if(members, [member](std::string_view name)
 	{
@@ -908,7 +908,7 @@ int pars::Array::get_member_index(std::string_view member) const
 	return index;
 }
 
-void pars::Array::write_to_name_buffer()
+void pars::ArrayType::write_to_name_buffer()
 {
 	constexpr auto buff_size = 10;
 	char buff[buff_size]{};
@@ -920,17 +920,17 @@ void pars::Array::write_to_name_buffer()
 	g_type_name_buffer.write(reinterpret_cast<u8*>(buff), char_size);
 }
 
-llvm::Type * pars::Slice::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::SliceType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return get_slice_struct(ctx);
 }
 
-bool pars::Slice::is_equal(Type const *other) const
+bool pars::SliceType::is_equal(Type const *other) const
 {
 	return other->is_array() && m_element_type->is_equal(other->get_inner());
 }
 
-llvm::Value * pars::Slice::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
+llvm::Value * pars::SliceType::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Value *index) const
 {
 	auto *base_ptr = ctx.builder.CreateConstInBoundsGEP2_32(get_llvm_type(ctx.llvm_ctx), target, 0, 0, "slice.ptr");
 	auto *ptr_type = llvm::PointerType::get(m_element_type->get_llvm_type(ctx.llvm_ctx), 0);
@@ -941,14 +941,14 @@ llvm::Value * pars::Slice::op_index(EmitCtx &ctx, llvm::Value *target, llvm::Val
 	return ctx.builder.CreateLoad(m_element_type->get_llvm_type(ctx.llvm_ctx), ptr);
 }
 
-llvm::Value * pars::Slice::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
+llvm::Value * pars::SliceType::access_member(EmitCtx &ctx, llvm::Value *ptr, llvm::Value *accessor,
 	std::string_view symbol) const
 {
 	if (symbol == "length")
 	{
 		auto *len_ptr = ctx.builder.CreateConstInBoundsGEP2_32(get_llvm_type(ctx.llvm_ctx), ptr, 0, 1);
 
-		return ctx.builder.CreateLoad(U32Type.get_llvm_type(ctx.llvm_ctx), len_ptr, "slice.length");
+		return ctx.builder.CreateLoad(U32_TYPE.get_llvm_type(ctx.llvm_ctx), len_ptr, "slice.length");
 	}
 	if (symbol == "ptr")
 	{
@@ -1074,12 +1074,12 @@ std::optional<pars::MemberInfo> pars::StructType::get_member(std::string_view sy
 	return MemberInfo{iter->symbol.name, iter->type.ptr};
 }
 
-llvm::Type * pars::Str::get_llvm_type(llvm::LLVMContext *ctx) const
+llvm::Type * pars::StrType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::PointerType::get(llvm::Type::getInt8Ty(*ctx), 0);
 }
 
-llvm::Value * pars::Str::get_default_value(llvm::LLVMContext *ctx) const
+llvm::Value * pars::StrType::get_default_value(llvm::LLVMContext *ctx) const
 {
 	auto *ptr_type = get_llvm_type(ctx);
 	return llvm::ConstantPointerNull::get((llvm::PointerType*)ptr_type);
@@ -1092,7 +1092,7 @@ llvm::Value * pars::RangeType::op_in(EmitCtx &ctx, llvm::Value *lhs, llvm::Value
 
 std::span<pars::Type *> pars::RangeType::get_iter_bindings() const
 {
-	static Type* binding[1] = {const_cast<Integer*>(&I32Type)};
+	static Type* binding[1] = {const_cast<IntegerType*>(&I32_TYPE)};
 	return binding;
 }
 
@@ -1115,16 +1115,16 @@ llvm::Value * pars::RangeType::iter_emit_condition(EmitCtx &ctx, Expr *iterable,
 
 	auto op = bin->op == DotDotEqual ? LessEqual : Less;
 
-	auto *v = ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), vars[0]);
+	auto *v = ctx.builder.CreateLoad(I32_TYPE.get_llvm_type(ctx.llvm_ctx), vars[0]);
 
 	return bin->left->type->op_binary(ctx, op, v, max);
 }
 
 llvm::Value * pars::RangeType::iter_emit_update(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
 {
-	auto *v = ctx.builder.CreateLoad(I32Type.get_llvm_type(ctx.llvm_ctx), vars[0]);
+	auto *v = ctx.builder.CreateLoad(I32_TYPE.get_llvm_type(ctx.llvm_ctx), vars[0]);
 
-	auto *inc = I32Type.op_binary(ctx, TokenType::Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
+	auto *inc = I32_TYPE.op_binary(ctx, TokenType::Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
 
 	return ctx.builder.CreateStore(inc, vars[0]);
 }
@@ -1192,7 +1192,7 @@ llvm::Value* pars::FnType::emit(EmitCtx &ctx, EmitParams params)
 			i++;
 		}
 
-		if (has_flag(flags, FnFlags::ArrowFn) && !signature.return_type->is_equal(&VoidType))
+		if (has_flag(flags, FnFlags::ArrowFn) && !signature.return_type->is_equal(&VOID_TYPE))
 		{
 			ctx.builder.CreateRet(body->nodes.front()->emit(ctx));
 		}
@@ -1200,7 +1200,7 @@ llvm::Value* pars::FnType::emit(EmitCtx &ctx, EmitParams params)
 		{
 			body->emit(ctx);
 
-			if (signature.return_type->is_equal(&VoidType) && ctx.builder.GetInsertBlock()->getTerminator() == nullptr)
+			if (signature.return_type->is_equal(&VOID_TYPE) && ctx.builder.GetInsertBlock()->getTerminator() == nullptr)
 			{
 				create_safe_void_ret(ctx);
 			}
@@ -1335,12 +1335,12 @@ std::string_view pars::EnumType::get_type_name() const
 
 llvm::Value * pars::EnumType::get_default_value(llvm::LLVMContext *ctx) const
 {
-	return llvm::ConstantInt::get(U64Type.get_llvm_type(ctx), default_value, true);
+	return llvm::ConstantInt::get(U64_TYPE.get_llvm_type(ctx), default_value, true);
 }
 
 llvm::Type * pars::EnumType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
-	return U32Type.get_llvm_type(ctx);
+	return U32_TYPE.get_llvm_type(ctx);
 }
 
 bool pars::EnumType::is_equal(Type const *other) const

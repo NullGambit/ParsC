@@ -67,7 +67,7 @@ llvm::Value * pars::LiteralExpr::emit(EmitCtx &ctx, EmitParams params)
 		},
 		[&ctx](std::nullptr_t) -> llvm::Value*
 		{
-			return VoidPointerType.get_default_value(ctx.llvm_ctx);
+			return VOID_POINTER_TYPE.get_default_value(ctx.llvm_ctx);
 		}
 	}, value);
 }
@@ -451,7 +451,7 @@ llvm::Value* pars::PtrOpExpr::emit(EmitCtx &ctx, EmitParams params)
 		{
 			auto *inner = target->type->get_inner();
 
-			if (inner->is_equal(&VoidType))
+			if (inner->is_equal(&VOID_TYPE))
 			{
 				throw CompileError{this, "Cannot dereference void pointer. size is not known"};
 			}
@@ -635,7 +635,7 @@ llvm::Value * pars::SliceExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	}
 	else
 	{
-		auto *array_type = produce_type<Array>(lhs->type);
+		auto *array_type = produce_type<ArrayType>(lhs->type);
 		end_value = ctx.builder.getInt32(array_type->size);
 	}
 

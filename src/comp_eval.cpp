@@ -130,7 +130,7 @@ pars::Node* pars::CompEval::visit(VarDeclStmt* stmt, VisitCtx ctx)
 
 pars::Node * pars::CompEval::visit(FnType *stmt, VisitCtx ctx)
 {
-    if (stmt->signature.return_type->is_equal(&VoidType))
+    if (stmt->signature.return_type->is_equal(&VOID_TYPE))
     {
         return nullptr;
     }

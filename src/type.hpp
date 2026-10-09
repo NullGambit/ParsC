@@ -45,6 +45,31 @@ namespace pars
 
 	struct Type : Node
 	{
+		enum class Kind
+		{
+			Unresolved,
+			Void,
+			UserDef,
+			Integral,
+			Alias,
+			Integer,
+			Float,
+			Bool,
+			Char,
+			Pointer,
+			Packed,
+			Struct,
+			Array,
+			Slice,
+			Str,
+			Fn,
+			Enum,
+		} kind;
+
+		Type() :
+			Node{BaseKind::Type}
+		{}
+
 		virtual bool is_equal(Type const *other) const = 0;
 		virtual bool is_primitive() const { return false; }
 
@@ -110,6 +135,8 @@ namespace pars
 		virtual llvm::Value* iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value*> vars) const { return nullptr; }
 	};
 
+#define TYPE_AS(TV, T) ((TV) != nullptr && (TV)->kind == Type::Kind::T ? static_cast<T##Type*>((TV)) : nullptr)
+
 	Type* produce_type(Type const *type);
 
 	template<class T>
@@ -169,7 +196,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 	// represents a symbol that has not been resolved yet.
 	// should not get past the frontend.
-	struct UnresolvedSymbol : Type
+	struct UnresolvedSymbolType : Type
 	{
 		std::string_view symbol;
 
@@ -184,9 +211,9 @@ virtual bool is_equal(Type const *other) const override							\
 		ACCEPT
 	};
 
-	struct Void : Type
+	struct VoidType : Type
 	{
-		DEFAULT_TYPE_EQUAL(Void)
+		DEFAULT_TYPE_EQUAL(VoidType)
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
@@ -210,13 +237,13 @@ virtual bool is_equal(Type const *other) const override							\
 		std::optional<MemberInfo> get_method(std::string_view symbol) const;
 	};
 
-	struct Integral : Type
+	struct IntegralType : Type
 	{
 		u8 bits;
 		bool is_signed;
 		std::string_view type_name;
 
-		Integral(u8 bits, bool is_signed, std::string_view type_name) :
+		IntegralType(u8 bits, bool is_signed, std::string_view type_name) :
 			bits{bits},
 			is_signed{is_signed},
 			type_name{type_name}
@@ -244,7 +271,7 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_coerce(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const override;
 		bool can_coerce_into(Type const *desired_type) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(Integral)
+		DEFAULT_INTEGRAL_EQUAL(IntegralType)
 	};
 
 	struct AliasType : UserDefType
@@ -315,10 +342,10 @@ virtual bool is_equal(Type const *other) const override							\
 		ACCEPT
 	};
 
-	struct Integer : Integral
+	struct IntegerType : IntegralType
 	{
-		Integer(u8 bits, bool is_signed, std::string_view type_name) :
-			Integral{bits, is_signed, type_name}
+		IntegerType(u8 bits, bool is_signed, std::string_view type_name) :
+			IntegralType{bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -337,13 +364,13 @@ virtual bool is_equal(Type const *other) const override							\
 			return true;
 		}
 
-		DEFAULT_INTEGRAL_EQUAL(Integer)
+		DEFAULT_INTEGRAL_EQUAL(IntegerType)
 	};
 
-	struct Float : Integral
+	struct FloatType : IntegralType
 	{
-		Float(u8 bits, bool is_signed, std::string_view type_name) :
-			Integral{bits, is_signed, type_name}
+		FloatType(u8 bits, bool is_signed, std::string_view type_name) :
+			IntegralType{bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -357,13 +384,13 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, f64 n) const override;
 		llvm::Constant *get_constant_from_literal(EmitCtx &ctx, i64 n) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(Float)
+		DEFAULT_INTEGRAL_EQUAL(FloatType)
 	};
 
-	struct Bool : Integral
+	struct BoolType : IntegralType
 	{
-		Bool(u8 bits, bool is_signed, std::string_view type_name) :
-			Integral{bits, is_signed, type_name}
+		BoolType(u8 bits, bool is_signed, std::string_view type_name) :
+			IntegralType{bits, is_signed, type_name}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -371,32 +398,32 @@ virtual bool is_equal(Type const *other) const override							\
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 		llvm::Value *op_unary(EmitCtx &ctx, TokenType op, llvm::Value *rhs) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(Bool)
+		DEFAULT_INTEGRAL_EQUAL(BoolType)
 	};
 
-	struct Char : Integral
+	struct CharType : IntegralType
 	{
-		Char(u8 bits, bool is_signed, std::string_view type_name) :
-			Integral{bits, is_signed, type_name}
+		CharType(u8 bits, bool is_signed, std::string_view type_name) :
+			IntegralType{bits, is_signed, type_name}
 		{}
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
-		DEFAULT_INTEGRAL_EQUAL(Char)
+		DEFAULT_INTEGRAL_EQUAL(CharType)
 	};
 
-	struct Pointer : Integer
+	struct PointerType : IntegerType
 	{
 		ACCEPT
 
-		Pointer() :
-			Integer{64, IS_SIGNED, "pointer"}
+		PointerType() :
+			IntegerType{64, IS_SIGNED, "pointer"}
 		{}
 
-		explicit Pointer(Type *inner) :
-			Integer{64, IS_SIGNED, "pointer"},
+		explicit PointerType(Type *inner) :
+			IntegerType{64, IS_SIGNED, "pointer"},
 			m_inner{inner}
 		{}
 
@@ -453,7 +480,7 @@ virtual bool is_equal(Type const *other) const override							\
 		std::string_view m_name;
 	};
 
-	struct Packed : Type
+	struct PackedType : Type
 	{
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override
 		{
@@ -470,9 +497,9 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 	};
 
-	static Packed PackedType {};
+	static PackedType PackedType {};
 
-	struct BaseArray : Type
+	struct BaseArrayType : Type
 	{
 		ACCEPT
 
@@ -516,7 +543,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 	constexpr auto UNSIZED_ARRAY = UINT32_MAX;
 
-	struct Array : BaseArray
+	struct ArrayType : BaseArrayType
 	{
 		std::vector<std::string_view> members;
 		// a temporary expression that must compile to a constant and will be assigned to size
@@ -549,7 +576,7 @@ virtual bool is_equal(Type const *other) const override							\
 		void write_to_name_buffer() override;
 	};
 
-	struct Slice : BaseArray
+	struct SliceType : BaseArrayType
 	{
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
@@ -603,28 +630,28 @@ virtual bool is_equal(Type const *other) const override							\
 		ACCEPT
 	};
 
-	static const Void VoidType {};
-	static const Integer I8Type {8, IS_SIGNED, "i8"};
-	static const Integer U8Type {8, !IS_SIGNED, "u8"};
-	static const Integer I16Type {16, IS_SIGNED, "i16"};
-	static const Integer U16Type {16, !IS_SIGNED, "u16"};
-	static const Integer I32Type {32, IS_SIGNED, "i32"};
-	static const Integer U32Type {32, !IS_SIGNED, "u32"};
-	static const Integer I64Type {64, IS_SIGNED, "i64"};
-	static const Integer U64Type {64, !IS_SIGNED, "u64"};
-	static const Float F32Type {32, IS_SIGNED, "f32"};
-	static const Float F64Type {64, IS_SIGNED, "f64"};
-	static const Bool BoolType {1, !IS_SIGNED, "bool"};
-	static const Char CharType {8, IS_SIGNED, "char"};
-	static const Char UCharType {8, !IS_SIGNED, "uchar"};
-	static const Pointer VoidPointerType {const_cast<Void*>(&VoidType)};
+	static const VoidType VOID_TYPE {};
+	static const IntegerType I8_TYPE {8, IS_SIGNED, "i8"};
+	static const IntegerType U8_TYPE {8, !IS_SIGNED, "u8"};
+	static const IntegerType I16_TYPE {16, IS_SIGNED, "i16"};
+	static const IntegerType U16_TYPE {16, !IS_SIGNED, "u16"};
+	static const IntegerType I32_TYPE {32, IS_SIGNED, "i32"};
+	static const IntegerType U32_TYPE {32, !IS_SIGNED, "u32"};
+	static const IntegerType I64_TYPE {64, IS_SIGNED, "i64"};
+	static const IntegerType U64_TYPE {64, !IS_SIGNED, "u64"};
+	static const FloatType F32_TYPE {32, IS_SIGNED, "f32"};
+	static const FloatType F64_TYPE {64, IS_SIGNED, "f64"};
+	static const BoolType BOOL_TYPE {1, !IS_SIGNED, "bool"};
+	static const CharType CHAR_TYPE {8, IS_SIGNED, "char"};
+	static const CharType UCHAR_TYPE {8, !IS_SIGNED, "uchar"};
+	static const PointerType VOID_POINTER_TYPE {const_cast<VoidType*>(&VOID_TYPE)};
 
-	struct Str : Pointer
+	struct StrType : PointerType
 	{
-		DEFAULT_TYPE_EQUAL(Str)
+		DEFAULT_TYPE_EQUAL(StrType)
 
-		Str() :
-			Pointer{const_cast<Char*>(&CharType)}
+		StrType() :
+			PointerType{const_cast<CharType*>(&CHAR_TYPE)}
 		{}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -642,7 +669,7 @@ virtual bool is_equal(Type const *other) const override							\
 		}
 	};
 
-	static const Str StrType {};
+	static const StrType StrType {};
 
 	struct RangeType : Type
 	{

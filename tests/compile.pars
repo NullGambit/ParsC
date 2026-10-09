@@ -20,8 +20,6 @@ impl Data
     }
 }
 
-
 fn main()
 {
-    let x = &10
 }

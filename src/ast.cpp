@@ -430,7 +430,7 @@ pars::Node* pars::AST::parse_return()
 
 	auto *stmt = new_node<ReturnStmt>();
 
-	if (!fn->signature.return_type.ptr->is_equal(&VoidType))
+	if (!fn->signature.return_type.ptr->is_equal(&VOID_TYPE))
 	{
 		stmt->expr = expression();
 	}
@@ -553,7 +553,7 @@ pars::FnSignature pars::AST::parse_fn_signature(bool parse_names, std::span<VarD
 	}
 	else
 	{
-		signature.return_type.ptr = const_cast<Void*>(&VoidType);
+		signature.return_type.ptr = const_cast<VoidType*>(&VOID_TYPE);
 	}
 
 	return signature;
@@ -886,14 +886,14 @@ pars::Expr* pars::AST::parse_primary()
 	if (m_lexer.match(True) || m_lexer.match(False))
 	{
 		literal->value = m_lexer.peek_last(True);
-		literal->type = const_cast<Bool*>(&BoolType);
+		literal->type = const_cast<BoolType*>(&BOOL_TYPE);
 	}
 	else if (m_lexer.match(IntegerLiteral))
 	{
 		auto lexeme = m_lexer.peek_last().lexeme;
 		i32 n = 0;
 		std::from_chars(lexeme.begin(), lexeme.end(), n);
-		literal->type = const_cast<Integer*>(&I32Type);
+		literal->type = const_cast<IntegerType*>(&I32_TYPE);
 		literal->value = n;
 	}
 	else if (m_lexer.match(DecimalLiteral))
@@ -901,23 +901,23 @@ pars::Expr* pars::AST::parse_primary()
 		auto lexeme = m_lexer.peek_last().lexeme;
 		f32 n = 0;
 		std::from_chars(lexeme.begin(), lexeme.end(), n);
-		literal->type = const_cast<Float*>(&F32Type);
+		literal->type = const_cast<FloatType*>(&F32_TYPE);
 		literal->value = n;
 	}
 	else if (m_lexer.match(StringLiteral))
 	{
 		literal->value = m_lexer.peek_last().lexeme;
-		literal->type = const_cast<Str*>(&StrType);
+		literal->type = const_cast<StrType*>(&StrType);
 	}
 	else if (m_lexer.match(CharLiteral))
 	{
 		literal->value = m_lexer.peek_last().lexeme[0];
-		literal->type = const_cast<Char*>(&CharType);
+		literal->type = const_cast<CharType*>(&CHAR_TYPE);
 	}
 	else if (m_lexer.match(Nil))
 	{
 		literal->value = nullptr;
-		literal->type = const_cast<Pointer*>(&VoidPointerType);
+		literal->type = const_cast<PointerType*>(&VOID_POINTER_TYPE);
 	}
 	else
 	{
@@ -1196,7 +1196,7 @@ pars::Type* pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overri
 
 	if (m_lexer.match(Identifier))
 	{
-		auto *unresolved = new_node<UnresolvedSymbol>();
+		auto *unresolved = new_node<UnresolvedSymbolType>();
 
 		unresolved->symbol = m_lexer.peek_last().lexeme;
 
@@ -1204,7 +1204,7 @@ pars::Type* pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overri
 	}
 	if (m_lexer.match(Caret))
 	{
-		auto *ptr = new_node<Pointer>();
+		auto *ptr = new_node<PointerType>();
 
 		auto *type = parse_type(meta, position);
 
@@ -1214,16 +1214,16 @@ pars::Type* pars::AST::parse_type(TypeMeta &meta, u32 position, bool imut_overri
 	}
 	if (m_lexer.match(LeftBracket))
 	{
-		BaseArray *base;
+		BaseArrayType *base;
 
 		if (m_lexer.match(RightBracket))
 		{
-			base = new_node<Slice>();
+			base = new_node<SliceType>();
 			base->set_inner(parse_type(meta, position), /*no_name=*/true);
 		}
 		else
 		{
-			auto *array = new_node<Array>();
+			auto *array = new_node<ArrayType>();
 
 			base = array;
 

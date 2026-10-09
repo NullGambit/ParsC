@@ -405,7 +405,7 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 		index_binding->symbol.name = "index";
 		index_binding->flags |= VarFlags::NoDiagnostics;
 
-		index_binding->type = const_cast<Integer*>(&U32Type);
+		index_binding->type = const_cast<IntegerType*>(&U32_TYPE);
 
 		bindings.emplace_back(index_binding);
 	}
@@ -447,7 +447,7 @@ llvm::Value* pars::ForStmt::emit(EmitCtx &ctx, EmitParams params)
 
 	auto *v = ctx.builder.CreateLoad(index_type, index_ptr, "index_value");
 
-	auto *inc = I32Type.op_binary(ctx, TokenType::Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
+	auto *inc = I32_TYPE.op_binary(ctx, TokenType::Plus, v, llvm::ConstantInt::get(*ctx.llvm_ctx, llvm::APInt(32, 1)));
 
 	ctx.builder.CreateStore(inc, index_ptr);
 

@@ -127,19 +127,19 @@ void init_global_symbols()
 		});
 	};
 
-	declare_global_type(&pars::VoidType);
-	declare_global_type(&pars::I8Type);
-	declare_global_type(&pars::U8Type);
-	declare_global_type(&pars::I16Type);
-	declare_global_type(&pars::U16Type);
-	declare_global_type(&pars::I32Type);
-	declare_global_type(&pars::U32Type);
-	declare_global_type(&pars::I64Type);
-	declare_global_type(&pars::U64Type);
-	declare_global_type(&pars::BoolType);
+	declare_global_type(&pars::VOID_TYPE);
+	declare_global_type(&pars::I8_TYPE);
+	declare_global_type(&pars::U8_TYPE);
+	declare_global_type(&pars::I16_TYPE);
+	declare_global_type(&pars::U16_TYPE);
+	declare_global_type(&pars::I32_TYPE);
+	declare_global_type(&pars::U32_TYPE);
+	declare_global_type(&pars::I64_TYPE);
+	declare_global_type(&pars::U64_TYPE);
+	declare_global_type(&pars::BOOL_TYPE);
 	declare_global_type(&pars::StrType);
-	declare_global_type(&pars::CharType);
-	declare_global_type(&pars::UCharType);
-	declare_global_type(&pars::F32Type);
-	declare_global_type(&pars::F64Type);
+	declare_global_type(&pars::CHAR_TYPE);
+	declare_global_type(&pars::UCHAR_TYPE);
+	declare_global_type(&pars::F32_TYPE);
+	declare_global_type(&pars::F64_TYPE);
 }

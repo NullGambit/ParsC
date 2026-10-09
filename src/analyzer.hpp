@@ -51,10 +51,10 @@ namespace pars
 		Node* visit(IndexOpExpr* expr, VisitCtx ctx) override;
 		Node* visit(StructLiteral* expr, VisitCtx ctx) override;
 		Node* visit(SliceExpr* expr, VisitCtx ctx) override;
-		Node* visit(UnresolvedSymbol *type, VisitCtx ctx) override;
-		Node* visit(Pointer *type, VisitCtx ctx) override;
-		Node* visit(BaseArray *type, VisitCtx ctx) override;
-		Node* visit(Array *type, VisitCtx ctx) override;
+		Node* visit(UnresolvedSymbolType *type, VisitCtx ctx) override;
+		Node* visit(PointerType *type, VisitCtx ctx) override;
+		Node* visit(BaseArrayType *type, VisitCtx ctx) override;
+		Node* visit(ArrayType *type, VisitCtx ctx) override;
 		Node *visit(LiteralExpr *expr, VisitCtx ctx) override;
 
 		void analyze(const std::vector<Node*> &nodes);
