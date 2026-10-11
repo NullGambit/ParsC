@@ -802,7 +802,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 				subsymbol, expr->target->get_symbol())};
 		};
 
-		auto *call = EXPR_AS(expr->accessor, Call);
+		auto *call = dyn_cast<CallExpr>(expr->accessor);
 
 		expr->is_method = call != nullptr;
 

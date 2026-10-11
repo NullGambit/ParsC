@@ -47,9 +47,39 @@ namespace pars
 		virtual Node* accept(Visitor *visitor, VisitCtx ctx) { return nullptr; }
 	};
 
+#define CLASSOF(V, T) T##V() : V{Kind::T} {} static bool classof(const V *other) { return other->kind == Kind::T; }
+
 #define NODE_AS(N, T) ((N) != nullptr && (N)->base_kind == Node::BaseKind::T ? static_cast<T*>((N)) : nullptr)
 
 #define ACCEPT pars::Node* accept(Visitor *visitor, VisitCtx ctx) override { return visitor->visit(this, ctx); }
+
+	template<class To, class From>
+	To* dyn_cast(From *from)
+	{
+		if (from != nullptr && To::classof(from))
+		{
+			return static_cast<To*>((from));
+		}
+
+		return nullptr;
+	}
+
+	template<class To, class From>
+	bool isa(const From *from)
+	{
+		return To::classof(from) != nullptr;
+	}
+
+	template<class To, class From>
+	const To* dyn_cast(const From *from)
+	{
+		if (from != nullptr && To::classof(from))
+		{
+			return static_cast<const To*>((from));
+		}
+
+		return nullptr;
+	}
 
 	u8 *alloc_node(u32 size);
 

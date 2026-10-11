@@ -97,9 +97,7 @@ namespace pars
 	{
 		LiteralExprValue value;
 
-		LiteralExpr() :
-			Expr{Kind::Literal}
-		{}
+		CLASSOF(Expr, Literal)
 
 		explicit LiteralExpr(LiteralExprValue value) :
 			Expr{Kind::Literal},
@@ -134,9 +132,7 @@ namespace pars
 		Expr *left;
 		Expr *right;
 
-		BinaryExpr() :
-			Expr{Kind::Binary}
-		{}
+		CLASSOF(Expr, Binary)
 
 		BinaryExpr(Expr *left, TokenType op, Expr *right) :
 			Expr{Kind::Binary},
@@ -165,9 +161,7 @@ namespace pars
 		char op;
 		Expr *right;
 
-		UnaryExpr() :
-			Expr{Kind::Unary}
-		{}
+		CLASSOF(Expr, Unary)
 
 		UnaryExpr(char op, Expr *right) :
 			Expr{Kind::Unary},
@@ -186,9 +180,7 @@ namespace pars
 		Node *symbol_node;
 		std::string_view symbol;
 
-		SymbolExpr() :
-			Expr{Kind::Symbol}
-		{}
+		CLASSOF(Expr, Symbol)
 
 		SymbolExpr(std::string_view symbol) :
 			Expr{Kind::Symbol},
@@ -214,9 +206,7 @@ namespace pars
 		Expr *callable;
 		std::vector<Expr*> arguments;
 
-		CallExpr() :
-			Expr{Kind::Call}
-		{}
+		CLASSOF(Expr, Call)
 
 		CallExpr(Expr *callable, std::vector<Expr*> &&arguments) :
 			Expr{Kind::Call},
@@ -239,9 +229,7 @@ namespace pars
 	{
 		Expr* inner;
 
-		GroupExpr() :
-			Expr{Kind::Group}
-		{}
+		CLASSOF(Expr, Group)
 
 		GroupExpr(Expr *inner) :
 			Expr{Kind::Group},
@@ -264,18 +252,14 @@ namespace pars
 	{
 		ACCEPT
 
-		TypeExpr() :
-			Expr{Kind::Type}
-		{}
+		CLASSOF(Expr, Type)
 	};
 
 	struct SizeofExpr : Expr
 	{
 		Expr *expr;
 
-		SizeofExpr() :
-			Expr{Kind::Sizeof}
-		{}
+		CLASSOF(Expr, Sizeof)
 
 		SizeofExpr(Expr *expr) :
 			Expr{Kind::Sizeof},
@@ -291,9 +275,7 @@ namespace pars
 	{
 		Expr *expr;
 
-		NameofExpr() :
-			Expr{Kind::Nameof}
-		{}
+		CLASSOF(Expr, Nameof)
 
 		NameofExpr(Expr *expr) :
 			Expr{Kind::Nameof},
@@ -309,9 +291,7 @@ namespace pars
 	// empty because all nodes store a token already
 	struct KeywordExpr : Expr
 	{
-		KeywordExpr() :
-			Expr{Kind::Keyword}
-		{}
+		CLASSOF(Expr, Keyword)
 	};
 
 	struct MemberAccessExpr : Expr
@@ -321,9 +301,7 @@ namespace pars
 		bool is_static_access {};
 		bool is_method {};
 
-		MemberAccessExpr() :
-			Expr{Kind::MemberAccess}
-		{}
+		CLASSOF(Expr, MemberAccess)
 
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
@@ -337,9 +315,7 @@ namespace pars
 	{
 		std::string_view property_name;
 
-		TypePropExpr() :
-			Expr{Kind::TypeProp}
-		{}
+		CLASSOF(Expr, TypeProp)
 
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 	};
@@ -351,9 +327,7 @@ namespace pars
 		// useful for correct integer casting when doing code gen
 		Type *original_type;
 
-		CastExpr() :
-			Expr{Kind::Cast}
-		{}
+		CLASSOF(Expr, Cast)
 
 		llvm::Value* emit(EmitCtx& ctx, EmitParams params = {}) override;
 
@@ -365,9 +339,7 @@ namespace pars
 		std::string_view name;
 		Expr *value;
 
-		NamedExpr() :
-			Expr{Kind::Named}
-		{}
+		CLASSOF(Expr, Named)
 
 		NamedExpr(std::string_view name, Expr *value) :
 			Expr{Kind::Named},
@@ -390,9 +362,7 @@ namespace pars
 	{
 		Expr *value;
 
-		AbsExpr() :
-			Expr{Kind::Abs}
-		{}
+		CLASSOF(Expr, Abs)
 
 		AbsExpr(Expr *value) :
 			Expr{Kind::Abs},
@@ -409,9 +379,7 @@ namespace pars
 		TokenType op;
 		Expr *target;
 
-		PtrOpExpr() :
-			Expr{Kind::PtrOp}
-		{}
+		CLASSOF(Expr, PtrOp)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -422,9 +390,7 @@ namespace pars
 
 	struct PackedExpr : Expr
 	{
-		PackedExpr() :
-			Expr{Kind::Packed}
-		{}
+		CLASSOF(Expr, Packed)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
