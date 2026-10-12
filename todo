@@ -27,6 +27,8 @@
     - pointer arithmetic type mismatch. coercion sucks right now.
     - function parameter mutability testing is very wonky right now. can pass a imut T to a function expecting T.
     - the analysis for member access has become extremely messy. same with symbol analysis.
+    - change anon init expr and struct literal to be the same expression. making it generic would allow using it for any type
+        - such as for primitives or aliases to initialize like i32{5}
 
 - design issues:
     - literals and type coercion need addressing.

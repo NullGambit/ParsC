@@ -47,7 +47,7 @@ namespace pars
 	{
 		enum class Kind
 		{
-			Unresolved,
+			UnresolvedSymbol,
 			Void,
 			UserDef,
 			Integral,
@@ -71,6 +71,11 @@ namespace pars
 			Node{BaseKind::Type},
 			kind{kind}
 		{}
+
+		static bool classof(const Node *node)
+		{
+			return node->base_kind == BaseKind::Type;
+		}
 
 		virtual bool is_equal(Type const *other) const = 0;
 		virtual bool is_primitive() const { return false; }
@@ -167,9 +172,7 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		std::string_view symbol;
 
-		UnresolvedSymbolType() :
-			Type{Kind::Unresolved}
-		{}
+		CLASSOF(Type, UnresolvedSymbol)
 
 		bool is_equal(Type const *other) const override { return false; }
 
@@ -186,9 +189,7 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		DEFAULT_TYPE_EQUAL(Void)
 
-		VoidType() :
-			Type{Kind::Void}
-		{}
+		CLASSOF(Type, Void)
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
@@ -213,6 +214,14 @@ virtual bool is_equal(Type const *other) const override							\
 			Type{kind}
 		{}
 
+		static bool classof(const Type *type)
+		{
+			return
+				type->kind == Kind::Alias	||
+				type->kind == Kind::Struct	||
+				type->kind == Kind::Enum;
+		}
+
 		std::optional<MemberInfo> get_method(std::string_view symbol) const;
 	};
 
@@ -232,6 +241,15 @@ virtual bool is_equal(Type const *other) const override							\
 		bool is_primitive() const final
 		{
 			return true;
+		}
+
+		static bool classof(const Type *type)
+		{
+			return
+				type->kind == Kind::Integer ||
+				type->kind == Kind::Float	||
+				type->kind == Kind::Bool	||
+				type->kind == Kind::Char;
 		}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
@@ -263,6 +281,11 @@ virtual bool is_equal(Type const *other) const override							\
 		AliasType() :
 			UserDefType{Kind::Alias}
 		{}
+
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Alias;
+		}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 		std::string_view get_type_name() const override;
@@ -336,6 +359,11 @@ virtual bool is_equal(Type const *other) const override							\
 			IntegralType{kind, bits, is_signed, type_name}
 		{}
 
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Integer;
+		}
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
@@ -361,6 +389,11 @@ virtual bool is_equal(Type const *other) const override							\
 			IntegralType{Kind::Float, bits, is_signed, type_name}
 		{}
 
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Float;
+		}
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
@@ -381,6 +414,11 @@ virtual bool is_equal(Type const *other) const override							\
 			IntegralType{Kind::Bool, bits, is_signed, type_name}
 		{}
 
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Bool;
+		}
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
@@ -394,6 +432,11 @@ virtual bool is_equal(Type const *other) const override							\
 		CharType(u8 bits, bool is_signed, std::string_view type_name) :
 			IntegralType{Kind::Char, bits, is_signed, type_name}
 		{}
+
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Char;
+		}
 
 		llvm::Value *op_binary(EmitCtx &ctx, TokenType op, llvm::Value *lhs, llvm::Value *rhs) const override;
 
@@ -409,6 +452,11 @@ virtual bool is_equal(Type const *other) const override							\
 		PointerType() :
 			IntegerType{Kind::Pointer, 64, IS_SIGNED, "pointer"}
 		{}
+
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Pointer;
+		}
 
 		explicit PointerType(Type *inner) :
 			IntegerType{64, IS_SIGNED, "pointer"},
@@ -475,9 +523,7 @@ virtual bool is_equal(Type const *other) const override							\
 
 	struct PackedType : Type
 	{
-		PackedType() :
-			Type{Kind::Packed}
-		{}
+		CLASSOF(Type, Packed)
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override
 		{
@@ -503,6 +549,11 @@ virtual bool is_equal(Type const *other) const override							\
 		BaseArrayType(Kind kind) :
 			Type{kind}
 		{}
+
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Array || type->kind == Kind::Slice;
+		}
 
 		llvm::Value *get_default_value(llvm::LLVMContext *ctx) const override;
 
@@ -553,6 +604,11 @@ virtual bool is_equal(Type const *other) const override							\
 			BaseArrayType{Kind::Array}
 		{}
 
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Array;
+		}
+
 		ACCEPT
 
 		u32 get_size() override;
@@ -584,6 +640,11 @@ virtual bool is_equal(Type const *other) const override							\
 		SliceType() :
 			BaseArrayType{Kind::Slice}
 		{}
+
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Slice;
+		}
 
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
@@ -617,6 +678,11 @@ virtual bool is_equal(Type const *other) const override							\
 		StructType() :
 			UserDefType{Kind::Struct}
 		{}
+
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Struct;
+		}
 
 		u32 get_size() override;
 
@@ -665,6 +731,11 @@ virtual bool is_equal(Type const *other) const override							\
 			PointerType{Kind::Str, const_cast<CharType*>(&CHAR_TYPE)}
 		{}
 
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Str;
+		}
+
 		llvm::Type *get_llvm_type(llvm::LLVMContext *ctx) const override;
 
 		std::string_view get_type_name() const override
@@ -686,9 +757,7 @@ virtual bool is_equal(Type const *other) const override							\
 	{
 		DEFAULT_TYPE_EQUAL(Range)
 
-		RangeType() :
-			Type{Kind::Range}
-		{}
+		CLASSOF(Type, Range)
 
 		llvm::Type* get_llvm_type(llvm::LLVMContext *ctx) const override { return nullptr; }
 
@@ -746,9 +815,7 @@ virtual bool is_equal(Type const *other) const override							\
 		FnFlags flags {};
 		FnCollection *collection;
 
-		FnType() :
-			Type{Kind::Fn}
-		{}
+		CLASSOF(Type, Fn)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -805,6 +872,11 @@ virtual bool is_equal(Type const *other) const override							\
 		EnumType() :
 			UserDefType{Kind::Enum}
 		{}
+
+		static bool classof(const Type *type)
+		{
+			return type->kind == Kind::Enum;
+		}
 
 		std::string_view get_type_name() const override;
 

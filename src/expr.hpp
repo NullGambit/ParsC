@@ -72,6 +72,11 @@ namespace pars
 			kind{kind}
 		{}
 
+		static bool classof(const Node *node)
+		{
+			return node->base_kind == BaseKind::Expr;
+		}
+
 		virtual llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) { return nullptr; }
 		virtual llvm::Constant* emit_constant(EmitCtx &ctx, EmitParams params = {});
 
@@ -427,6 +432,11 @@ namespace pars
 			AggregateExpr{Kind::AnonInit}
 		{}
 
+		static bool classof(const Expr *other)
+		{
+			return other->kind == Kind::AnonInit;
+		}
+
 		bool is_ctx_sensitive() override
 		{
 			return true;
@@ -443,6 +453,11 @@ namespace pars
 			AggregateExpr{Kind::ArrayLiteral}
 		{}
 
+		static bool classof(const Expr *other)
+		{
+			return other->kind == Kind::ArrayLiteral;
+		}
+
 		bool is_ctx_sensitive() override
 		{
 			return type_specifier == nullptr && initializers.empty();
@@ -456,9 +471,7 @@ namespace pars
 		Expr *lhs;
 		Expr *index;
 
-		IndexOpExpr() :
-			Expr{Kind::IndexOp}
-		{}
+		CLASSOF(Expr, IndexOp)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -477,6 +490,11 @@ namespace pars
 	{
 		std::string_view name;
 
+		static bool classof(const Expr *other)
+		{
+			return other->kind == Kind::StructLiteral;
+		}
+
 		StructLiteral() :
 			AggregateExpr{Kind::StructLiteral}
 		{}
@@ -490,9 +508,7 @@ namespace pars
 		Expr *start {};
 		Expr *end {};
 
-		SliceExpr() :
-			Expr{Kind::Slice}
-		{}
+		CLASSOF(Expr, Slice)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Value *emit_ptr(EmitCtx &ctx, EmitParams params = {}) override;
@@ -507,9 +523,7 @@ namespace pars
 	{
 		u32 value {};
 
-		EnumLiteralExpr() :
-			Expr{Kind::EnumLiteral}
-		{}
+		CLASSOF(Expr, EnumLiteral)
 
 		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params) override;

@@ -38,6 +38,11 @@ namespace pars
 			Node{BaseKind::Stmt},
 			kind{kind}
 		{}
+
+		static bool classof(const Node *node)
+		{
+			return node->base_kind == BaseKind::Stmt;
+		}
 	};
 
 #define STMT_AS(S, T) ((S) != nullptr && (S)->kind == Stmt::Kind::T ? static_cast<T##Stmt*>((S)) : nullptr)
@@ -65,9 +70,7 @@ namespace pars
 		Expr *initializer {};
 		VarFlags flags {};
 
-		VarDeclStmt() :
-			Stmt{Kind::VarDecl}
-		{}
+		CLASSOF(Stmt, VarDecl)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -90,9 +93,7 @@ namespace pars
 		Expr *rhs;
 		TokenType op;
 
-		AssignmentStmt() :
-			Stmt{Kind::Assignment}
-		{}
+		CLASSOF(Stmt, Assignment)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -103,9 +104,7 @@ namespace pars
 	{
 		std::vector<Node*> nodes;
 
-		BlockStmt() :
-			Stmt{Kind::Block}
-		{}
+		CLASSOF(Stmt, Block)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -125,9 +124,7 @@ namespace pars
 		std::string_view alias;
 		std::vector<NamedSymbol> selective_imports;
 
-		ImportStmt() :
-			Stmt{Kind::Import}
-		{}
+		CLASSOF(Stmt, Import)
 
 		ACCEPT
 	};
@@ -141,9 +138,7 @@ namespace pars
 	{
 		Expr* expr {};
 
-		ReturnStmt() :
-			Stmt{Kind::Return}
-		{}
+		CLASSOF(Stmt, Return)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -152,9 +147,7 @@ namespace pars
 
 	struct BreakStmt : Stmt, TerminatorStmt
 	{
-		BreakStmt() :
-			Stmt{Kind::Break}
-		{}
+		CLASSOF(Stmt, Break)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -163,9 +156,7 @@ namespace pars
 
 	struct ContinueStmt : Stmt, TerminatorStmt
 	{
-		ContinueStmt() :
-			Stmt{Kind::Continue}
-		{}
+		CLASSOF(Stmt, Continue)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -178,9 +169,7 @@ namespace pars
 		BlockStmt *body;
 		Node *else_br {};
 
-		IfStmt() :
-			Stmt{Kind::If}
-		{}
+		CLASSOF(Stmt, If)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -191,9 +180,7 @@ namespace pars
 	{
 		IfStmt *stmt;
 
-		CompIfStmt() :
-			Stmt{Kind::CompIf}
-		{}
+		CLASSOF(Stmt, CompIf)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -205,9 +192,7 @@ namespace pars
 		Expr* condition;
 		BlockStmt *body;
 
-		WhileStmt() :
-			Stmt{Kind::While}
-		{}
+		CLASSOF(Stmt, While)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -220,9 +205,7 @@ namespace pars
 		Expr *iterable;
 		BlockStmt *body;
 
-		ForStmt() :
-			Stmt{Kind::For}
-		{}
+		CLASSOF(Stmt, For)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
@@ -237,9 +220,7 @@ namespace pars
 		UserDefType *type;
 		std::vector<FnType*> methods;
 
-		ImplStmt() :
-			Stmt{Kind::Impl}
-		{}
+		CLASSOF(Stmt, Impl)
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params) override;
 

@@ -58,7 +58,7 @@ namespace pars
 	{
 		if (from != nullptr && To::classof(from))
 		{
-			return static_cast<To*>((from));
+			return static_cast<To*>(from);
 		}
 
 		return nullptr;
@@ -67,7 +67,7 @@ namespace pars
 	template<class To, class From>
 	bool isa(const From *from)
 	{
-		return To::classof(from) != nullptr;
+		return To::classof(from);
 	}
 
 	template<class To, class From>
@@ -75,7 +75,7 @@ namespace pars
 	{
 		if (from != nullptr && To::classof(from))
 		{
-			return static_cast<const To*>((from));
+			return static_cast<const To*>(from);
 		}
 
 		return nullptr;

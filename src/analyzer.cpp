@@ -75,7 +75,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 			arg = visit_expr(expr, arg, {ctx_type});
 		}
 
-		if (auto *named_param = EXPR_AS(arg, Named))
+		if (auto *named_param = dyn_cast<NamedExpr>(arg))
 		{
 			// this would not scale well but for the average number of function arguments it should still be fairly fast
 			for (auto i = 0; auto *param : call_info.parameters)
@@ -92,7 +92,7 @@ pars::Node* pars::Analyzer::visit(CallExpr *expr, VisitCtx ctx)
 
 	for (auto [named_expr, position] : named_replace_list)
 	{
-		auto *named = EXPR_AS(expr->arguments[position], Named);
+		auto *named = dyn_cast<NamedExpr>(expr->arguments[position]);
 
 		if (named == nullptr)
 		{
@@ -140,7 +140,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		{
 			Type *parent_type {};
 
-			if (auto *impl = dynamic_cast<ImplStmt*>(ctx.invoker))
+			if (auto *impl = dyn_cast<ImplStmt>(dyn_cast<Stmt>(ctx.invoker)))
 			{
 				parent_type = impl->type;
 			}
@@ -165,10 +165,8 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 	{
 		auto *front = fn->body->nodes.front();
 
-		if (front->base_kind == Node::BaseKind::Expr)
+		if (auto *expr = dyn_cast<Expr>(front))
 		{
-			auto *expr = static_cast<Expr*>(front);
-
 			// TODO resolve return type if manually typed
 			expr->accept(this, {.type = fn->signature.return_type.ptr});
 
@@ -183,7 +181,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 		{
 			for (auto i = 0; auto *node : fn->body->nodes)
 			{
-				if (auto *expr = NODE_AS(node, Expr))
+				if (auto *expr = dyn_cast<Expr>(node))
 				{
 					fn->body->nodes[i] = visit_expr(nullptr, expr, {});
 				}
@@ -271,7 +269,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 	}
 
-	if (auto *array = TYPE_AS(stmt->type.ptr, Array))
+	if (auto *array = dyn_cast<ArrayType>(stmt->type.ptr))
 	{
 		if (array->size == UNSIZED_ARRAY && stmt->initializer == nullptr)
 		{
@@ -279,7 +277,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 		}
 		if (stmt->initializer != nullptr)
 		{
-			array->size = TYPE_AS(stmt->initializer->type, Array)->size;
+			array->size = dyn_cast<ArrayType>(stmt->initializer->type)->size;
 		}
 	}
 
@@ -321,7 +319,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 
 		auto *result = stmt->initializer->accept(&m_comp_eval, {});
 
-		stmt->initializer = NODE_AS(result, Expr);
+		stmt->initializer = dyn_cast<Expr>(result);
 
 		if (stmt->initializer == nullptr)
 		{
@@ -372,11 +370,11 @@ pars::Node* pars::Analyzer::visit(ReturnStmt *stmt, VisitCtx ctx)
 
 	auto *fn = get_current_fn();
 
-	stmt->expr->accept(this, {.type = fn->signature.return_type.ptr});
+	stmt->expr = visit_expr(nullptr, stmt->expr, new_ctx(stmt, ctx, fn->signature.return_type.ptr));
 
 	if (!fn->signature.return_type->is_equal(stmt->expr->type))
 	{
-		throw FrontendError{stmt->token, fmt::format("Expected {} in return statement but got {}",
+		throw FrontendError{stmt->token, fmt::format("Expected expression of type {} in return statement but got {}",
 			fn->signature.return_type->get_type_name(), stmt->expr->type->get_type_name())};
 	}
 
@@ -391,18 +389,18 @@ pars::Node* pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 
 	ctx = new_ctx(stmt, ctx);
 
-	for (auto i = 0; auto *node : stmt->nodes)
+	for (auto &node : stmt->nodes)
 	{
-		if (auto *expr = NODE_AS(node, Expr))
+		// TODO possible not needed to do this because an expression that is not bound to any statement would
+		// not need to transmute itself.
+		if (auto *expr = dyn_cast<Expr>(node))
 		{
-			stmt->nodes[i] = visit_expr(nullptr, expr, ctx);
+			node = visit_expr(nullptr, expr, ctx);
 		}
 		else
 		{
 			node->accept(this, ctx);
 		}
-
-		i += 1;
 	}
 
 	auto &current_flags = m_ctx->scope_table.get_current_flags();
@@ -540,7 +538,9 @@ pars::Node* pars::Analyzer::visit(ForStmt *stmt, VisitCtx ctx)
 pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 {
 	auto *symbol = m_ctx->scope_table.find_local_symbol(stmt->type_symbol.name);
-	stmt->type  = dynamic_cast<UserDefType*>(symbol);
+	auto *sym_type = dyn_cast<Type>(symbol);
+
+	stmt->type = dyn_cast<UserDefType>(sym_type);
 
 	if (stmt->type == nullptr)
 	{
@@ -601,58 +601,58 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 
 			expr->type = member.type;
 		}
+
+		return expr;
+	}
+
+	if (auto *enum_type = dyn_cast<EnumType>(ctx.type))
+	{
+		auto *literal = enum_type->get_literal(expr->symbol);
+
+		if (literal == nullptr)
+		{
+			throw FrontendError{expr->token,
+				fmt::format("enum {} does not have a variant {}",
+					enum_type->symbol.name,
+					expr->symbol)};
+		}
+
+		return literal;
+	}
+
+	ScopeTable *table_override {};
+
+	if (ctx.scope_table_override != nullptr)
+	{
+		table_override = ctx.scope_table_override;
+	}
+
+	auto *sym_node = find_symbol(expr->symbol, expr->token, table_override);
+	auto *stmt_node = dyn_cast<Stmt>(sym_node);
+
+	if (auto *var = dyn_cast<VarDeclStmt>(stmt_node))
+	{
+		var->flags |= VarFlags::Used;
+		expr->mut_set = var->type.mut_set;
+		expr->type = var->type.ptr;
+	}
+	else if (auto *collection = dynamic_cast<FnCollection*>(sym_node))
+	{
+		auto *call = dynamic_cast<CallExpr*>(ctx.invoker);
+		auto args = call != nullptr ? call->arguments : std::span<Expr*>{};
+
+		expr->type = collection->get_fn(args, this);
+	}
+	else if (auto *type = dyn_cast<Type>(sym_node))
+	{
+		expr->type = type;
 	}
 	else
 	{
-		if (auto *enum_type = TYPE_AS(ctx.type, Enum))
-		{
-			auto *literal = enum_type->get_literal(expr->symbol);
-
-			if (literal == nullptr)
-			{
-				throw FrontendError{expr->token,
-					fmt::format("enum {} does not have a variant {}",
-						enum_type->symbol.name,
-						expr->symbol)};
-			}
-
-			return literal;
-		}
-
-		ScopeTable *table_override {};
-
-		if (ctx.scope_table_override != nullptr)
-		{
-			table_override = ctx.scope_table_override;
-		}
-
-		auto *sym_node = find_symbol(expr->symbol, expr->token, table_override);
-		auto *stmt_node = NODE_AS(sym_node, Stmt);
-
-		if (auto *var = STMT_AS(stmt_node, VarDecl))
-		{
-			var->flags |= VarFlags::Used;
-			expr->mut_set = var->type.mut_set;
-			expr->type = var->type.ptr;
-		}
-		else if (auto *collection = dynamic_cast<FnCollection*>(sym_node))
-		{
-			auto *call = dynamic_cast<CallExpr*>(ctx.invoker);
-			auto args = call != nullptr ? call->arguments : std::span<Expr*>{};
-
-			expr->type = collection->get_fn(args, this);
-		}
-		else if (auto *type = NODE_AS(sym_node, Type))
-		{
-			expr->type = type;
-		}
-		else
-		{
-			throw FrontendError{expr->token, fmt::format("could not resolve the type of symbol {}", expr->symbol)};
-		}
-
-		expr->symbol_node = sym_node;
+		throw FrontendError{expr->token, fmt::format("could not resolve the type of symbol {}", expr->symbol)};
 	}
+
+	expr->symbol_node = sym_node;
 
 	return expr;
 }
@@ -1371,7 +1371,7 @@ pars::Expr* pars::Analyzer::visit_expr(Expr *parent, Expr *expr, VisitCtx ctx)
 
 	m_expr_depth--;
 
-	return NODE_AS(result, Expr);
+	return dyn_cast<Expr>(result);
 }
 
 pars::Analyzer::Analyzer(ParseCtx *parse_ctx)
