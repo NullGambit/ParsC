@@ -167,8 +167,19 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 
 		if (auto *expr = dyn_cast<Expr>(front))
 		{
-			// TODO resolve return type if manually typed
+			auto check_types = fn->signature.return_type.is_valid() && !fn->signature.return_type->is_equal(&VOID_TYPE);
+
+			if (check_types)
+			{
+				resolve_type(fn->signature.return_type);
+			}
+
 			expr->accept(this, {.type = fn->signature.return_type.ptr});
+
+			if (check_types && !fn->signature.return_type->is_equal(expr->type))
+			{
+				throw FrontendError{expr->token, "return type does not match"};
+			}
 
 			fn->signature.return_type = expr->type;
 		}

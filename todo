@@ -15,7 +15,6 @@
     - user defined attributes
 
 - tech debt:
-    - there are still some dynamic_cast replace with virtual methods and other solutions.
     - change many expression types into unary and postfix expressions instead of doing them within parse_primary.
     - theres a lot of allocations made when using stl containers. replace them with custom allocators and reuse memory more often.
     - the compeval is currently very incomplete.
@@ -29,6 +28,7 @@
     - the analysis for member access has become extremely messy. same with symbol analysis.
     - change anon init expr and struct literal to be the same expression. making it generic would allow using it for any type
         - such as for primitives or aliases to initialize like i32{5}
+    - merge FrontendError and CompilerError into the same object as there has never been a point to have two different ones.
 
 - design issues:
     - literals and type coercion need addressing.

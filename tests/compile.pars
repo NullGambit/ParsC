@@ -1,24 +1,6 @@
 import core.stdc.stdio
 
-struct Nested 
-{
-    value: i32
-    valid: bool
-}
-
-struct Data 
-{
-    yes: i32
-    array: [6]Nested
-}
-
-impl Data
-{
-    fn test()
-    {
-        self.array[0] = {100, true}
-    }
-}
+fn test(): i32 => 5
 
 fn main()
 {
