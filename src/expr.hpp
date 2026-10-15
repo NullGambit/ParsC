@@ -86,8 +86,6 @@ namespace pars
 		virtual bool is_resolved() { return type != nullptr; }
 	};
 
-#define EXPR_AS(E, T) ((E) != nullptr && (E)->kind == Expr::Kind::T ? static_cast<T##Expr*>((E)) : nullptr)
-
 	using LiteralExprValue = std::variant
 	<
 		i32,
@@ -418,6 +416,14 @@ namespace pars
 		AggregateExpr(Kind kind) :
 			Expr{kind}
 		{}
+
+		static bool classof(const Expr *expr)
+		{
+			return
+				expr->kind == Kind::AnonInit		||
+				expr->kind == Kind::ArrayLiteral	||
+				expr->kind == Kind::StructLiteral;
+		}
 
 		llvm::Value *emit(EmitCtx &ctx, EmitParams params = {}) override;
 		llvm::Constant *emit_constant(EmitCtx &ctx, EmitParams params) override;

@@ -13,6 +13,8 @@ namespace llvm
 
 namespace pars
 {
+	struct Stmt;
+	struct Expr;
 	struct VisitCtx;
 	struct Type;
 	struct EmitCtx;
@@ -49,8 +51,6 @@ namespace pars
 
 #define CLASSOF(V, T) T##V() : V{Kind::T} {} static bool classof(const V *other) { return other->kind == Kind::T; }
 
-#define NODE_AS(N, T) ((N) != nullptr && (N)->base_kind == Node::BaseKind::T ? static_cast<T*>((N)) : nullptr)
-
 #define ACCEPT pars::Node* accept(Visitor *visitor, VisitCtx ctx) override { return visitor->visit(this, ctx); }
 
 	template<class To, class From>
@@ -63,6 +63,10 @@ namespace pars
 
 		return nullptr;
 	}
+
+	Expr* to_expr(Node *node);
+	Stmt* to_stmt(Node *node);
+	Type* to_type(Node *node);
 
 	template<class To, class From>
 	bool isa(const From *from)

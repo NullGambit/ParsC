@@ -45,8 +45,6 @@ namespace pars
 		}
 	};
 
-#define STMT_AS(S, T) ((S) != nullptr && (S)->kind == Stmt::Kind::T ? static_cast<T##Stmt*>((S)) : nullptr)
-
 	enum class VarFlags : u32
 	{
 		// TODO actually implement static

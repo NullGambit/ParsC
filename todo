@@ -79,6 +79,12 @@
         {
             self.x = 10
         }
+    - allow for structs and similair types to be iterable. such as
+        - for field in my_struct
+        - for field_info in MyStruct
+        - field in an instance would contain information about the field + the value
+        - field_info would just be information about the types fields
+        - can also add fieldsof() operator to create an array of struct fields. should also work at compile time with const.
 
 - enums:
     - allow setting the value of an enum variant
@@ -87,6 +93,7 @@
     - payloads
     - flag enums
     - iota members
+    - add a way to get the name of the enums current value by with a nameof operator and a built in parser to do the opposite.
 
 - other core features:
     - generics

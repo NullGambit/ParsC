@@ -763,7 +763,7 @@ llvm::Constant* pars::ArrayType::get_aggregate_constant(EmitCtx &ctx, llvm::Arra
 
 bool pars::ArrayType::is_equal(Type const *other) const
 {
-	auto *other_array = TYPE_AS(other, Array);
+	auto *other_array = produce_type<ArrayType>(other);
 
 	if (other_array == nullptr)
 	{
@@ -1008,7 +1008,7 @@ llvm::Value * pars::StructType::get_default_value(llvm::LLVMContext *ctx) const
 
 bool pars::StructType::is_equal(Type const *other) const
 {
-	const auto *other_struct = TYPE_AS(other, Struct);
+	const auto *other_struct = produce_type<StructType>(other);
 
 	// do structural equality matching of either one is anon
 	if (other_struct != nullptr && (symbol.name.empty() || other_struct->symbol.name.empty()))

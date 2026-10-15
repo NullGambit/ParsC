@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "expr.hpp"
+#include "stmt.hpp"
 #include "memory/virtual_alloc.hpp"
 
 #define KB(x) ((x) * 1024UL)
@@ -51,6 +53,36 @@ u8* get_memory(size_t size)
 	g_current_block->offset += size;
 
 	return g_current_block->ptr + offset;
+}
+
+pars::Expr * pars::to_expr(Node *node)
+{
+	if (node != nullptr && node->base_kind == Node::BaseKind::Expr)
+	{
+		return static_cast<Expr*>(node);
+	}
+
+	return nullptr;
+}
+
+pars::Stmt * pars::to_stmt(Node *node)
+{
+	if (node != nullptr && node->base_kind == Node::BaseKind::Stmt)
+	{
+		return static_cast<Stmt*>(node);
+	}
+
+	return nullptr;
+}
+
+pars::Type * pars::to_type(Node *node)
+{
+	if (node != nullptr && node->base_kind == Node::BaseKind::Type)
+	{
+		return static_cast<Type*>(node);
+	}
+
+	return nullptr;
 }
 
 u8 * pars::alloc_node(u32 size)

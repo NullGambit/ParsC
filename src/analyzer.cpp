@@ -175,7 +175,7 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 	}
 	else
 	{
-		resolve_type(fn->signature.return_type, fn);
+		resolve_type(fn->signature.return_type);
 
 		if (fn->body != nullptr)
 		{
@@ -224,7 +224,7 @@ pars::Node* pars::Analyzer::visit(StructType *stmt, VisitCtx ctx)
 
 	for (auto &field : stmt->fields)
 	{
-		resolve_type(field.type, stmt);
+		resolve_type(field.type);
 	}
 
 	stmt->flags |= StructFlags::Resolved;
@@ -237,7 +237,7 @@ pars::Node* pars::Analyzer::visit(VarDeclStmt *stmt, VisitCtx ctx)
 	// var x: T
 	if (stmt->is_explicitly_typed())
 	{
-		resolve_type(stmt->type, stmt);
+		resolve_type(stmt->type);
 	}
 
 	// var x = E
@@ -582,7 +582,7 @@ pars::Node * pars::Analyzer::visit(ImplStmt *stmt, VisitCtx ctx)
 
 pars::Node* pars::Analyzer::visit(AliasType *alias, VisitCtx ctx)
 {
-	resolve_type(alias->type, alias);
+	resolve_type(alias->type);
 
 	m_ctx->scope_table.add_to_scope(alias->symbol, alias, false);
 
@@ -638,7 +638,7 @@ pars::Node* pars::Analyzer::visit(SymbolExpr *expr, VisitCtx ctx)
 	}
 	else if (auto *collection = dynamic_cast<FnCollection*>(sym_node))
 	{
-		auto *call = dynamic_cast<CallExpr*>(ctx.invoker);
+		auto *call = dyn_cast<CallExpr>(to_expr(ctx.invoker));
 		auto args = call != nullptr ? call->arguments : std::span<Expr*>{};
 
 		expr->type = collection->get_fn(args, this);
@@ -739,16 +739,15 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	auto symbol = expr->target->get_symbol();
 
 	auto *symbol_node = ctx.member ? nullptr : find_symbol(symbol, expr->token);
-	auto *stmt_node = NODE_AS(symbol_node, Stmt);
-	auto *type_node = NODE_AS(symbol_node, Type);
+	auto *type_node = to_type(symbol_node);
 
-	if (auto *import = STMT_AS(stmt_node, Import))
+	if (auto *import = dyn_cast<ImportStmt>(to_stmt(symbol_node)))
 	{
 		ctx.scope_table_override = import->module->scope_table;
 
 		expr->accessor = visit_expr(expr, expr->accessor, new_ctx(expr, ctx));
 	}
-	else if (auto *enum_type = TYPE_AS(type_node, Enum))
+	else if (auto *enum_type = dyn_cast<EnumType>(type_node))
 	{
 		auto *literal = enum_type->get_literal(expr->accessor->get_symbol());
 
@@ -766,7 +765,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 	{
 		auto *prop_expr = new_node<TypePropExpr>();
 
-		auto *prop_symbol = EXPR_AS(expr->accessor, Symbol);
+		auto *prop_symbol = dyn_cast<SymbolExpr>(expr->accessor);
 
 		if (prop_symbol == nullptr)
 		{
@@ -806,7 +805,10 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 
 		expr->is_method = call != nullptr;
 
-		auto maybe_member = expr->is_method ? expr->target->type->get_method(subsymbol) : expr->target->type->get_member(subsymbol);
+		auto maybe_member =
+			expr->is_method								?
+			expr->target->type->get_method(subsymbol)	:
+			expr->target->type->get_member(subsymbol);
 
 		// maybe its not a method and its just a function pointer field
 		if (expr->is_method && !maybe_member.has_value())
@@ -821,7 +823,7 @@ pars::Node* pars::Analyzer::visit(MemberAccessExpr* expr, VisitCtx ctx)
 		{
 			auto *self_arg = expr->target;
 
-			if (!TYPE_AS(expr->target->type, Pointer))
+			if (!dyn_cast<PointerType>(expr->target->type))
 			{
 				expr->target->flags |= ExprFlags::AlwaysPtr;
 
@@ -860,7 +862,7 @@ pars::Node* pars::Analyzer::visit(CastExpr* expr, VisitCtx ctx)
 {
 	ctx = new_ctx(expr, ctx);
 
-	resolve_type(expr->cast_type, expr);
+	resolve_type(expr->cast_type);
 
 	expr->type = expr->cast_type.ptr;
 	expr->mut_set = expr->cast_type.mut_set;
@@ -903,8 +905,8 @@ pars::Node* pars::Analyzer::visit(PtrOpExpr *expr, VisitCtx ctx)
 		{
 			// in case target is actually a type this might be a pointer type.
 			// useful in cases of nameof expressions.
-			if (auto *symbol = EXPR_AS(expr->target, Symbol);
-				auto *type = NODE_AS(symbol->symbol_node, Type))
+			if (auto *symbol = dyn_cast<SymbolExpr>(expr->target);
+				auto *type = to_type(symbol->symbol_node))
 			{
 				auto *ptr = new_node<PointerType>();
 
@@ -966,7 +968,7 @@ namespace pars
 
 			auto &[initializer, pos] = initializers[i];
 
-			if (auto *named_expr = EXPR_AS(initializer, Named))
+			if (auto *named_expr = dyn_cast<NamedExpr>(initializer))
 			{
 				auto it = std::ranges::find_if(fields, [&](const auto &element) { return find_fn(element, named_expr); });
 
@@ -1030,14 +1032,14 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 
 		array_type->set_inner(type);
 
-		auto *real = TYPE_AS(array_type->get_inner(), Array);
+		auto *real = produce_type<ArrayType>(array_type);
 
 		if (real != nullptr)
 		{
 			array_type = real;
 		}
 	}
-	else if (auto *array_ctx = dynamic_cast<BaseArrayType*>(produce_type(ctx.type)))
+	else if (auto *array_ctx = produce_type<BaseArrayType>(ctx.type))
 	{
 		array_type->set_inner(array_ctx->get_inner());
 	}
@@ -1078,7 +1080,7 @@ pars::Node* pars::Analyzer::visit(ArrayLiteralExpr *expr, VisitCtx ctx)
 		i += 1;
 	}
 
-	if (auto *ctx_array = TYPE_AS(ctx.type, Array); ctx_array && ctx_array->size != UNSIZED_ARRAY)
+	if (auto *ctx_array = dyn_cast<ArrayType>(ctx.type); ctx_array && ctx_array->size != UNSIZED_ARRAY)
 	{
 		if (ctx_array->size < array_type->size)
 		{
@@ -1095,7 +1097,7 @@ pars::Node* pars::Analyzer::visit(IndexOpExpr *expr, VisitCtx ctx)
 {
 	auto *left_symbol = find_symbol(expr->lhs->get_symbol(), expr->lhs->token, nullptr, /*permissive=*/true);
 
-	if (NODE_AS(left_symbol, Type))
+	if (to_type(left_symbol))
 	{
 		auto *literal = new_node<ArrayLiteralExpr>();
 
@@ -1129,7 +1131,12 @@ pars::Node* pars::Analyzer::visit(StructLiteral *expr, VisitCtx ctx)
 {
 	expr->type = get_type(expr->name, expr->token);
 
-	auto *struct_type = TYPE_AS(expr->type, Struct);
+	auto *struct_type = dyn_cast<StructType>(expr->type);
+
+	if (struct_type == nullptr)
+	{
+		throw FrontendError{expr->token, fmt::format("{} is not a struct", expr->type->get_type_name())};
+	}
 
 	assign_struct_indices(struct_type, this, expr->initializers);
 
@@ -1144,9 +1151,9 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 
 		expr->type = type;
 
-		for (auto i = 0; auto &[expr, pos] : expr->initializers)
+		for (auto i = 0; auto &[initializer, pos] : expr->initializers)
 		{
-			if (auto *named = EXPR_AS(expr, Named))
+			if (auto *named = dyn_cast<NamedExpr>(initializer))
 			{
 				named->value->accept(this, {});
 
@@ -1159,7 +1166,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 			}
 			else
 			{
-				throw FrontendError{expr->token, "anon struct can only contain named fields"};
+				throw FrontendError{initializer->token, "anon struct can only contain named fields"};
 			}
 
 			pos = i;
@@ -1171,7 +1178,7 @@ pars::Node* pars::Analyzer::visit(AnonInitExpr *expr, VisitCtx ctx)
 
 	expr->type = produce_type(ctx.type);
 
-	if (auto *struct_type = TYPE_AS(expr->type, Struct))
+	if (auto *struct_type = dyn_cast<StructType>(expr->type))
 	{
 		assign_struct_indices(struct_type, this, expr->initializers);
 	}
@@ -1251,9 +1258,9 @@ pars::Node* pars::Analyzer::visit(ArrayType *type, VisitCtx ctx)
 		goto ret;
 	}
 
-	value = NODE_AS(type->size_expr->accept(&m_comp_eval, {}), Expr);
+	value = to_expr(type->size_expr->accept(&m_comp_eval, {}));
 
-	if (auto *literal = EXPR_AS(value, Literal); auto literal_value = literal->get_int())
+	if (auto *literal = dyn_cast<LiteralExpr>(value); auto literal_value = literal->get_int())
 	{
 		if (literal_value.has_value())
 		{
@@ -1298,14 +1305,14 @@ pars::FnType * pars::Analyzer::get_current_fn()
 	return m_function_stack.back();
 }
 
-void pars::Analyzer::resolve_type(TypeMeta &meta, Node *node)
+void pars::Analyzer::resolve_type(TypeMeta &meta)
 {
-	if (meta.ptr != nullptr)
+	if (meta.is_valid())
 	{
-		meta.ptr->accept(this, {.result = (Node**)&meta.ptr});
+		meta->accept(this, {.result = (Node**)&meta.ptr});
 	}
 
-	if (auto *alias = dynamic_cast<AliasType*>(meta.ptr))
+	if (auto *alias = dyn_cast<AliasType>(meta.ptr))
 	{
 		meta.mut_set = alias->type.mut_set;
 	}

@@ -141,7 +141,7 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 	{
 		llvm::Function *fn {};
 
-		if (auto *fn_type = TYPE_AS(type, Fn))
+		if (auto *fn_type = dyn_cast<FnType>(type))
 		{
 			fn = fn_type->get_llvm_fn(ctx);
 		}
@@ -635,7 +635,7 @@ llvm::Value * pars::SliceExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 	}
 	else
 	{
-		auto *array_type = TYPE_AS(lhs->type, Array);
+		auto *array_type = dyn_cast<ArrayType>(lhs->type);
 		end_value = ctx.builder.getInt32(array_type->size);
 	}
 

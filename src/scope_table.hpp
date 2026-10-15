@@ -8,6 +8,7 @@
 
 namespace pars
 {
+	struct Stmt;
 	struct Node;
 
 	struct AutoScope;
@@ -107,7 +108,20 @@ namespace pars
 		{
 			auto *node = find_symbol(name);
 
-			return dynamic_cast<T*>(node);
+			if constexpr (std::derived_from<T, Expr>)
+			{
+				return dyn_cast<T>(to_expr(node));
+			}
+			if constexpr (std::derived_from<T, Stmt>)
+			{
+				return dyn_cast<T>(to_stmt(node));
+			}
+			if constexpr (std::derived_from<T, Type>)
+			{
+				return dyn_cast<T>(to_type(node));
+			}
+
+			return nullptr;
 		}
 
 		const std::vector<ScopeData>& get_table() const
