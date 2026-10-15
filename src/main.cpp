@@ -34,12 +34,6 @@ struct Wrapper
 
 int main(int argc, char **argv)
 {
-	// TODO: if entry file is not provided parse and compile all files in dir
-	if (argc < 2)
-	{
-		fmt::panic("Must provide an entry file\n");
-	}
-
 	auto &config = pars::init_config();
 
 	auto result = pars::parse_cli_args(argc, argv,
@@ -49,7 +43,7 @@ int main(int argc, char **argv)
 
 	if (result.has_error())
 	{
-		fmt::panic("{}", result.message);
+		fmt::panic("{}\n", result.message);
 	}
 
 	if (config.command == pars::CompileCommand::Help)
@@ -62,6 +56,11 @@ int main(int argc, char **argv)
 
 	// remove the executables name
 	exe_path.remove_filename();
+
+	if (result.args.empty())
+	{
+		fmt::panic("Must provide an entry file\n");
+	}
 
 	auto source_path = std::filesystem::path{result.args[0]};
 
