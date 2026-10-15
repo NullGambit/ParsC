@@ -347,7 +347,6 @@ llvm::Value * pars::CompIfStmt::emit(EmitCtx &ctx, EmitParams params)
 {
 	auto *value = stmt->condition->emit(ctx);
 
-	// TODO could throw an error here but for now ill allow a silent fail to else
 	if (auto *constant = llvm::dyn_cast<llvm::ConstantInt>(value); constant && constant->getValue() == true)
 	{
 		return stmt->body->emit(ctx);

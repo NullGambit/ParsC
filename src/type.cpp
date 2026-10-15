@@ -126,11 +126,6 @@ llvm::Value* pars::IntegralType::get_property(llvm::LLVMContext* ctx, std::strin
 	return llvm::ConstantInt::get(*ctx, llvm::APInt(bits, value, is_signed));
 }
 
-u32 pars::IntegralType::get_size()
-{
-	return bits / 8;
-}
-
 llvm::Value * pars::IntegralType::op_cast(EmitCtx &ctx, llvm::Value *value, Type *desired_type) const
 {
 	auto *target_type = desired_type->get_llvm_type(ctx.llvm_ctx);
@@ -234,11 +229,6 @@ llvm::Value * pars::AliasType::op_index(EmitCtx &ctx, llvm::Value *target, llvm:
 llvm::Value * pars::AliasType::op_call(EmitCtx &ctx, llvm::Value *callable, llvm::ArrayRef<llvm::Value *> args) const
 {
 	return type->op_call(ctx, callable, args);
-}
-
-u32 pars::AliasType::get_size()
-{
-	return type->get_size();
 }
 
 llvm::Value * pars::AliasType::get_default_value(llvm::LLVMContext *ctx) const
@@ -749,11 +739,6 @@ llvm::Value * pars::BaseArrayType::iter_emit_update(EmitCtx &ctx, Expr *iterable
 	return ctx.builder.CreateStore(value, vars[0]);
 }
 
-u32 pars::ArrayType::get_size()
-{
-	return size * m_element_type->get_size();
-}
-
 llvm::Type * pars::ArrayType::get_llvm_type(llvm::LLVMContext *ctx) const
 {
 	return llvm::ArrayType::get(m_element_type->get_llvm_type(ctx), size);
@@ -959,15 +944,6 @@ llvm::Value * pars::SliceType::access_member(EmitCtx &ctx, llvm::Value *ptr, llv
 	}
 
 	return nullptr;
-}
-
-u32 pars::StructType::get_size()
-{
-	// TODO calculate alignment
-	return std::accumulate(fields.begin(), fields.end(), u32{0}, [](u32 a, const StructFieldInfo &b)
-	{
-		return a + b.type->get_size();
-	});
 }
 
 llvm::Type * pars::StructType::get_llvm_type(llvm::LLVMContext *ctx) const
