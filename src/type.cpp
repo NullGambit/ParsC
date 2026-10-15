@@ -135,7 +135,7 @@ llvm::Value * pars::IntegralType::op_cast(EmitCtx &ctx, llvm::Value *value, Type
 {
 	auto *target_type = desired_type->get_llvm_type(ctx.llvm_ctx);
 
-	auto *other_type = dynamic_cast<IntegralType*>(desired_type->get_real_type());
+	auto *other_type = produce_type<IntegralType>(desired_type);
 
 	if (other_type == nullptr)
 	{
@@ -154,7 +154,7 @@ llvm::Value * pars::IntegralType::op_coerce(EmitCtx &ctx, llvm::Value *value, Ty
 
 bool pars::IntegralType::can_coerce_into(Type const *desired_type) const
 {
-	const auto *other_type = dynamic_cast<IntegralType*>(desired_type->get_real_type());
+	const auto *other_type = produce_type<IntegralType>(desired_type);
 
 	if (other_type == nullptr)
 	{
@@ -178,7 +178,7 @@ bool pars::AliasType::is_equal(Type const *other) const
 {
 	if (is_distinct)
 	{
-		auto *other_alias = dynamic_cast<AliasType const*>(other);
+		auto *other_alias = dyn_cast<AliasType>(other);
 
 		if (other_alias != nullptr && other_alias == this)
 		{
@@ -629,14 +629,17 @@ llvm::Value * pars::PointerType::op_binary(EmitCtx &ctx, TokenType op, llvm::Val
 
 bool pars::PointerType::is_equal(Type const *other) const
 {
-	auto *other_ptr = dynamic_cast<const PointerType*>(other);
+	auto *other_ptr = produce_type<PointerType>(other);
+
+	if (other_ptr == nullptr)
+	{
+		return false;
+	}
 
 	return
-	other_ptr != nullptr
-	&&
-	(m_inner->is_equal(other_ptr->m_inner)
-	||
-	other_ptr->m_inner->is_equal(&VOID_TYPE) || m_inner->is_equal(&VOID_TYPE));
+		m_inner->is_equal(other_ptr->m_inner)		||
+		other_ptr->m_inner->is_equal(&VOID_TYPE)	||
+		m_inner->is_equal(&VOID_TYPE);
 }
 
 std::string_view pars::PackedType::get_type_name() const
@@ -850,7 +853,7 @@ std::optional<pars::MemberInfo> pars::ArrayType::get_member(std::string_view sym
 
 bool pars::ArrayType::can_coerce_into(Type const *desired_type) const
 {
-	return dynamic_cast<const SliceType*>(desired_type);
+	return produce_type<SliceType>(desired_type);
 }
 
 llvm::StructType* get_slice_struct(llvm::LLVMContext *ctx)
@@ -1098,7 +1101,7 @@ std::span<pars::Type *> pars::RangeType::get_iter_bindings() const
 
 llvm::Value * pars::RangeType::iter_emit_init(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
 {
-	auto *bin = dynamic_cast<BinaryExpr*>(iterable);
+	auto *bin = dyn_cast<BinaryExpr>(iterable);
 
 	auto *min = bin->left->emit(ctx);
 
@@ -1107,7 +1110,7 @@ llvm::Value * pars::RangeType::iter_emit_init(EmitCtx &ctx, Expr *iterable, std:
 
 llvm::Value * pars::RangeType::iter_emit_condition(EmitCtx &ctx, Expr *iterable, std::span<llvm::Value *> vars) const
 {
-	auto *bin = dynamic_cast<BinaryExpr*>(iterable);
+	auto *bin = dyn_cast<BinaryExpr>(iterable);
 
 	auto *max = bin->right->emit(ctx);
 
@@ -1299,9 +1302,9 @@ llvm::Value * pars::FnType::op_call(EmitCtx &ctx, llvm::Value *callable, llvm::A
 
 bool pars::FnType::is_equal(Type const *other) const
 {
-	auto other_fn = dynamic_cast<FnType const*>(other);
+	auto other_fn = produce_type<FnType>(other);
 
-	auto ret_match = [&]()
+	auto ret_match = [&]
 	{
 		return signature.return_type.ptr->is_equal(other_fn->signature.return_type.ptr);
 	};

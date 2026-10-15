@@ -244,8 +244,10 @@ virtual bool is_equal(Type const *other) const override							\
 		{
 			return
 				type->kind == Kind::Integer ||
+				type->kind == Kind::Pointer	||
 				type->kind == Kind::Float	||
 				type->kind == Kind::Bool	||
+				type->kind == Kind::Str		|| // TODO str is an integral type now because its a pointer. later it must be replaced with a slice so remove this.
 				type->kind == Kind::Char;
 		}
 

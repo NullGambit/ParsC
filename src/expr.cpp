@@ -186,7 +186,7 @@ llvm::Value * pars::SymbolExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 
 std::string_view pars::SymbolExpr::get_symbol()
 {
-	if (dynamic_cast<Type*>(symbol_node))
+	if (to_type(symbol_node))
 	{
 		return type->get_type_name();
 	}
@@ -379,7 +379,7 @@ llvm::Value * pars::MemberAccessExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		set_metadata(ctx.llvm_ctx, result, node, "Const");
 	}
 
-	if (dynamic_cast<SymbolExpr*>(accessor))
+	if (dyn_cast<SymbolExpr>(accessor))
 	{
 		return result;
 	}
@@ -481,6 +481,11 @@ llvm::Value * pars::PtrOpExpr::emit_ptr(EmitCtx &ctx, EmitParams params)
 		}
 		case Caret:
 		{
+			if (type->is_equal(&VOID_TYPE))
+			{
+				throw CompileError{this, "Cannot dereference void pointer"};
+			}
+
 			auto *result = ctx.builder.CreateLoad(llvm::PointerType::get(*ctx.llvm_ctx, 0), value);
 
 			set_flag_metadata(ctx, target, result);

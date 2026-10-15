@@ -86,7 +86,22 @@ namespace pars
 		template<IsNode T>
 		T* find_symbol(std::string_view name, Token &error_token, ScopeTable *table_override = nullptr)
 		{
-			return dynamic_cast<T*>(find_symbol(name, error_token, table_override));
+			auto *node = find_symbol(name, error_token, table_override);
+
+			if constexpr (std::derived_from<T, Expr>)
+			{
+				return dyn_cast<T>(to_expr(node));
+			}
+			if constexpr (std::derived_from<T, Stmt>)
+			{
+				return dyn_cast<T>(to_stmt(node));
+			}
+			if constexpr (std::derived_from<T, Type>)
+			{
+				return dyn_cast<T>(to_type(node));
+			}
+
+			return nullptr;
 		}
 
 		Type* get_type(std::string_view name, Token &error_token);

@@ -205,7 +205,7 @@ llvm::Value* pars::BlockStmt::emit(EmitCtx &ctx, EmitParams params)
 		ctx.builder.SetInsertPoint(bb);
 
 		// eliminate dead code so llvm doesnt complain about terminator in the middle of basic block
-		if (auto *term = dynamic_cast<TerminatorStmt*>(node))
+		if (auto *stmt = to_stmt(node); stmt && stmt->is_terminator())
 		{
 			if (std::distance(iter, nodes.end()) > 1)
 			{

@@ -25,6 +25,7 @@ namespace pars
 			Block,
 			Import,
 			Return,
+			ConstantReturn,
 			Break,
 			Continue,
 			If,
@@ -38,6 +39,8 @@ namespace pars
 			Node{BaseKind::Stmt},
 			kind{kind}
 		{}
+
+		virtual bool is_terminator() { return false; }
 
 		static bool classof(const Node *node)
 		{
@@ -127,38 +130,48 @@ namespace pars
 		ACCEPT
 	};
 
-	struct TerminatorStmt
-	{
-
-	};
-
-	struct ReturnStmt : Stmt, TerminatorStmt
+	struct ReturnStmt : Stmt
 	{
 		Expr* expr {};
 
 		CLASSOF(Stmt, Return)
 
+		ACCEPT
+
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
-		ACCEPT
+		bool is_terminator() override
+		{
+			return true;
+		}
 	};
 
-	struct BreakStmt : Stmt, TerminatorStmt
+	struct BreakStmt : Stmt
 	{
 		CLASSOF(Stmt, Break)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
+
+		bool is_terminator() override
+		{
+			return true;
+		}
 	};
 
-	struct ContinueStmt : Stmt, TerminatorStmt
+	struct ContinueStmt : Stmt
 	{
 		CLASSOF(Stmt, Continue)
 
 		llvm::Value* emit(EmitCtx &ctx, EmitParams params = {}) override;
 
 		ACCEPT
+
+		bool is_terminator() override
+		{
+			return true;
+		}
 	};
 
 	struct IfStmt : Stmt

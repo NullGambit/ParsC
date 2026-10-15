@@ -9,9 +9,16 @@
 
 namespace pars
 {
-    struct ConstantReturnStmt : Node
+    struct ConstantReturnStmt : Stmt
     {
         LiteralExpr *value;
+
+        CLASSOF(Stmt, ConstantReturn)
+
+        bool is_terminator() override
+        {
+            return true;
+        }
     };
 }
 
@@ -20,8 +27,8 @@ pars::Node* pars::CompEval::visit(BinaryExpr* expr, VisitCtx ctx)
     auto *left_node = expr->left->accept(this, ctx);
     auto *right_node = expr->right->accept(this, ctx);
 
-    auto *left = dynamic_cast<LiteralExpr*>(left_node);
-    auto *right = dynamic_cast<LiteralExpr*>(right_node);
+    auto *left = dyn_cast<LiteralExpr>(to_expr(left_node));
+    auto *right = dyn_cast<LiteralExpr>(to_expr(right_node));
 
     if (left == nullptr || right == nullptr)
     {
@@ -144,7 +151,7 @@ pars::Node * pars::CompEval::visit(FnType *stmt, VisitCtx ctx)
     {
         auto *result = node->accept(this, ctx);
 
-        if (auto *ret = dynamic_cast<ConstantReturnStmt*>(result))
+        if (auto *ret = dyn_cast<ConstantReturnStmt>(to_stmt(result)))
         {
             return ret->value;
         }
@@ -159,7 +166,7 @@ namespace pars
     {
         for (auto &element : expr->initializers)
         {
-            element.expr = dynamic_cast<Expr*>(element.expr->accept(eval, ctx));
+            element.expr = dyn_cast<Expr>(element.expr->accept(eval, ctx));
 
             if (element.expr == nullptr)
             {
@@ -188,7 +195,7 @@ pars::Node * pars::CompEval::visit(CallExpr *expr, VisitCtx ctx)
 
 pars::Node * pars::CompEval::visit(ReturnStmt *stmt, VisitCtx ctx)
 {
-    auto *literal = dynamic_cast<LiteralExpr*>(stmt->expr->accept(this, ctx));
+    auto *literal = dyn_cast<LiteralExpr>(to_expr(stmt->expr->accept(this, ctx)));
 
     if (literal == nullptr)
     {
