@@ -16,6 +16,6 @@ namespace pars
 
 		FnType* get_fn(std::span<Expr*> args, Analyzer *analyzer);
 
-		bool fn_is_duplicate(FnType *in_fn);
+		bool fn_is_duplicate(FnType *in_fn) const;
 	};
 }

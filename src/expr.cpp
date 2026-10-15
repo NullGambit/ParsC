@@ -146,14 +146,15 @@ llvm::Value* pars::SymbolExpr::emit(EmitCtx &ctx, EmitParams params)
 			fn = fn_type->get_llvm_fn(ctx);
 		}
 
-		// TODO stack allocate if no target ptr
-		if (fn != nullptr && params.target_ptr != nullptr)
-		{
-			ctx.builder.CreateStore(fn, params.target_ptr);
-		}
-
 		if (fn != nullptr)
 		{
+			if (params.target_ptr == nullptr)
+			{
+				params.target_ptr = create_alloca(ctx, type->get_llvm_type(ctx.llvm_ctx));
+			}
+
+			ctx.builder.CreateStore(fn, params.target_ptr);
+
 			return fn;
 		}
 	}

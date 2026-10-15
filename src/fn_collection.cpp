@@ -59,7 +59,7 @@ pars::FnType * pars::FnCollection::get_fn(std::span<Expr *> args, Analyzer *anal
 	return nullptr;
 }
 
-bool pars::FnCollection::fn_is_duplicate(FnType *in_fn)
+bool pars::FnCollection::fn_is_duplicate(FnType *in_fn) const
 {
 	if (functions.empty())
 	{

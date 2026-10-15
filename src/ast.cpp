@@ -586,7 +586,6 @@ pars::FnType* pars::AST::parse_fn(std::span<VarDeclStmt*> added_params)
 
 	fn->collection = m_ctx->scope_table.get_or_add_symbol<FnCollection>(fn->symbol, !has_flag(fn->flags, FnFlags::Private));
 
-	// TODO change to a hash set or map and throw an error in case of duplicates
 	fn->collection->functions.emplace_back(fn);
 
 	m_function_stack.emplace_back(fn);
