@@ -190,18 +190,9 @@ pars::Node* pars::Analyzer::visit(FnType *fn, VisitCtx ctx)
 
 		if (fn->body != nullptr)
 		{
-			for (auto i = 0; auto *node : fn->body->nodes)
+			for (auto *node : fn->body->nodes)
 			{
-				if (auto *expr = dyn_cast<Expr>(node))
-				{
-					fn->body->nodes[i] = visit_expr(nullptr, expr, {});
-				}
-				else
-				{
-					node->accept(this, {});
-				}
-
-				i += 1;
+				node->accept(this, {});
 			}
 		}
 
