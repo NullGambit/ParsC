@@ -402,16 +402,7 @@ pars::Node* pars::Analyzer::visit(BlockStmt *stmt, VisitCtx ctx)
 
 	for (auto &node : stmt->nodes)
 	{
-		// TODO possible not needed to do this because an expression that is not bound to any statement would
-		// not need to transmute itself.
-		if (auto *expr = dyn_cast<Expr>(node))
-		{
-			node = visit_expr(nullptr, expr, ctx);
-		}
-		else
-		{
-			node->accept(this, ctx);
-		}
+		node->accept(this, ctx);
 	}
 
 	auto &current_flags = m_ctx->scope_table.get_current_flags();
